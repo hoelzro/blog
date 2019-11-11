@@ -1,0 +1,206 @@
+title: $:/template
+
+\define tv-wikilink-template() $uri_doubleencoded$.html
+\define tv-config-toolbar-icons() no
+\define tv-config-toolbar-text() no
+\define tv-config-toolbar-class() tc-btn-invisible
+\import [[$:/core/ui/PageMacros]] [all[shadows+tiddlers]tag[$:/tags/Macro]!has[draft.of]]
+`<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" itemscope itemtype="http://schema.org/Webpage" lang='en'>
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<meta name='author' content='Rob Hoelz' />
+<meta name='date' content='`<$view field="created" template="YYYY-0MM-0DD" format="date" />`' />
+<meta name='description' content="Rob's thoughts on programming and a place for his projects" /> <!-- XXX you can do better -->
+<meta name='keywords' content='perl,lua,programming,coding,learning' /> <!-- XXX you can do better -->
+<meta name='twitter:dnt' content='on' />
+<title>`{{!!title}}`</title>
+<link rel="stylesheet" href="css/style.css" /> <!-- XXX placeholder -->
+<link rel='alternate' type='application/rss+xml' title='hoelz.ro - All Updates' href='/feed.rss' /> <!-- XXX what about the RSS feed? -->
+
+<meta itemprop="name" content="`{{!!title}}`" />
+<meta itemprop="description" content="Rob's thoughts on programming and a place for his projects" /> <!-- XXX you can do better -->
+<meta itemprop="image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" /> <!-- XXX does this need to be more dynamic? -->
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:site" content="@hoelzro" />
+<meta name="twitter:title" content="`{{!!title}}`" />
+<meta name="twitter:description" content="Rob's thoughts on programming and a place for his projects" /> <!-- XXX you can do better -->
+<meta name="twitter:creator" content="@hoelzro" />
+<meta name="twitter:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" /> <!-- XXX does this need to be more dynamic? -->
+<meta name="twitter:image:alt" content="Rob's thoughts on programming and a place for his projects" /> <!-- XXX you can do better -->
+
+<meta property="og:title" content="`{{!!title}}`" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost/blog/lazily-evaluated-learning.html" /> <!-- XXX what about this? -->
+<meta property="og:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" /> <!-- XXX whatever you do, fix this -->
+<meta property="og:description" content="Rob's thoughts on programming and a place for his projects" /> <!-- XXX you can do better -->
+<meta property="og:site_name" content="hoelz.ro" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+</head>
+<body>
+  <div id='topbar'>
+    <ul>
+      <li><a rel='start' href='/'>Home</a></li>
+      <li><a href='/archive'>Blog Archive</a></li>
+      <li><a href='/blog-series'>Blog Series</a></li>
+      <li><a href='/tag/favorites'>Favorite Posts</a></li>
+      <li><a href='/ref'>Reference</a></li>
+      <li><a href='/about-me'>About Me</a></li>
+    </ul>
+
+    <span class='social-icons'>
+     <a
+  href='http://twitter.com/hoelzro'
+  target='_blank'
+  rel='noreferrer'
+  class='social-icon twitter'>
+twitter
+</a>
+
+     <a
+  href='https://github.com/hoelzro'
+  target='_blank'
+  rel='noreferrer'
+  class='social-icon github'>
+github
+</a>
+
+     <a
+  href='/feed.rss'
+  target='_blank'
+  rel='noreferrer'
+  class='social-icon rss'>
+rss
+</a>
+
+     <a
+  href='#'
+  target='_self'
+  
+  class='social-icon email'>
+email
+</a>
+
+    </span>
+
+    <form action='/search' method='get'>
+      <input name='q' type='text' aria-label='Search Query' />
+      <button>Search</button>
+    </form>
+  </div>
+
+  <div id='sidebar'>
+    <h1>hoelz.ro</h1>
+
+    <img id='gravatar' src='https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180' alt='My picture' /> <!-- XXX more dynamic -->
+
+    <ul>
+      <li><a rel='start' href='/'>Home</a></li>
+      <li><a href='/archive'>Blog Archive</a></li>
+      <li><a href='/blog-series'>Blog Series</a></li>
+      <li><a href='/tag/favorites'>Favorite Posts</a></li>
+      <li><a href='/ref'>Reference</a></li>
+      <li><a href='/about-me'>About Me</a></li>
+    </ul>
+
+    <form action='/search' method='get' id='search-form'>
+      <input name='q' id='q' type='text' aria-label='Search Query'/>
+      <button id='search'>Search</button>
+      <abbr id='search-help' title='You can use AND or OR to combine terms (OR is implied by spacing).  You can also prefix a term with tag:, title:, or date: to refine your search (ex. tag:perl)'>Search Help</abbr>
+    </form>
+
+    <div class='clear-it'>
+    </div>
+
+    <span class='social-icons'>
+     <a
+  href='http://twitter.com/hoelzro'
+  target='_blank'
+  rel='noreferrer'
+  class='social-icon twitter'>
+twitter
+</a>
+
+     <a
+  href='https://github.com/hoelzro'
+  target='_blank'
+  rel='noreferrer'
+  class='social-icon github'>
+github
+</a>
+
+     <a
+  href='/feed.rss'
+  target='_blank'
+  rel='noreferrer'
+  class='social-icon rss'>
+rss
+</a>
+
+     <a
+  href='#'
+  target='_self'
+  
+  class='social-icon email'>
+email
+</a>
+
+    </span>
+  </div>
+
+  <div id='content'>
+
+<!-- FIXME (restrict to blog posts, fix title and link) -->
+`
+<$list variable="previous" filter="[!is[system]nsort[created]] +[before<currentTiddler>]">
+<<previous>>
+<$link class='history-next' to=<<previous>>><<previous>></$link>
+</$list>
+`
+
+<!-- FIXME (restrict to blog posts, fix title and link) -->
+`
+<$list variable="next" filter="[!is[system]nsort[created]] +[after<currentTiddler>]">
+`<a class='history-next' rel='prev' href='/blog/`<<next>>`'>`<<next>>`</a>`
+</$list>
+`
+
+<div class="level1">
+  `<$view format='htmlwikified'/>`
+
+<div class="tags"><span>
+`
+<$list variable="tag" filter="[is[current]tags[]] -[[Blog Post]] +[lowercase[]]">
+`<a href="/tag/`<<tag>>`" class="wikilink1" title="`<<tag>>`" rel="tag">`<<tag>>`</a>`
+</$list>
+`
+</span></div>
+
+</div>
+
+  <div class='clear-it'></div>
+
+  <i>Published on 2018-03-03</i> <!-- FIXME -->
+
+  <div id="disqus_thread"></div>
+  <script type="text/javascript" src="/javascripts/disqus.js"></script>
+  <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"
+          type="text/javascript"
+          integrity="sha384-8gBf6Y4YYq7Jx97PIqmTwLPin4hxIzQw5aDmUg/DDhul9fFpbbLcLh3nTIIDJKhx"
+          crossorigin="anonymous"></script>
+  <script type="text/javascript" src="/javascripts/bigfoot.js">
+  </script>
+  <script type="text/javascript" src="/javascripts/turbolinks.js">
+  </script>
+  <script type='text/javascript' src='/javascripts/main.js'></script>
+</body>
+</html>
+`
