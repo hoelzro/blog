@@ -11,15 +11,15 @@
     ],
     "build": {
         "index": [
-            "--rendertiddlers",
+            "--render",
             "[!is[system]!is[image]]",
-            "$:/template",
-            "static",
+            "[is[tiddler]splitregexp[\\W+]join[-]removesuffix[-]] ~[is[tiddler]splitregexp[\\W+]join[-]] +[lowercase[]addsuffix[.html]]",
             "text/plain",
+            "$:/template",
 
-            "--rendertiddler",
+            "--render",
             "$:/style.css",
-            "static/css/style.css",
+            "css/style.css",
             "text/plain"
         ]
     }
