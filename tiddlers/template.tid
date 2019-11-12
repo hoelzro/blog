@@ -33,7 +33,7 @@ title: $:/template
 
 <meta property="og:title" content="`{{!!title}}`" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="http://localhost/blog/lazily-evaluated-learning.html" /> <!-- XXX what about this? -->
+<meta property="og:url" content="`https://hoelz.ro/{{{ [is[current]sitelink[]] }}}`" />
 <meta property="og:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" /> <!-- XXX whatever you do, fix this -->
 <meta property="og:description" content="Rob's thoughts on programming and a place for his projects" /> <!-- XXX you can do better -->
 <meta property="og:site_name" content="hoelz.ro" />
@@ -154,18 +154,19 @@ email
 
   <div id='content'>
 
-<!-- FIXME (restrict to blog posts, fix title and link) -->
 `
-<$list variable="previous" filter="[!is[system]nsort[created]] +[before<currentTiddler>]">
-<<previous>>
-<$link class='history-next' to=<<previous>>><<previous>></$link>
+<$list variable="previous" filter="[!is[system]tag[Blog Post]nsort[created]] +[before<currentTiddler>]">
+<$set name="prev-link" filter="[<previous>sitelink[]]" select="0">
+`<a class='history-prev' rel='prev' href='/`<<prev-link>>`'>`<<previous>>`</a>`
+</$set>
 </$list>
 `
 
-<!-- FIXME (restrict to blog posts, fix title and link) -->
 `
-<$list variable="next" filter="[!is[system]nsort[created]] +[after<currentTiddler>]">
-`<a class='history-next' rel='prev' href='/blog/`<<next>>`'>`<<next>>`</a>`
+<$list variable="next" filter="[!is[system]tag[Blog Post]nsort[created]] +[after<currentTiddler>]">
+<$set name="next-link" filter="[<next>sitelink[]]" select="0">
+`<a class='history-next' rel='next' href='/`<<next-link>>`'>`<<next>>`</a>`
+</$set>
 </$list>
 `
 
