@@ -10,10 +10,17 @@
         "tiddlywiki/snowwhite"
     ],
     "build": {
+        "test": [
+            "--render",
+            "[[The Leaving of Madison]]",
+            "[is[tiddler]sitelink[]addsuffix[.html]]",
+            "text/plain",
+            "$:/template"
+        ],
         "index": [
             "--render",
             "[!is[system]!is[image]]",
-            "[is[tiddler]splitregexp[\\W+]join[-]removesuffix[-]] ~[is[tiddler]splitregexp[\\W+]join[-]] +[lowercase[]addsuffix[.html]]",
+            "[is[tiddler]sitelink[]addsuffix[.html]]",
             "text/plain",
             "$:/template",
 
