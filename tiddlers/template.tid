@@ -12,30 +12,30 @@ title: $:/template
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <meta name='author' content='Rob Hoelz' />
 <meta name='date' content='`<$view field="created" template="YYYY-0MM-0DD" format="date" />`' />
-<meta name='description' content="Rob's thoughts on programming and a place for his projects" /> <!-- XXX you can do better -->
-<meta name='keywords' content='perl,lua,programming,coding,learning' /> <!-- XXX you can do better -->
+<meta name='description' content="Rob's thoughts on programming and a place for his projects" />
+<meta name='keywords' content='perl,lua,programming,coding,learning' />
 <meta name='twitter:dnt' content='on' />
 <title>`{{!!title}}`</title>
-<link rel="stylesheet" href="css/style.css" /> <!-- XXX placeholder -->
-<link rel='alternate' type='application/rss+xml' title='hoelz.ro - All Updates' href='/feed.rss' /> <!-- XXX what about the RSS feed? -->
+<link rel="stylesheet" href="css/style.css" />
+<link rel='alternate' type='application/rss+xml' title='hoelz.ro - All Updates' href='/feed.rss' />
 
 <meta itemprop="name" content="`{{!!title}}`" />
-<meta itemprop="description" content="Rob's thoughts on programming and a place for his projects" /> <!-- XXX you can do better -->
-<meta itemprop="image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" /> <!-- XXX does this need to be more dynamic? -->
+<meta itemprop="description" content="Rob's thoughts on programming and a place for his projects" />
+<meta itemprop="image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" />
 
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:site" content="@hoelzro" />
 <meta name="twitter:title" content="`{{!!title}}`" />
-<meta name="twitter:description" content="Rob's thoughts on programming and a place for his projects" /> <!-- XXX you can do better -->
+<meta name="twitter:description" content="Rob's thoughts on programming and a place for his projects" />
 <meta name="twitter:creator" content="@hoelzro" />
-<meta name="twitter:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" /> <!-- XXX does this need to be more dynamic? -->
-<meta name="twitter:image:alt" content="Rob's thoughts on programming and a place for his projects" /> <!-- XXX you can do better -->
+<meta name="twitter:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" />
+<meta name="twitter:image:alt" content="Rob's thoughts on programming and a place for his projects" />
 
 <meta property="og:title" content="`{{!!title}}`" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="`https://hoelz.ro/{{{ [is[current]sitelink[]] }}}`" />
-<meta property="og:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" /> <!-- XXX whatever you do, fix this -->
-<meta property="og:description" content="Rob's thoughts on programming and a place for his projects" /> <!-- XXX you can do better -->
+<meta property="og:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" />
+<meta property="og:description" content="Rob's thoughts on programming and a place for his projects" />
 <meta property="og:site_name" content="hoelz.ro" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -96,7 +96,7 @@ email
   <div id='sidebar'>
     <h1>hoelz.ro</h1>
 
-    <img id='gravatar' src='https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180' alt='My picture' /> <!-- XXX more dynamic -->
+    <img id='gravatar' src='https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180' alt='My picture' />
 
     <ul>
       <li><a rel='start' href='/'>Home</a></li>
