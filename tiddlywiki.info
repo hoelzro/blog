@@ -25,6 +25,12 @@
             "$:/template",
 
             "--render",
+            "$:/search-placeholder",
+            "templates/search.html",
+            "text/plain",
+            "$:/template",
+
+            "--render",
             "$:/style.css",
             "css/style.css",
             "text/plain"
