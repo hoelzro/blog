@@ -1,0 +1,8 @@
+title: $:/search-placeholder
+type: text/plain
+
+<ul>
+{% for (url, title) in matches %}
+  <li><a href="/« url »">« title »</a></li>
+{% endfor %}
+</ul>
