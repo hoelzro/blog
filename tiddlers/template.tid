@@ -16,7 +16,7 @@ title: $:/template
 <meta name='keywords' content='perl,lua,programming,coding,learning' />
 <meta name='twitter:dnt' content='on' />
 <title>`{{!!title}}`</title>
-<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="../css/style.css" />
 <link rel='alternate' type='application/rss+xml' title='hoelz.ro - All Updates' href='/feed.rss' />
 
 <meta itemprop="name" content="`{{!!title}}`" />
@@ -185,7 +185,7 @@ email
 
   <div class='clear-it'></div>
 
-  <i>Published on 2018-03-03</i> <!-- FIXME -->
+  <i class='publish-date'>Published on 2018-03-03</i> <!-- FIXME -->
 
   <div id="disqus_thread"></div>
   <script type="text/javascript" src="/javascripts/disqus.js"></script>
