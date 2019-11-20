@@ -1,0 +1,26 @@
+title: $:/templates/blog
+
+<$list variable="previous" filter="[!is[system]tag[Blog Post]nsort[created]] +[before<currentTiddler>]">
+<$set name="prev-link" filter="[<previous>sitelink[]]" select="0">
+`<a class='history-prev' rel='prev' href='/`<<prev-link>>`'>`<<previous>>`</a>`
+</$set>
+</$list>
+
+<$list variable="next" filter="[!is[system]tag[Blog Post]nsort[created]] +[after<currentTiddler>]">
+<$set name="next-link" filter="[<next>sitelink[]]" select="0">
+`<a class='history-next' rel='next' href='/`<<next-link>>`'>`<<next>>`</a>`
+</$set>
+</$list>
+
+`
+<div class="level1">
+  `<$view format='htmlwikified'/>`
+
+<div class="tags"><span>
+`
+<$list variable="tag" filter="[is[current]tags[]] -[[Blog Post]] +[lowercase[]]">
+`<a href="/tag/`<<tag>>`" class="wikilink1" title="`<<tag>>`" rel="tag">`<<tag>>`</a>`
+</$list>
+`
+</span></div>
+`

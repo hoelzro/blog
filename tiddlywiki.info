@@ -29,6 +29,8 @@
             "[is[tiddler]sitelink[]addsuffix[.html]]",
             "text/plain",
             "$:/template",
+            "subtemplate",
+            "$:/templates/blog",
 
             "--render",
             "$:/search-placeholder",
