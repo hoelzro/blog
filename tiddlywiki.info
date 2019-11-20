@@ -22,7 +22,9 @@
             "[!is[system]tags[]] -[[Blog Post]]",
             "[addsuffix[.html]addprefix[tag/]]",
             "text/plain",
-            "$:/tag-template",
+            "$:/template",
+            "subtemplate",
+            "$:/templates/tag-index",
 
             "--render",
             "[!is[system]!is[image]]",

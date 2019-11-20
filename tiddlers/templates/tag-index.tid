@@ -1,0 +1,14 @@
+title: $:/templates/tag-index
+
+`
+<h1>Tag Index</h1>
+<ul id='page-list'>
+`
+<$list variable="tagee" filter="[!is[system]tag<currentTiddler>]">
+<$set name="tagee-link" filter="[<tagee>sitelink[]]" select="0">
+`<li><a href='/`<<tagee-link>>`'>`<<tagee>>`</a></li>`
+</$set>
+</$list>
+`
+</ul>
+`
