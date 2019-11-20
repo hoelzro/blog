@@ -38,7 +38,7 @@ sub extract_git_data($root, $filename) {
     close $pipe;
 }
 
-sub capture($action) :prototype(&) {
+sub capture :prototype(&) ($action) {
     my @chunks;
     local $emitter = sub {
         push @chunks, $_[0];
