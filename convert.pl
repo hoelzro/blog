@@ -24,9 +24,10 @@ sub assert($cond) {
     croak "shit" unless $cond;
 }
 
-sub extract_git_data($filename) {
+sub extract_git_data($root, $filename) {
+    my $rel_filename = File::Spec->abs2rel(File::Spec->rel2abs($filename), $root);
     # XXX follow renames?
-    open my $pipe, '-|', 'git', 'log', '--date=format:%Y%m%d%H%M%s', '--format=%ad', '--', $filename;
+    open my $pipe, '-|', 'git', '-C', $root, 'log', '--date=format:%Y%m%d%H%M%s', '--format=%ad', '--', ":/$rel_filename";
     my @timestamps;
     while(<$pipe>) {
         chomp;
@@ -279,7 +280,7 @@ find(sub {
     return unless /[.]txt$/;
 
     push @files, $File::Find::name;
-}, '.');
+}, $ARGV[0]);
 
 # remove drafts
 @files = grep { !m{drafts/} } @files;
@@ -323,7 +324,7 @@ for my $filename (@files) {
 
     pop @chunks while @chunks && $chunks[-1] =~ /^\s*$/;
 
-    extract_git_data($filename);
+    extract_git_data($ARGV[0], $filename);
 
     die "WTF - no title?" unless defined($post_title);
     $emit_meta->(title => $post_title);
@@ -334,7 +335,7 @@ for my $filename (@files) {
         die "Shit: bad filename: '$post_title'";
     }
     my $filename = $post_title . '.tid';
-    $filename = '/home/rob/projects/tiddlyblog.hoelz.ro/tiddlers/' . $filename;
+    $filename = 'tiddlers/' . $filename;
 
     die "File already accounted for?" if $seen{$filename};
     $seen{$filename} = 1;
