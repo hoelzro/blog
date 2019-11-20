@@ -19,6 +19,12 @@
         ],
         "index": [
             "--render",
+            "[!is[system]tags[]] -[[Blog Post]]",
+            "[addsuffix[.html]addprefix[tag/]]",
+            "text/plain",
+            "$:/tag-template",
+
+            "--render",
             "[!is[system]!is[image]]",
             "[is[tiddler]sitelink[]addsuffix[.html]]",
             "text/plain",
