@@ -287,6 +287,8 @@ find(sub {
 
 my %seen;
 
+mkdir 'tiddlers/pages';
+
 for my $filename (@files) {
     $post_title = undef;
 
@@ -335,7 +337,7 @@ for my $filename (@files) {
         die "Shit: bad filename: '$post_title'";
     }
     my $filename = $post_title . '.tid';
-    $filename = 'tiddlers/' . $filename;
+    $filename = 'tiddlers/pages/' . $filename;
 
     die "File already accounted for?" if $seen{$filename};
     $seen{$filename} = 1;
