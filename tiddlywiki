@@ -1,0 +1,6 @@
+#!/bin/bash
+
+export TIDDLYWIKI_PORT=9091
+
+< tiddlywiki.yaml yq . >| tiddlywiki.info
+./node_modules/.bin/tiddlywiki "$@"
