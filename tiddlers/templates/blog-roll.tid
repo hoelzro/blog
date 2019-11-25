@@ -5,7 +5,9 @@ title: $:/templates/blog-roll
     <$list variable="page-link" filter="[<page>sitelink[]]">
 `<h2><a href='/`<<page-link>>`'>`<<page>>`</a></h2>`
     `<p></p>
-    <p>Placeholder Placeholder Placeholder Placeholder Placeholder</p>
+    `<$set name="firstParagraph" filter="[<page>firstparagraph[]]" select="0">`
+    <p>`<<firstParagraph>>`</p>
+    `</$set>`
     <p></p>
     <a href='/`<<page-link>>`'>Read More...</a>
     <br />
