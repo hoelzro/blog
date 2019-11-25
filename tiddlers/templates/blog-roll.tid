@@ -1,0 +1,16 @@
+title: $:/templates/blog-roll
+
+<$set name="offset" filter="[<currentTiddler>multiply[5]]" select="0">
+  <$list variable="page" filter="[!is[system]tag[Blog Post]!nsort[created]butfirst<offset>first[5]]">
+    <$list variable="page-link" filter="[<page>sitelink[]]">
+`<h2><a href='/`<<page-link>>`'>`<<page>>`</a></h2>`
+    `<p></p>
+    <p>Placeholder Placeholder Placeholder Placeholder Placeholder</p>
+    <p></p>
+    <a href='/`<<page-link>>`'>Read More...</a>
+    <br />
+    <span class='post-date'>Posted on `<$view tiddler=<<page>> field="created" format="date" template="YYYY-0MM-0DD" mode="inline" />`</span>
+    <hr />`
+    </$list>
+  </$list>
+</$set>
