@@ -33,6 +33,23 @@ build:
   - "subtemplate"
   - "$:/templates/blog"
 
+  # render blog rolls
+  - "--render"
+  - "[!is[system]tag[Blog Post]count[]divide[5]ceil[]upto[]]"
+  - "[addprefix[blog/]addsuffix[.html]]"
+  - "text/plain"
+  - "$:/template"
+  - "subtemplate"
+  - "$:/templates/blog-roll"
+
+  - "--render"
+  - "0"
+  - "blog.html"
+  - "text/plain"
+  - "$:/template"
+  - "subtemplate"
+  - "$:/templates/blog-roll"
+
   # render search template used by the search daemon
   - "--render"
   - "$:/search-placeholder"
