@@ -6,7 +6,7 @@ title: $:/templates/blog-roll
 `<h2><a href='/`<<page-link>>`'>`<<page>>`</a></h2>`
     `<p></p>
     `<$set name="firstParagraph" filter="[<page>firstparagraph[]]" select="0">`
-    <p>`<<firstParagraph>>`</p>
+    <p>`<$codeblock code={{{ firstParagraph +[getvariable[]] }}} />`</p>
     `</$set>`
     <p></p>
     <a href='/`<<page-link>>`'>Read More...</a>
