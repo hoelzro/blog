@@ -11,6 +11,7 @@ use File::Basename qw(basename);
 use File::Find qw(find);
 use File::Slurper qw(read_text write_text);
 use JSON qw(decode_json);
+use Mojo::URL;
 use List::MoreUtils qw(all);
 use List::Util qw(max min);
 
@@ -115,9 +116,19 @@ sub convert_link($payload) {
     $emitter->('|');
     my $referent = $link_url->[0];
 
-    # XXX this check for keys(%title_map) sucks
-    #     google lucky searches too
-    if(keys(%title_map) && $referent !~ m{^http[s]?://}) {
+    if($referent =~ m{^http[s]?://}) {
+        my $url = Mojo::URL->new($referent);
+        if(($url->host eq 'google.com' || $url->host eq 'www.google.com') && ($url->query->param('btnI') // '') eq 'lucky') {
+            my $q = $url->query->param('q');
+
+            if($q =~ /-/) {
+                $referent = "https://metacpan.org/release/$q";
+            } else {
+                $referent = "https://metacpan.org/pod/$q";
+            }
+        }
+    } elsif(keys(%title_map)) {
+        # XXX this check for keys(%title_map) sucks
         assert(exists $title_map{$referent});
         $referent = $title_map{$referent};
     }
