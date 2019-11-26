@@ -19,6 +19,7 @@ use Data::Printer;
 our $emitter;
 our $emit_meta;
 our $post_title;
+our %title_map;
 
 sub assert($cond) {
     croak "shit" unless $cond;
@@ -274,6 +275,26 @@ sub convert($block) {
     return $converter->($children);
 }
 
+sub build_title_map($root, @documents) {
+    my %map;
+
+    for my $doc (@documents) {
+        my $process;
+
+        local $emitter   = sub {};
+        local $emit_meta = sub {};
+        $post_title      = undef;
+
+        for my $child (@{ $doc->{'blocks'} }) {
+            convert($child);
+        }
+
+        $map{ '/' . File::Spec->abs2rel(File::Spec->rel2abs($doc->{'filename'}), $root) } = $post_title;
+    }
+
+    return %map;
+}
+
 my @files;
 
 find(sub {
@@ -308,6 +329,8 @@ for my $filename (@files) {
 
     push @documents, $doc;
 }
+
+%title_map = build_title_map($ARGV[0], @documents);
 
 for my $doc (@documents) {
     $post_title = undef;
