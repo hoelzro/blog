@@ -288,7 +288,7 @@ sub build_title_map($root, @documents) {
             convert($child);
         }
 
-        $map{ '/' . File::Spec->abs2rel(File::Spec->rel2abs($doc->{'filename'}), $root) } = $post_title;
+        $map{ '/' . File::Spec->abs2rel(File::Spec->rel2abs($doc->{'filename'}), $root) =~ s/[.]txt$//r } = $post_title;
     }
 
     return %map;
