@@ -290,9 +290,10 @@ my %seen;
 
 mkdir 'tiddlers/pages';
 
-for my $filename (@files) {
-    $post_title = undef;
 
+my @documents;
+
+for my $filename (@files) {
     open my $pipe, '-|', 'pandoc', '-f', 'dokuwiki', '-t', 'json', $filename;
 
     my $json = do {
@@ -303,8 +304,16 @@ for my $filename (@files) {
     close $pipe;
 
     my $doc = decode_json($json);
+    $doc->{'filename'} = $filename;
 
-    my $blocks = $doc->{'blocks'};
+    push @documents, $doc;
+}
+
+for my $doc (@documents) {
+    $post_title = undef;
+
+    my $blocks   = $doc->{'blocks'};
+    my $filename = $doc->{'filename'};
 
     my %meta;
     my @chunks;
@@ -337,13 +346,13 @@ for my $filename (@files) {
     if($post_title !~ /^[-_',.!+a-zA-Z0-9\s]+$/) {
         die "Shit: bad filename: '$post_title'";
     }
-    my $filename = $post_title . '.tid';
-    $filename = 'tiddlers/pages/' . $filename;
+    my $full_filename = $post_title . '.tid';
+    $full_filename = 'tiddlers/pages/' . $full_filename;
 
-    die "File already accounted for?" if $seen{$filename};
-    $seen{$filename} = 1;
+    die "File already accounted for?" if $seen{$full_filename};
+    $seen{$full_filename} = 1;
 
-    open my $fh, '>', $filename;
+    open my $fh, '>', $full_filename;
     say {$fh} "$_: $meta{$_}" for keys(%meta);
     say {$fh} '';
     print {$fh} encode_utf8($_) for @chunks;
