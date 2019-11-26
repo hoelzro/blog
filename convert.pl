@@ -264,10 +264,8 @@ sub convert_linebreak($payload) {
 }
 
 sub convert($block) {
-    my $children = delete $block->{'c'};
-    my $type     = delete $block->{'t'};
-
-    die "WTF" if keys(%$block);
+    my $children = $block->{'c'};
+    my $type     = $block->{'t'};
 
     my $converter = __PACKAGE__->can('convert_' . lc($type));
 
