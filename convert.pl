@@ -9,6 +9,7 @@ use Carp::Always;
 use Encode qw(encode_utf8);
 use File::Basename qw(basename);
 use File::Find qw(find);
+use File::Slurper qw(read_text write_text);
 use JSON qw(decode_json);
 use List::MoreUtils qw(all);
 use List::Util qw(max min);
@@ -311,18 +312,33 @@ my %seen;
 
 mkdir 'tiddlers/pages';
 
-
 my @documents;
 
+mkdir '/tmp/page-trees';
 for my $filename (@files) {
-    open my $pipe, '-|', 'pandoc', '-f', 'dokuwiki', '-t', 'json', $filename;
+    my $pipe;
 
-    my $json = do {
-        local $/;
-        <$pipe>
-    };
-
+    open $pipe, '-|', 'sha256sum', $filename;
+    my $checksum = <$pipe>;
+    chomp $checksum;
+    $checksum =~ s/\s+.*$//;
     close $pipe;
+
+    my $json;
+    if(-e "/tmp/page-trees/$checksum") {
+        $json = read_text("/tmp/page-trees/$checksum");
+    } else {
+        open $pipe, '-|', 'pandoc', '-f', 'dokuwiki', '-t', 'json', $filename;
+
+        $json = do {
+            local $/;
+            <$pipe>
+        };
+
+        close $pipe;
+
+        write_text("/tmp/page-trees/$checksum", $json);
+    }
 
     my $doc = decode_json($json);
     $doc->{'filename'} = $filename;
