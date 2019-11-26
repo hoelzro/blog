@@ -113,7 +113,15 @@ sub convert_link($payload) {
     };
     $emitter->($accum);
     $emitter->('|');
-    $emitter->($link_url->[0]);
+    my $referent = $link_url->[0];
+
+    # XXX this check for keys(%title_map) sucks
+    #     google lucky searches too
+    if(keys(%title_map) && $referent !~ m{^http[s]?://}) {
+        assert(exists $title_map{$referent});
+        $referent = $title_map{$referent};
+    }
+    $emitter->($referent);
     $emitter->(']]');
 }
 
