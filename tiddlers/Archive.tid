@@ -1,0 +1,18 @@
+title: Archive
+created: 20191125204206000
+modified: 20191125204206000
+type: text/vnd.tiddlywiki
+
+<$list variable="year" filter="[tag[Blog Post]!nsort[created]eachdate:created[YYYY]]">
+`<h2>`<<year>>`</h2>`
+<$list variable="month" filter="[tag[Blog Post]!nsort[created]sameyear:created<year>eachdate:created[MMM]]">
+`<h3>`<<month>>`</h3>`
+`<ul>`
+<$list filter="[tag[Blog Post]!nsort[created]sameyear:created<year>samemonth:created<month>]">
+<$set name="link" filter="[<currentTiddler>sitelink[]]" select="0">
+`<li><a href='/`<<link>>`'>`<<currentTiddler>>`</a></li>`
+</$set>
+</$list>
+`</ul>`
+</$list>
+</$list>
