@@ -21,6 +21,7 @@ use Data::Printer;
 our $emitter;
 our $emit_meta;
 our $post_title;
+our $filename;
 our %title_map;
 
 sub assert($cond) {
@@ -171,7 +172,9 @@ sub convert_image($payload) {
 
     if($path =~ m{^tag>\s*(.*)}) {
         my @tags = split /\s+/, $1;
-        push @tags, '[[Blog Post]]';
+        if($filename =~ m{/blog/}) {
+            push @tags, '[[Blog Post]]';
+        }
         $emit_meta->(tags => join(' ', @tags)); # XXX tiddlywiki space encoding
     } else {
         my $alt = capture {
@@ -296,6 +299,8 @@ sub convert($block) {
 sub build_title_map($root, @documents) {
     my %map;
 
+    local $filename = '';
+
     for my $doc (@documents) {
         my $process;
 
@@ -368,8 +373,8 @@ for my $filename (@files) {
 for my $doc (@documents) {
     $post_title = undef;
 
-    my $blocks   = $doc->{'blocks'};
-    my $filename = $doc->{'filename'};
+    my $blocks      = $doc->{'blocks'};
+    local $filename = $doc->{'filename'};
 
     my %meta;
     my @chunks;
@@ -383,7 +388,9 @@ for my $doc (@documents) {
     };
 
     # XXX this sucks but whatever
-    $emit_meta->(tags => '[[Blog Post]]');
+    if($filename =~ m{/blog/}) {
+        $emit_meta->(tags => '[[Blog Post]]');
+    }
 
     for my $block (@$blocks) {
         convert($block);
