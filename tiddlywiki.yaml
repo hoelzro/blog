@@ -50,6 +50,15 @@ build:
   - "subtemplate"
   - "$:/templates/blog-roll"
 
+  # render blog archive
+  - "--render"
+  - "Archive"
+  - "archive.html"
+  - "text/plain"
+  - "$:/template"
+  - "subtemplate"
+  - "$:/templates/archive"
+
   # render search template used by the search daemon
   - "--render"
   - "$:/search-placeholder"
