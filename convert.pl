@@ -23,6 +23,7 @@ our $emit_meta;
 our $post_title;
 our $filename;
 our %title_map;
+our $debug;
 
 sub assert($cond) {
     croak "shit" unless $cond;
@@ -123,6 +124,10 @@ sub convert_link($payload) {
         # XXX this check for keys(%title_map) sucks
         assert(exists $title_map{$referent});
         $referent = $title_map{$referent};
+    }
+    if($debug) {
+        p $payload;
+        say STDERR "[[$accum|$referent]]";
     }
     $emitter->('[[');
     $emitter->($accum);
