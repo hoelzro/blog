@@ -102,19 +102,10 @@ sub convert_link($payload) {
     #assert(scalar($link_url->[0] =~ m{^http[s]?://}));
     assert($link_url->[1] eq '');
 
-    $emitter->('[[');
-    my $accum = '';
-    do {
-        local $emitter = sub {
-            $accum .= $_[0];
-        };
-
+    my $accum = capture {
         convert($_) for @$link_text;
-
-        $accum =~ s/\n/ /g;
     };
-    $emitter->($accum);
-    $emitter->('|');
+    $accum =~ s/\n/ /g;
     my $referent = $link_url->[0];
 
     if($referent =~ m{^http[s]?://}) {
@@ -133,6 +124,9 @@ sub convert_link($payload) {
         assert(exists $title_map{$referent});
         $referent = $title_map{$referent};
     }
+    $emitter->('[[');
+    $emitter->($accum);
+    $emitter->('|');
     $emitter->($referent);
     $emitter->(']]');
 }
