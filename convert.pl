@@ -130,8 +130,10 @@ sub convert_link($payload) {
         say STDERR "[[$accum|$referent]]";
     }
     $emitter->('[[');
-    $emitter->($accum);
-    $emitter->('|');
+    if($accum ne $link_url->[0]) {
+        $emitter->($accum);
+        $emitter->('|');
+    }
     $emitter->($referent);
     $emitter->(']]');
 }
