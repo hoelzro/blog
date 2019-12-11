@@ -50,6 +50,15 @@ build:
   - "subtemplate"
   - "$:/templates/blog-roll"
 
+  # render site index as copy of blog
+  - "--render"
+  - "0"
+  - "home.html"
+  - "text/plain"
+  - "$:/template"
+  - "subtemplate"
+  - "$:/templates/blog-roll"
+
   # render blog archive
   - "--render"
   - "Archive"
