@@ -40,6 +40,9 @@ title: $:/template
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+<script type="text/javascript" src="/javascripts/turbolinks.js">
+</script>
+
 </head>
 <body>
   <div id='topbar'>
@@ -173,8 +176,6 @@ email
           integrity="sha384-8gBf6Y4YYq7Jx97PIqmTwLPin4hxIzQw5aDmUg/DDhul9fFpbbLcLh3nTIIDJKhx"
           crossorigin="anonymous"></script>
   <script type="text/javascript" src="/javascripts/bigfoot.js">
-  </script>
-  <script type="text/javascript" src="/javascripts/turbolinks.js">
   </script>
   <script type='text/javascript' src='/javascripts/main.js'></script>
 </body>
