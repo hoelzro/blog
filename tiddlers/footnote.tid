@@ -1,0 +1,10 @@
+title: $:/footnote
+tags: $:/tags/Macro
+type: text/vnd.tiddlywiki
+
+\define footnote(text)
+<sup id="fnref:1">
+  <a href="#fn:1" rel="footnote">$text$</a>
+</sup>
+<span class="footnote" id="fn:1">$text$</span>
+\end
