@@ -32,14 +32,20 @@ sub assert($cond) {
 sub extract_git_data($root, $filename) {
     my $rel_filename = File::Spec->abs2rel(File::Spec->rel2abs($filename), $root);
     # XXX follow renames?
-    open my $pipe, '-|', 'git', '-C', $root, 'log', '--date=format:%Y%m%d%H%M%s', '--format=%ad', '--', ":/$rel_filename";
+    open my $pipe, '-|', 'git', '-C', $root, 'log', '--date=unix', '--format=%ad', '--', ":/$rel_filename";
     my @timestamps;
     while(<$pipe>) {
         chomp;
-        push @timestamps, $_;
+
+        my ( $sec, $min, $hour, $day, $month, $year ) = gmtime($_);
+
+        $month++;
+        $year += 1_900;
+
+        push @timestamps, sprintf('%04d%02d%02d%02d%02d%02d000', $year, $month, $day, $hour, $min, $sec);
     }
-    $emit_meta->(created  => min(@timestamps) . '000');
-    $emit_meta->(modified => max(@timestamps) . '000');
+    $emit_meta->(created  => min(@timestamps));
+    $emit_meta->(modified => max(@timestamps));
     close $pipe;
 }
 
