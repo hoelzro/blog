@@ -72,3 +72,8 @@ build:
   - "css/style.css"
   - "text/plain"
 
+  # RSS
+  - "--render"
+  - "$:/feed"
+  - "feed.rss"
+  - "text/plain"

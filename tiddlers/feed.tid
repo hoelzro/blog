@@ -1,0 +1,40 @@
+title: $:/feed
+type: text/vnd.tiddlywiki
+
+`<?xml version="1.0" encoding="UTF-8"?>
+<channel>
+<title>hoelz.ro</title>
+<link>https://hoelz.ro/</link>
+<description>RSS feed for hoelz.ro</description>
+<language>en-us</language>
+<lastBuildDate>`<<now "[UTC]ddd, DD mmm YYYY 0hh:0mm:0ss +0000">>`</lastBuildDate>
+
+<image>
+<title>hoelz.ro</title>
+<url>https://hoelz.ro/favicon.ico</url>
+<link>https://hoelz.ro/</link>
+</image>
+`
+<$list  filter="[!is[system]tag[Blog Post]!nsort[created]first[15]]">
+<$list variable="link" filter="[<currentTiddler>sitelink[]]">
+<$set name="firstParagraph" filter="[<currentTiddler>firstparagraph[]]" select="0">
+`
+<item>
+<title>`{{!!title}}`</title>
+<link>https://hoelz.ro/`<<link>>`</link>
+<description>`<<firstParagraph>>`<a href='https://hoelz.ro/`<<link>>`'>Read More...</a></description>
+`
+<$list variable="tag" filter="[is[current]tags[]] -[[Blog Post]] +[lowercase[]]">
+`<category>`<<tag>>`</category>`
+</$list>
+`
+<pubDate>`<$view format="date" field="created" template="[UTC]ddd, DD mmm YYYY 0hh:0mm:0ss +0000" />`</pubDate>
+</item>
+`
+</$set>
+</$list>
+</$list>
+`
+</channel>
+</rss>
+`
