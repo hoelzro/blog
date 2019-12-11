@@ -72,6 +72,12 @@ build:
   - "css/style.css"
   - "text/plain"
 
+  # render JS files
+  - "--render"
+  - "[is[system]field:type[application/javascript]prefix[$:/scripts/]]"
+  - "[removeprefix[$:/scripts]addprefix[javascripts]]"
+  - "text/plain"
+
   # RSS
   - "--render"
   - "$:/feed"
