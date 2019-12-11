@@ -1,0 +1,27 @@
+{
+    "tiddlers": [{
+        "file": "bigfoot.js",
+        "fields": {
+            "type": "application/javascript",
+            "title": "$:/scripts/bigfoot.js"
+        }
+    }, {
+    "file": "disqus.js",
+    "fields": {
+        "type": "application/javascript",
+        "title": "$:/scripts/disqus.js"
+    }
+    }, {
+    "file": "main.js",
+    "fields": {
+        "type": "application/javascript",
+        "title": "$:/scripts/main.js"
+    }
+    }, {
+    "file": "turbolinks.js",
+    "fields": {
+        "type": "application/javascript",
+        "title": "$:/scripts/turbolinks.js"
+    }
+    }]
+}
