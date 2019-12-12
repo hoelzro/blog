@@ -187,8 +187,9 @@ sub convert_image($payload) {
         my $alt = capture {
             convert($_) for @$two;
         };
+        my $basename = basename($path);
         my @attrs = (
-            qq{source="//hoelz.ro/_media/$path"},
+            qq{source="//hoelz.ro/images/$basename"},
             qq{alt="$alt"},
         );
         push @attrs, qq{width="$width"}   if $width;
