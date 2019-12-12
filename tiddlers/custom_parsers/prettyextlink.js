@@ -72,9 +72,7 @@ exports.parseLink = function(source,pos) {
 			type: "element",
 			tag: "a",
 			start: pos,
-			attributes: {
-				"class": {type: "string", value: "tc-tiddlylink-external"},
-			},
+			attributes: {},
 			children: [textNode]
 		};
 	// Skip whitespace
@@ -105,8 +103,7 @@ exports.parseLink = function(source,pos) {
 		textNode.text = URL;
 	}
 	node.attributes.href = {type: "string", value: URL};
-	node.attributes.target = {type: "string", value: "_blank"};
-	node.attributes.rel = {type: "string", value: "noopener noreferrer"};
+	node.attributes.rel = {type: "string", value: "noopener"};
 	// Update the end position
 	node.end = closePos + 2;
 	return node;

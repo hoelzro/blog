@@ -39,9 +39,7 @@ exports.parse = function() {
 			tag: "a",
 			attributes: {
 				href: {type: "string", value: link},
-				"class": {type: "string", value: "tc-tiddlylink-external"},
-				target: {type: "string", value: "_blank"},
-				rel: {type: "string", value: "noopener noreferrer"}
+				rel: {type: "string", value: "noopener"}
 			},
 			children: [{
 				type: "text", text: text
