@@ -1,0 +1,92 @@
+title: How Does Git Know What Functions Look Like?
+modified: 20160803194251000
+tags: git [[Blog Post]]
+created: 20160803194251000
+
+! How Does Git Know What Functions Look Like?
+
+While recently skimming the man page for `git-log`, I came across a neat looking feature for the `-L` option:
+
+```
+  ... -L <start>,<end>:<file>, -L :<funcname>:<file>
+  
+  If ":<funcname>" is given in place of <start> and <end>, it is a regular
+  expression that denotes the range from the first funcname line that matches
+  <funcname>, up to the next funcname line.
+```
+After marveling at this functionality, I began to wonder: how does it know what
+a function looks like? After all, Vim has some awareness of language features
+like functions, but its assumptions are usually rooted in C and its kin. Does
+Git's `-L :<funcname>:<file>` feature only recognize functions in C-like
+languages? Let's find out!
+
+!! Exploring the Git Source
+
+Using `ctags` and following the trail of breadcrumbs, I ended up finding the
+logic that Git uses to determine function name boundaries. First, Git tries to
+find what's called a //userdiff driver//; we'll get to the details of that in a
+second. Then, regardless of whether or not it found one, it iterates over each
+line of the file provided with `-L`. If a line matches the function name
+provided with `-L` (`funcname` is treated as a regular expression), Git's behavior
+differs based on whether it was able to load a userdiff driver. If it was, it
+uses a set of regular expressions provided by the driver; if any of those
+regular expressions match the line that matched `funcname`, that line is
+considered the start of the function. For example, the Perl driver looks for `^sub`,
+since Perl subroutines are introduced via the `sub` keyword.
+
+If Git was //not// able to load a userdiff driver, it falls back to a very simple regular
+expression: if the line matching `funcname` begins with an alphanumeric character, an
+underscore, or a dollar sign, that line is treated as the start of the function, which
+works pretty well for a lot of programming languages...except for ones in which you
+would indent your function definitions!
+
+To find the end of the function, Git takes the set of regular expressions from the userdiff
+driver (or the fallback alphanumeric + underscore + dollar sign regular expression), and
+continues to iterate over of the lines of the file. Once it finds a line that matches its
+set of regular expressions, the preceding line is considered to be the end of the function.
+Now that Git has a range of lines, it uses its typical line range history algorithm to finish
+the job.
+
+The fallback pattern is a pretty simple heuristic, and it works alright for
+languages like C. But what about languages that have different-looking
+functions? Let's get back to those user diff drivers!
+
+!! User Diff Drivers
+
+By default, files in a Git repository have no userdiff driver, but we can change that using `gitattributes`.
+For example, to associate Perl files with the perl userdiff driver based on the `.pl` file extension, you
+can put the following into your `.gitattributes` file at the top of your repository:
+
+```
+*.pl    diff=perl
+```
+Now that `.pl` files use the perl driver, where is that driver defined? Userdiff drivers can be defined
+in two places: built into Git itself, or defined in `git-config`.
+
+!!! Built-In
+
+To see the drivers built into Git, we need only look at `userdiff.c`; there are drivers for languages such
+as Perl, Python, and CSS in here.
+
+!!! Gitconfig
+
+If Git doesn't have a driver for a language, or if you would like to override its default driver, you can
+specify them in `gitconfig` like so:
+
+```ini
+[diff.perl6]
+    xfuncname = "^\\s*((my|our)\\s+)?(class|role|grammar|package|module|sub|method|multi)"
+```
+The flexibility of this system means that you can extend the definition of "funcname" beyond just functions -
+in my Perl 6 example above, it will pick up on classes, roles, modules, etc, in addition to functions. There
+are a few limits to this flexibility, however:
+
+* You can't specify what the end of a function looks like. This normally isn't a problem, but if you allow indentation ahead of your functions, you can run into problems if you have nested definitions.
+* If you work in a language that allows you to overload a function, such as Java, C++, Haskell, Elixir, or Perl 6, Git will only pick up on the first definition. You can provide a starting line to `-L` to cover other entries, but this is less than awesome.
+
+Since you may specify `-L` multiple times and it's basically sugar for a line range, you could get around both of these with a more syntax-aware tool that emits `-L` options, though.
+
+I learned a lot about Git and this variant of the `-L` option; I hope you did
+as well! One takeaway I have from this is what an untapped resource
+`gitattributes` is; there seem to be a lot of goodies hiding out in its manpage.
+Time for me to check them out!

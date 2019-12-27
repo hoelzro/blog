@@ -1,0 +1,209 @@
+tags: perl [[Blog Post]]
+created: 20130905174311000
+title: Perl 5 Internals - Part Two
+modified: 20130910064900000
+
+! Perl 5 Internals - Part Two
+
+Welcome back for another exciting episode on the inner workings of
+the perl interpreter! [[Last time|Perl 5 Internals - Part One]] we
+covered some of the basic optimizations perl performs on SVs, as well as
+the consequences of those optimizations. This time, we'll be going over
+some of the optimizations specific to strings and arrays. I know I said
+we'd be covering hashes too, but this article is already quite lengthy,
+and I have enough material on hashes to merit its own article, so look for that
+information in the upcoming third part of this series!
+
+! Strings
+
+Since Perl was designed to perform operations on bodies on text, you can imagine that it has some
+clever optimizations for doing so. One set of optimizations is that trimming from either end of a
+string is cheap.
+
+You can easily imagine how this might work from the end of the string; simply place a `NUL` character
+after the new end of the string, and update the length field. Many string implementations do
+this, and it should come as no surprise that perl does this as well. Similar to the "never
+downgrade" policy that I mentioned in the previous entry, a character buffer in perl is never
+shrunk, because perl figures you'll need it again, or at least that you'll be throwing away that
+value soon enough anyway.
+
+Perl optimizes removing characters from the beginning of a string as well. It accomplishes this by
+setting the `OOK` flag on the SV (which means "offset ok"), updating the buffer pointer to
+point `offset` bytes past the start of the buffer, and setting the SV's `OFFSET` field the
+`offset` (in newer perls, this is placed in the string buffer itself). For example:
+
+```perl
+use Devel::Peek;
+my $s = 'foobar';
+Dump($s);
+# SV = PV(0x7fe4fe73b130) at 0x7fe4fe7741f8
+#   REFCNT = 2
+#   FLAGS = (PADMY,POK,pPOK)
+#   PV = 0x7fe4fd214200 "foobar"\0
+#   CUR = 6
+#   LEN = 16
+
+$s =~ s/^foo//;
+Dump($s); # note how the PV's pointer has moved forward three bytes,
+          # as well as the \3 in the buffer before the new contents
+# SV = PV(0x7fe4fe73b130) at 0x7fe4fe7741f8
+#   REFCNT = 2
+#   FLAGS = (PADMY,POK,OOK,pPOK)
+#   OFFSET = 3
+#   PV = 0x7fe4fd214203 ( "fo\3" . ) "bar"\0
+#   CUR = 3
+#   LEN = 13
+```
+Finally, when perl calls `free()` to deallocate the buffer, it uses the offset to calculate the pointer to pass
+to `free()`.
+
+Appending to a string is also cheap, if the SV's buffer is large enough (ie. if `LEN` is big
+enough). Perl simply updates the `CUR` field and places a `NUL` character at the appropriate
+spot in the buffer:
+
+```perl
+my $s = 'foo';
+Dump($s);
+# SV = PV(0x7ff3f673a910) at 0x7ff3f67739f8
+#   REFCNT = 2
+#   FLAGS = (PADMY,POK,pPOK)
+#   PV = 0x7ff3f5214200 "foo"\0
+#   CUR = 3
+#   LEN = 16
+$s .= 'bar';
+Dump($s); # note how the PV pointer hasn't changed
+# SV = PV(0x7ff3f673a910) at 0x7ff3f67739f8
+#   REFCNT = 2
+#   FLAGS = (PADMY,POK,pPOK)
+#   PV = 0x7ff3f5214200 "foobar"\0
+#   CUR = 6
+#   LEN = 16
+```
+Of course, certain operations will end up reallocating the buffer, so be sure to benchmark and put
+`Devel::Peek` to good use!
+
+! Arrays
+
+AVs benefit from a similar optimization:
+
+```perl
+my @array = qw/foo bar baz/;
+Dump(\@array);
+# SV = PVAV(0x7fe4fe77bbc8) at 0x7fe4fe791e58
+#   REFCNT = 3
+#   FLAGS = (PADMY)
+#   ARRAY = 0x7fe4fd333c30
+#   FILL = 2
+#   MAX = 3
+#   ARYLEN = 0x0
+#   FLAGS = (REAL)
+#   Elt No. 0
+#   ...
+pop @array;
+Dump(\@array); # note how the ARRAY pointer hasn't changed
+# SV = PVAV(0x7fe4fe77bbc8) at 0x7fe4fe791e58
+#   REFCNT = 3
+#   FLAGS = (PADMY)
+#   ARRAY = 0x7fe4fd333c30
+#   FILL = 1
+#   MAX = 3
+#   ARYLEN = 0x0
+#   FLAGS = (REAL)
+#   Elt No. 0
+#   ...
+shift @array;
+Dump(\@array); # note the annotation on the ARRAY field dump
+# SV = PVAV(0x7fe4fe77bbc8) at 0x7fe4fe791e58
+#   REFCNT = 3
+#   FLAGS = (PADMY)
+#   ARRAY = 0x7fe4fd333c38 (offset=1)
+#   ALLOC = 0x7fe4fd333c30
+#   FILL = 0
+#   MAX = 2
+#   ARYLEN = 0x0
+#   FLAGS = (REAL)
+#   Elt No. 0
+#   ...
+```
+(`FILL` is the last "valid" index of an array, equivalent to `$#array`)
+
+Calling `unshift` on an array with the offset hack in place will make use of the free space:
+
+```perl
+unshift @array, 'quux';
+Dump(\@array);
+# SV = PVAV(0x7fe4fe77bbc8) at 0x7fe4fe791e58
+#   REFCNT = 3
+#   FLAGS = (PADMY)
+#   ARRAY = 0x7fe4fd333c30
+#   FILL = 1
+#   MAX = 3
+#   ARYLEN = 0x0
+#   FLAGS = (REAL)
+#   Elt No. 0
+#   ...
+```
+If you're constantly pushing new elements onto an array, perl will `realloc()` new arrays as you
+go. This is fairly common in the implementation of dynamically sized arrays. If you know (or at
+least have a good idea) about how many elements your array will contain, you can use `$#array`
+as an lvalue to tell Perl to preallocate space for those elements:
+
+```perl
+$#array = $expected_size - 1; # - 1 because $#array is the last index, not the size
+```
+This fills the array with `undef` values, though, so you'll have to calculate the insert index by
+hand if you do this.
+
+```perl
+my @names;
+$#names = 9;
+
+# BAD
+push @names, 'Rob'; # puts 'Rob' at index 10
+
+# GOOD
+my $i = 0;
+$names[$i++] = 'Rob'; # puts 'Rob at index 0
+```
+Of course, you could always set `$#array` to preallocate storage, and clear the array to be able
+to use push the normal way:
+
+```perl
+my @array;
+$#array = 99;
+@array  = ();
+Dump(\@array);
+
+# SV = PVAV(0x7ff83cf13fc8) at 0x7ff83cf745e0
+#   REFCNT = 3
+#   FLAGS = (PADMY,RMG)
+#   MAGIC = 0x7ff83bb3bec0
+#     MG_VIRTUAL = &PL_vtbl_arylen_p
+#     MG_TYPE = PERL_MAGIC_arylen_p(@)
+#     MG_FLAGS = 0x02
+#       REFCOUNTED
+#     MG_OBJ = 0x7ff83cf7e018
+#     SV = PVMG(0x7ff83cf7a830) at 0x7ff83cf7e018
+#       REFCNT = 1
+#       FLAGS = (GMG,SMG,IOK,pIOK)
+#       IV = 99
+#       NV = 0
+#       PV = 0
+#       MAGIC = 0x7ff83bb0c360
+#         MG_VIRTUAL = &PL_vtbl_arylen
+#         MG_TYPE = PERL_MAGIC_arylen(#)
+#         MG_OBJ = 0x7ff83cf745e0
+#   ARRAY = 0x7ff83bb44ad0
+#   FILL = -1
+#   MAX = 99
+#   ARYLEN = 0x7ff83cf7e018
+#   FLAGS = (REAL)
+
+push @array, 'foo'; # now places 'foo' at index 0
+```
+(I'm not sure what the `MAGIC` is here for in this case; that might merit some future research!)
+
+! Next Time
+
+The next article will discuss how perl implements hashtables, along with some of the optimizations
+and security implications that come along with that implementation.

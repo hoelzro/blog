@@ -1,0 +1,128 @@
+modified: 20151222042408000
+title: Hunted By a Leak - Part Two
+tags: moarvm perl6 [[Blog Post]]
+created: 20151215144546000
+
+! Hunted By a Leak - Part Two
+
+In my [[previous post|Tracking Slowdowns in Creating Child Processes - Part One]],
+I talked about a slowdown in a Perl 6 process I was fixing, and how I
+discovered that the cause was really a memory leak. Instead of looking for the
+memory leak in `Proc::Async`, I decided to look in `run`, which also spawns
+children and exhibited the leak, but works in a synchronous manner. To find
+the Perl 6 code that was causing the leak, I wrote some code that would call
+run repeatedly:
+
+```perl6
+for ^100_000 {
+    run('true');
+}
+```
+...along with a script to monitor the RSS of a child program once a second:
+
+```perl
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use autodie;
+use feature qw(say);
+
+use Fcntl;
+use File::Slurper qw(read_text);
+
+my @command = @ARGV;
+
+my $pid = fork();
+
+my ( $sentinel_read, $sentinel_write );
+
+pipe $sentinel_read, $sentinel_write;
+
+fcntl($sentinel_write, F_SETFD, FD_CLOEXEC);
+
+if($pid) {
+    close $sentinel_write;
+    do {
+        my $buffer;
+        sysread $sentinel_read, $buffer, 1;
+    };
+
+    while(1) {
+        my @statm = split /\s+/, read_text("/proc/$pid/statm");
+        last if $statm[1] == 0; # will be 0 when the child has exited and
+                                # is waiting for parent to ask for status
+        say STDERR $statm[1];
+        sleep 1;
+    }
+    waitpid $pid, 0;
+} else {
+    close $sentinel_read;
+    exec @command;
+    die "couldn't execute command";
+}
+```
+So I started stripping away code from the body of `run`, until I ended up with the
+following definition for `run`:
+
+```perl6
+sub run(*@args ($, *@),
+    :$in = '-',
+    :$out = '-',
+    :$err = '-',
+    Bool :$bin,
+    Bool :$chomp = True,
+    Bool :$merge,
+    Str:D :$enc = 'utf8',
+    Str:D :$nl = "\n",
+    :$cwd = $*CWD,
+    :$env)
+{}
+```
+You may be put off by its complex signature, but don't let that distract you.
+The important part is that the subroutine has //no body//.
+
+So wait...just //calling// a subroutine leaks memory? To confirm this as true
+(it better not be!), I tried calling a subroutine with no arguments in its
+signature; //that// stopped the leak. After playing around with the signature
+for a bit, I finally came across a condition that would and would not trigger
+the leak:
+
+```perl6
+sub no-leak(*@args) {}
+sub leak(*@args ($, *@)) {}
+```
+If you're not familiar with Perl 6's signatures, allow me to explain. The
+`no-leak` subroutine above has a //slurpy// argument named `@args`; that is,
+all extra arguments to the subroutine go into `@args`. `leak` has a slurpy
+`@args` as well, but the difference is that `leak`'s `@args` has what's
+called a //subsignature//. A subsignature places constraints on what the shape
+of the argument can be; in this case, `($, *@)` just means that it must have
+at least one value in it. So `leak` needs to take at least one argument.
+
+Digging into the code that handles subsignatures, I discovered that
+`MVMCallCapture` objects in MoarVM were creating new `MVMCallsite` structs,
+but not freeing them when the GC comes calling <<footnote """`MVMCallCapture` structs are
+used for signature checking and binding parameters to arguments, and this logic
+is reused for subsignature checking
+""">>. I naïvely free'd the callsites
+in the GC handler, hoping that the solution would be that simple;
+unfortunately, I immediately started seeing failures involving double
+`free`s. I was not surprised to learn that call capture objects can share
+their callsites with one another; however, it was clear that capture objects
+that create a callsite always outlive the captures that take a reference to the
+callsite. So I managed to add a flag to tell captures whether they owned their
+callsite, or were just borrowing them. This plugged the leak! This made me
+ecstatic, since I was leaving for my honeymoon in Japan the next day, and now I
+would be able to have two weeks away from the code without having to worry. If
+only life were so simple...
+
+For better or for worse, Nicholas Clark discovered a use-after-free bug in my
+fix by running the entire Perl 6 test suite (aka roast) under ASAN (Google's Address
+Sanitizer). Unfortunately, I had to leave for Japan a few hours later, so I
+did what I could: I reverted the change I made, started a branch with the fix
+restored as a reminder, and tried not to think about it during my two weeks in
+Japan.
+
+In the [[next installment|Address Your Sanity with AddressSanitizer - Part Three]], I'll cover the nature of that use-after-free bug, and
+how I managed to fix that with the help of ASAN.

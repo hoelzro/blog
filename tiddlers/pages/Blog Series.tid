@@ -1,0 +1,45 @@
+modified: 20160809020935000
+title: Blog Series
+created: 20160205053926000
+
+! Blog Series
+
+A number of my blog posts are members of a series; usually it's when I decide to dive
+into a particular topic and don't want to leave a novel for people to read! Here's a guide
+to the various series I've published here.
+
+!! Diving into MoarVM
+
+* [[Tracking Slowdowns in Creating Child Processes - Part One]]
+* [[Hunted By a Leak - Part Two]]
+* [[Address Your Sanity with AddressSanitizer - Part Three]]
+* [[Using Valgrind to find memory problems - Part Four]]
+
+!! Language of the Month
+
+* [[Language of the Month]]
+* [[R Mateys!]]
+* [[Using latent semantic analysis to find synonyms in my Getting Things Done inbox]]
+* [[Climbing the Elm Tree]]
+* [[A Strongly Typed Typing Tutor]]
+* [[What's That Racket?]]
+* [[Game of Life]]
+* [[Max Out Your Programming HP and MP With Elixir]]
+* [[Elixir Adventures]]
+* [[Talking Small]]
+* [[Implementing Minesweeper in Pharo]]
+* [[Language of the Month - Five Languages In]]
+
+!! Perl 5 Internals
+
+* [[Perl 5 Internals - Part One]]
+* [[Perl 5 Internals - Part Two]]
+* [[Perl 5 Internals - Part Three]]
+* [[Perl 5 Internals - Part Four]]
+
+!! What I Learned Writing a Dropbox Clone
+
+* [[What I Learned Writing a Dropbox Clone - Part 1 - Introduction]]
+* [[What I Learned Writing a Dropbox Clone - Part 2 - Filesystem Operations]]
+* [[What I Learned Writing a Dropbox Clone - Part 3 - Inotify]]
+* [[What I Learned Writing a Dropbox Clone - Part 4 - Conclusion]]

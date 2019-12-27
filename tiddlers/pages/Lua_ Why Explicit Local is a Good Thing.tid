@@ -1,0 +1,53 @@
+modified: 20130909143555000
+title: Lua: Why Explicit Local is a Good Thing
+created: 20120604094533000
+tags: lua [[Blog Post]]
+
+! Lua: Why Explicit Local is a Good Thing
+
+One complaint about Lua that I see on the #lua channel (and elsewhere) is that Lua's variables are implicitly global; if you want a local variable, you need to tell Lua. For example:
+
+```lua
+      a = 5 -- assigns 5 to the global named 'a'
+local b = 6 -- creates a local variable named 'b' and assigns 6 to it
+```
+Lua is a very flexible language; it's very easy to use it in a procedural, object-oriented, or functional manner. In Lua, functions are first class citizens (in fact, `function foo() end` can be considered syntactic sugar for `foo = function() end`) and a lot of Lua programmers make use of this. Consider the following snippet:
+
+```lua
+local function getnums()
+  -- implementation omitted for brevity
+end
+
+loop:addtimer(1000, function()
+  local nums       = getnums()
+  local square_sum = 0
+  nums:each(function(num)
+    local square = num * num
+    square_sum   = square_sum + square
+  end)
+  print(square_sum)
+end)
+```
+This miniature program contains three levels of scope. Because I need to declare all of my local variables explicitly, I can easily see which local belongs to which scope,
+and I can still refer to variables within a higher scope (which Lua calls //upvalues//). Now, let's pretend that Lua used an implicit local, explicit global method for variables. Here's how that
+same program would look:
+
+```lua
+function getnums()
+end
+
+loop:addtimer(1000, function()
+  nums       = getnums()
+  square_sum = 0
+  nums:each(function(num)
+    square     = num * num
+    square_sum = square_sum + square
+  end)
+  print(square_sum)
+end)
+```
+In this snippet, it's not immediately clear which variable belongs to which scope. Also, the rules for referring to upvalues in this case can get a little murky. In some languages, you are allowed to read upvalues, but as soon as you write to a variable of the same name, a new local variable of the same name is created in the current scope. This would make the modified snippet only ever print '0', because `square_sum` would be a new local variable in the innermost scope.
+
+Other languages take the approach that allows you to read ''and'' write upvalues; only if you write to a variable with a name not found in any enclosing scope will a new local variable be created. This allows the modified snippet to work, but it has a different issue: when you write code this way, you need to be aware of every variable name used in an enclosing scope so you don't accidentally clobber it. Also, every programmer maintaining that piece of code has to be aware of the variable names you're using in your innermost scope, so they don't pick the same name and have their variables mysteriously clobbered later on.
+
+Since I like to write functional-style code, in Lua and in other languages, I'm happy that Lua has explicit local variables.

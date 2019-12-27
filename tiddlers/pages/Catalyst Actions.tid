@@ -1,0 +1,27 @@
+modified: 20151222043850000
+title: Catalyst Actions
+created: 20150421153421000
+tags: perl catalyst
+
+! Catalyst Actions
+
+! Subroutine Attributes
+
+* `:Local` - Matches a URL beginning with the current controller namespace and action name.
+* `:Global` - Matches a URL beginning with the action name.
+* `:Args(N)` - Limits the number of path elements that can be present after the matched URL prefix. No `:Args` implies "varargs".
+* `:Path(PATH)` - Matches a URL beginning with the current controller namespace and PATH. The namespace is ignored if PATH has a leading slash.
+* `:Path` - Matches a URL beginning with the current controller namespace.
+* `:Regex(RE)` - Matches a URL that matches RE. The controller namespace is ''not'' considered! You may want to use `^` with this.
+* `:LocalRegex(RE)` - Matches a URL beginning with the current controller namespace and a path that matches RE.
+* `:Chained` - Used for building action chains. See [[http://search.cpan.org/perldoc?Catalyst%3A%3ADispatchType%3A%3AChained]]
+* `:Private` - Never used for matching URLs, but you can still use these with `$c->forward` and friends.
+
+! Special Actions
+
+* `default :Path` - Called when no other action matches.
+* `begin :Private` - Called before matching actions are called.
+* `end :Private` - Called after matching actions are called.
+* `auto :Private` - Called after begin actions; multiple auto actions can be defined.
+
+(Source: [[http://search.cpan.org/~bobtfish/Catalyst-Manual-5.9000/lib/Catalyst/Manual/Intro.pod#Actions]])

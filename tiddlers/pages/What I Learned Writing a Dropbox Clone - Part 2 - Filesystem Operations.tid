@@ -1,0 +1,119 @@
+created: 20150201225708000
+tags: [[Blog Post]]
+title: What I Learned Writing a Dropbox Clone - Part 2 - Filesystem Operations
+modified: 20150306045232000
+
+! What I Learned Writing a Dropbox Clone - Part 2 - Filesystem Operations
+
+```
+  commit add8cc5
+  Author: Rob Hoelz <***.*****.**>
+  Date:   Wed Dec 7 17:56:54 2011 -0600
+  
+      Fix potential race condition in _handle_conflict
+  
+```
+These posts are largely independent of each other, but if you'd like some
+context, you should probably read
+[[the first post|What I Learned Writing a Dropbox Clone - Part 1 - Introduction]].
+
+In my previous post, I described the different pieces of the Sahara Sync
+program. For this post, I'll be focusing on the client daemon and how it
+interacts with the user; namely, how clientd manages the user's sync directory
+(which I'll be referring to as the ''sandbox''). This post discusses the details
+of how clientd was implemented for Linux; many of the statements about the
+filesystem API may hold true for similar systems like *BSD or Mac OS X.
+
+Because the user is using files in their sandbox however they normally do,
+those files can change at any time. So it's critical that we present a
+consistent view of what those files look like; all modifications we make to
+files in the sync directory must be atomic. On top of that, when performing
+the update, we need to verify that the file hasn't been changed by the user
+since last we checked it; otherwise, we could lose some data that the user has
+edited that file.
+
+When we conduct an operation on the sync directory, we need to perform a number
+of `read` and `write` operations to get a file to be what we need it to be.
+However, even though an individual `read` or `write` operation is atomic,
+we can't guarantee atomicity across an arbitrary number of them. So for
+everything we do, we perform these operations on a temporary file in a special
+subdirectory of `Sandbox`, which I called the //overlay directory//. <<footnote """This was
+implemented as `Sandbox/.saharasync`. In retrospect, I probably could have
+made a truly hidden directory using `mkdir`, `open`, `rmdir`, and the
+various *at calls
+""">>. That way, after a file is in a ready state, we can
+perform an atomic operation like `link` or `rename` to get it into the sync
+directory.
+
+!! What Operations Do We Need to Perform?
+
+The kinds of operations we are responsbile for as clientd are create, read,
+update, and delete. Since creation, updating, and deletion occur because of
+something hostd tells us, and reading happens because of something the user's
+operating system tells us, I'll cover reading last.
+
+When we create a file (due to hostd telling us a new file has been created), we
+need to go through some fairly simple steps. First, we download the file from
+hostd into the overlay. Next, we simply `link` the overlay file to the name
+of the new file in the Sandbox. Finally, we `unlink` the file in the overlay.
+The reason we go through this seemingly over-complicated rigamorole is for
+conflict detection: what if, while we were writing the file from hostd, the
+user created his/her own file with the same name? `link` will return
+`EEXIST` if the file exists, and it's atomic, so we can handle this situation
+perfectly.
+
+When we delete a file, we `link` the file in question to a temporary file in
+the overlay, then we `unlink` the file in the sandbox. Now, it seems like our
+job is done here, but we have one final step to perform: we have to make sure
+that the file hasn't changed. We read the file in and calculate a fingerprint,
+then we compare it to what we think the file's fingerprint should be. If we
+have a match, we can `unlink` the overlay file; otherwise, we `link` it to a
+conflict file in the sandbox, and then `unlink` it.
+
+When updating a file, we download the file into the overlay, just like for file
+creation. However, now we have to swap the overlay file and the sandbox file.
+There is, as far as I know, no atomic swap operation on POSIX file systems.
+What the current implementation does is `rename` the sandbox file into the
+overlay, then `rename` the overlay file into the sandbox, hoping that the
+user hasn't done anything to the file in that small interval (this is a race
+condition still present in the implementation). After this step, we verify that
+the file hasn't changed, and handle the conflict if it has. <<footnote """It occurred to
+me while writing this that I could have linked the sandbox file into the
+overlay, and then renamed the overlay file into the sandbox, and that would
+have resulted in atomic change to the sandbox file
+""">>
+
+When reading a file (ex. we've detected a change in that file, so now we have
+to upload its contents to the host), we simply open a file handle to the
+changed file, and perform an HTTP PUT to send it to hostd. This may seem
+innocent enough, but there's a flaw: what if the underlying file is changed
+while we're reading it? The existing implementation does nothing to address
+this, but one possibility I thought of while working on this post was to use
+inotify to detect changes, and start the upload process over if it has changed
+while we were reading it. Another potential problem is if a user changes the
+file, and then immediately deletes it; we wouldn't send the intermediary
+change to hostd. I could simply treat this as a special case that doesn't need to be
+handled (because they //are// getting rid of the file, after all), but if I
+wanted to fix this, I would keep a copy of hard links to sandbox files
+somewhere so I could refer to their contents post-deletion.
+
+!! A Word About File Locking
+
+Some of you reading this are no doubt thinking something like "why don't you make use of
+file locking" right about now? That would be wonderful to rely upon, but keep in
+mind that the locking provided by `flock` and `fcntl` are //advisory//;
+meaning that a program is free to ignore locks on files. Since the user may use
+any program to modify files in their sandbox, advisory locking is right out. Linux
+//does// offer mandatory file locking, but it requires a special mount option, and
+I wanted Sahara Sync to work for everyone with minimal, no matter how they or their
+distribution set up their home filesystem.
+
+There are also advanced features in more modern filesystems that could prove
+useful, like filesystem snapshotting in ZFS/btrfs. Again, I wanted to make
+sure that Sahara Sync would work for everyone, no matter their setup, so I had
+to target the lowest common denominator.
+
+!! Next Time
+
+In the [[next installment|What I Learned Writing a Dropbox Clone - Part 3 - Inotify]] of this series, I'll discuss how clientd detects a
+user's changes using Linux's inotify API, and the limitations thereof.

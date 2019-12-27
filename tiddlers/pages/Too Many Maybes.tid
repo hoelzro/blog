@@ -1,0 +1,65 @@
+modified: 20160415124621000
+title: Too Many Maybes
+created: 20160415124621000
+tags: elm [[Blog Post]]
+
+! Too Many Maybes
+
+I hang out in the Elm Slack channel from time to time, and people will
+often show up asking for help on their applications, ranging from questions
+about Elm's syntax to overall application design. One question that
+comes up pretty often is the right way to reduce the complexity of code
+like this:
+
+```elm
+type alias User = {
+    username : Maybe String,
+    email : Maybe String,
+    name : Maybe String
+}
+
+renderUser : User -> Html
+renderUser user =
+  ul [] [
+    li [] [ text <| Maybe.withDefault "" user.username ],
+    li [] [ text <| Maybe.withDefault "" user.email ],
+    li [] [ text <| Maybe.withDefault "" user.name ]
+    ]
+```
+That's a lot of `Maybe.withDefault` calls, isn't it? I find that a lot of
+users new to Elm who aren't familiar with option types like `Maybe` tend to
+use it too much in a program. My question is this:
+
+> Does it make sense for a user to lack a username? To lack an e-mail?
+
+Now, there are some `Maybe`s that //do// belong here; for example, I can easily imagine
+an application where a human readable name is optional. The question is whether the
+domain you're modeling accommodates for it. Most websites require a user to have a
+username and an e-mail, so why should your Elm application have to deal with the
+notion of extracting from a `Maybe` something that always should be present?
+
+The responses I've gotten to this is that maybe they're building a form so they need
+to store the values for the new user while the user is inputting them, or perhaps
+they're creating a `User` value from a JSON response, and the `username` and `email`
+keys may not exist.
+
+In the case of the form, ask yourself: is a `User` object really the right
+abstraction you want to work with when processing a form? I think it would be
+better to use an alternative data structure (for instance, the humble `Dict`)
+to store your partial user values until the form is submitted, and then have a
+`dictToUser : Dict String String -> Maybe User` (or better yet, `Dict String String -> Result FormError User`)
+function perform the final conversion.
+
+In the case of the JSON response, if your backend is providing you with
+incomplete information, I think that's an issue you should be dealing with
+local to the JSON-loading module, much like you'd deal with an invalid JSON
+document. The JSON-loading module can handle these unusual situations, rather
+then having the rest of your application shoulder the syntactic burden of a
+situation that probably shouldn't happen. This keeps exceptional behavior
+isolated to a single module in your application, which keeps your code cleaner
+and reduces cognitive load. I feel that it allows you to use Elm's type system
+to its full advantage!
+
+If you're reading this and are new to Elm, hopefully I've helped give some perspective
+on using Maybe types in your application. Please let me know if I've helped, or if
+you think that I missed something!

@@ -1,0 +1,155 @@
+tags: perl6 [[Blog Post]]
+created: 20160112052106000
+modified: 20160909045418000
+title: Distributing Helper Libraries With Perl 6 Modules
+
+! Distributing Helper Libraries With Perl 6 Modules
+
+[[NativeCall|http://doc.perl6.org/language/nativecall]] is a great feature in Perl 6; it's one of the features I like
+to showcase when showing off what Perl 6 can do! For those of you who don't
+know, NativeCall is a module that allows you to trivially bind to native libraries
+without having to write any C. For example, if you want to call `write(2)` from Perl 6,
+you can just do this:
+
+```perl6
+use NativeCall;
+
+# native(Str) opens a handle to the running program, but this isn't portable!
+sub write(int32 $fd, Buf $buf, int32 $count) returns int32 is native(Str) { * }
+
+my $msg = "hello, world!\n".encode;
+write(2, $msg, $msg.bytes);
+```
+Opening an external library is as simple as providing its name to `is native()`. However,
+sometimes you don't want to rely on the user to have a certain library installed on their system;
+sometimes you want to bundle a library with your Perl 6 code (for example, if a library is
+unlikely to have an OS package available), or sometimes you need a helper library that helps you with
+things that NativeCall can't do (for example, wrapping C++ code that uses templates in C wrappers).
+Let's take my [[Linenoise|https://github.com/hoelzro/p6-linenoise]] module for example; it used to be that you would just do this:
+
+```perl6
+our sub linenoise(Str $prompt) returns Str is native('linenoise') { * }
+```
+However, the recent change in distribution installation means that now, you need to do this:
+
+```perl6
+our sub linenoise(Str $prompt) returns Str
+    is native(%?RESOURCES{'lib/linenoise.so'}) { * }
+```
+Which isn't that big of a change! But what does that `%?RESOURCES` part mean?
+
+!! %?RESOURCES
+
+In Perl 6, modules are distributed in //distributions//, or "dists" for short. In addition to
+code, dists may have associated resources; you can imagine using this to distribute images with
+a GUI app, or builtin templates with a web framework. To access these resources, a special
+compile-time hash is available to your modules: `%?RESOURCES`. When you retrieve a value from
+the `%?RESOURCES` hash, you get an `IO` object you can use. So this makes a natural vehicle
+for distributing helper libraries! However, there are a few caveats in doing so, and you may have
+spotted one in my example above.
+
+!! Portability
+
+`.so` is the standard extension for shared libraries on *nix systems, like Linux and BSD. Mac OS X
+breaks from BSD tradition with its `.dylib`, and Windows, ever the odd one out, uses `.dll`. So
+we can't hardcode the extension. Fortunately, the `$*VM` dynamic variable can help us out here;
+the extension is available as `$*VM.config<dll>` <<footnote """But only on MoarVM; the JVM has a //different//
+key under `$*VM.config` for getting this information. There's also `$*VM.platform-library-name.`
+""">>. So we can accommodate the various extensions
+like so:
+
+```perl6
+our sub linenoise(Str $prompt) returns Str
+    is native(%?RESOURCES{'lib/linenoise' ~ $*VM.config<dll>}) { * }
+```
+However, there is another issue: getting our module installer to install the helper library.
+
+!! Installing the Helper Library
+
+In order to get files into `%?RESOURCES`, we need to put them into our dist's
+META file. According to the [[the spec|http://design.perl6.org/S22.html#resource]], all of the resources in the dist's META file need to exist at
+installation time. We shouldn't need to build a DLL on Linux if we're never going
+to use it, but we need to give the installer ''something''. So we end up with a `resources`
+section that looks like this:
+
+```
+{
+    ...rest of META.info...
+    "resources": [
+        "lib/liblinenoise.so",
+        "lib/liblinenoise.dylib",
+        "lib/liblinenoise.dll"
+    ],
+}
+```
+...and a `Build.pm` that looks like this:
+
+```perl6
+use v6;
+
+use Panda::Builder;
+use LibraryMake;
+
+class Build is Panda::Builder {
+    method build($workdir) {
+        mkdir("$workdir/blib");
+        mkdir("$workdir/blib/lib");
+        my %vars = get-vars("$workdir/blib/lib");
+        my @shared-object-extensions = <.so .dll .dylib>.grep(* ne %vars<SO>);
+
+        %vars<FAKESO> = @shared-object-extensions.map('resources/lib/liblinenoise' ~ *);
+
+        my $fake-so-rules = @shared-object-extensions.map({
+            "resources/lib/liblinenoise$_:\n\tperl6 -e \"print ''\" > resources/lib/liblinenoise$_"
+        }).join("\n");
+
+        process-makefile($workdir, %vars);
+        spurt("$workdir/Makefile", $fake-so-rules, :append);
+        shell(%vars<MAKE>);
+    }
+}
+```
+What happens here is that I amend the `Makefile` so that empty files are
+generated for the other operating systems' shared object extensions. The
+`FAKESO` variable is present so that the Makefile can put it in its `all`
+rule to make sure those fake resources are built.
+
+Hopefully `.so`, `.dylib`, and `.dll` covers everything (if I missed
+something, please let me know! I love finding out about this kind of stuff!).
+
+So we have a complicated `Build.pm` file, some redundant logic in our module, and some
+custom rules in our `Makefile.in` that `Build.pm` will process. I didn't want to
+keep having to write the same boilerplate for every module that does this, so I did
+what all Perl programmers do: I wrote a module.
+
+!! Native::Resources
+
+[[My module|https://github.com/hoelzro/p6-native-resources]], `Native::Resources`, does its best to minimize boilerplate you need to write
+when distributing helper libraries. You still need the `%FAKESO%` bit in your `Makefile.in`,
+but here's what `Build.pm` looks like now:
+
+```perl6
+use v6;
+
+use Panda::Builder;
+use Native::Resources::Build;
+
+class Build is Panda::Builder {
+    method build($workdir) {
+        make($workdir, "$workdir/resources/lib", :libname<linenoise>);
+    }
+}
+```
+...and here's how the module code has changed:
+
+```perl6
+our sub linenoise(Str $prompt) returns Str
+    is native(resource-lib('linenoise', :%?RESOURCES)) { * }
+```
+You can look at the full Linenoise conversion to use `Native::Resources` [[here|https://github.com/hoelzro/p6-linenoise/tree/a6f05b98f35092b2197d99e5c48bfb3fc3ca1a31]].
+
+It's my hope that helper libraries will be handled by the spec and that `Native::Resources` will
+one day be obsolete <<footnote """panda is already experimenting with some ideas in this area.
+""">>. Until then, feel free to give it a try!
+
+''UPDATE'': With recent changes to Rakudo and the various Perl 6 module installers, `Native::Resources` has been made obsolete.

@@ -1,0 +1,126 @@
+tags: systems linux kernel favorites [[Blog Post]]
+created: 20160508012417000
+title: Finding the other end of a pipe on Linux
+modified: 20180715202103000
+
+! Finding the other end of a pipe on Linux
+
+Have you ever been using the command line and been looking at some colored
+output, only to lose the coloration when you pipe the output to another
+command? I often see this with `ack something | less -R`; you can force
+coloration with `ack --color` or use ack's `--pager` option, but I've often
+thought to myself "what if it were possible for a program to detect if the
+other side of the pipe were capable of handling colored output?". Wouldn't it be cool
+if ack could somehow discover that `less -R` was on the other side and automatically
+enable color?
+
+As far as I know, there's no way for a program to publish this information, and even if there were,
+I highly doubt that many programs use it. So, let's see if we can accomplish the next best thing:
+detecting who's listening on the other side of standard output; if we knew that, we could check
+the name and command line of that program against a whitelist of programs we know to support color.
+
+So...how do we detect who's listening?
+
+!! The Naïve Approach
+
+The rudimentary approach, which is specific to Linux (but probably not too hard to port to other OSes), is
+pretty simple: just crawl over `/proc` and look for a pipe that matches our standard output's pipe. You
+see, pipe file descriptors under `/proc`, like regular files, still have inodes, and the inode is unique
+to a pipe pair <<footnote """this is the case for sockets too; there are other files in `/proc` that reference this
+information, such as `/proc/net/tcp`
+""">>. So here's a quick and dumb Perl program that finds its partner:
+
+```perl
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use feature qw(say);
+
+use File::stat;
+
+exit unless -p STDOUT; # bail out if standard output isn't a pipe
+
+my $stdout_stat = stat(\*STDOUT);
+
+my $current_pid = $$;
+
+my @other_procs = grep {
+    m{/proc/(\d+)} && $1 != $current_pid
+} glob('/proc/*/');
+
+for my $proc_dir (@other_procs) {
+    my $stat = stat("$proc_dir/fd/0");
+    next unless $stat;
+
+    if($stat->dev == $stdout_stat->dev && $stat->ino == $stdout_stat->ino) {
+        my ( $pid ) = $proc_dir =~ m{/proc/(\d+)};
+
+        say STDERR $pid;
+        last;
+    }
+}
+```
+This gets the job done, but it feels a little //too// hacky for my tastes.
+There must be a better way!
+
+!! The less-than-naïve approach
+
+As inspiration for a cleaner approach, let's consider a cousin to pipes: UNIX
+sockets. Sockets work much like pipes, in that two file descriptors are bound
+to one another. With a UNIX socket, we can call
+`getsockopt(socket, SOL_SOCKET, SO_PEERCRED, &creds, sizeof(struct ucred))`
+to find out who we're talking to; perhaps there's an analogous call for pipes?
+
+To find out if this functionality is available for pipes, let's get an answer
+straight from the source - the Linux kernel source, to be precise! <<footnote """I'm looking
+at the source for Linux 4.5.3
+""">>
+
+If we look for `SO_PEERCRED` in `.c` files in the kernel, we quickly
+come upon this case statement in the `sock_getsockopt` function:
+
+```c
+case SO_PEERCRED:
+{
+        struct ucred peercred;
+        if (len > sizeof(peercred))
+                len = sizeof(peercred);
+        cred_to_ucred(sk->sk_peer_pid, sk->sk_peer_cred, &peercred);
+        if (copy_to_user(optval, &peercred, len))
+                return -EFAULT;
+        goto lenout;
+}
+```
+If we follow the breadcrumbs for the `sk` variable, we can see earlier in
+the `sock_getsockopt` function that `sk` is defined as a `struct sock`,
+which is quite large, but contains the `struct pid sk_peer_pid` member that
+we're hoping to find a counterpart to in whatever struct represents a pipe.
+
+We can find out which structure that is pretty easily if we look for an
+`ioctl` or `fcntl` code that's specific to pipes. If you look in the man
+page for `pipe(7)`, you'll find `F_GETPIPE_SZ`. Doing a search on the kernel
+code for that leads us to `pipe_fcntl` in `fs/pipe.c`, which references
+`struct pipe_inode_info`. That struct is small enough to show you here:
+
+```c
+struct pipe_inode_info {
+    struct mutex mutex;
+    wait_queue_head_t wait;
+    unsigned int nrbufs, curbuf, buffers;
+    unsigned int readers;
+    unsigned int writers;
+    unsigned int files;
+    unsigned int waiting_writers;
+    unsigned int r_counter;
+    unsigned int w_counter;
+    struct page *tmp_page;
+    struct fasync_struct *fasync_readers;
+    struct fasync_struct *fasync_writers;
+    struct pipe_buffer *bufs;
+    struct user_struct *user;
+};
+```
+A cursory look at this struct shows us, sadly, that `struct pipe_inode_info` doesn't
+have the have the information we need, so we'll have to stick with our naïve approach.
+So we didn't get a cleaner approach, but at least we got to look at some kernel code!

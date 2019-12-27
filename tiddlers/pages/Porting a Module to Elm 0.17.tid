@@ -1,0 +1,239 @@
+tags: elm [[Blog Post]]
+created: 20160614011947000
+modified: 20160615125756000
+title: Porting a Module to Elm 0.17
+
+! Porting a Module to Elm 0.17
+
+Elm 0.17 has been out for a little while now; it has a slightly different
+way of doing things compared to 0.16 and before. Like many others, I
+started porting my existing applications to 0.17 - first I started with
+my only "production" application, [[elm typing tutor|http://typing-tutor.hoelz.ro]],
+which was pretty trivial to update. After that, I moved onto the
+[[sample code|https://github.com/hoelzro/elm-talk]] I wrote for a talk I gave here
+in Chicago about Elm, which was also pretty simple. Last weekend, I took it upon
+myself to update my last remaining body of 0.16 code - the first application I wrote
+in Elm, one I've been keeping up-to-date since 0.14. I haven't released this code
+publicly yet; but suffice to say it's an application with a coordinate grid that
+you can click and drag to scroll around. The drag event functionality is
+encapsulated in its own module, and porting it to 0.17 was a little more challenging
+than before, so I thought I'd talk about how that went!
+
+!! Drag.elm - 0.16 and earlier
+
+First things first - here's what `Drag.elm` looks like as of Elm 0.16:
+
+```elm
+module Drag where
+
+import Mouse
+import Signal
+
+type alias MouseState = {
+    isDown : Bool,
+    wasDown : Bool,
+    prevPosition : (Int, Int),
+    currPosition : (Int, Int)
+}
+
+type alias DragDistance = (Int, Int)
+
+mouseState : Signal MouseState
+mouseState =
+    Signal.foldp (\(isDown, newPos) oldState -> {
+        isDown = isDown,
+        currPosition = newPos,
+        wasDown = oldState.isDown,
+        prevPosition = oldState.currPosition
+    }) { isDown = False, wasDown = False, prevPosition = (0, 0), currPosition = (0, 0) }
+    <| Signal.map2 (\a b -> (a, b)) Mouse.isDown Mouse.position
+
+mapDragState : MouseState -> DragDistance
+mapDragState ms =
+   if ms.isDown && ms.wasDown
+       then let (currX, currY) = ms.currPosition
+                (oldX, oldY)   = ms.prevPosition
+            in
+                (currX - oldX, currY - oldY)
+       else (0, 0)
+
+drag : Signal DragDistance
+drag =
+    Signal.map mapDragState mouseState
+```
+It's not a lot of code, and it's pretty easy to follow, I think. My favorite part
+about how this module works in 0.16 is that it exposes two things you need to care
+about - `DragDistance`, which is the distance the mouse has been dragged since
+the previous event, and `drag`, a stream of drag events. It's extremely simple
+to integrate into your code; just consume the `drag` signal and handle it in
+your `update` function.
+
+!! Updating to 0.17 - What's Changed?
+
+Even before 0.17, most modules like `Drag.elm` resemble the Elm architecture: you
+have initialization, events you care about, and updating your state according to
+events. Applications have a view, which isn't really needed for modules.
+
+With 0.17, modules like this one resemble the Elm architecture even more, because
+now things like `Signal.foldp` don't exist. It's up to the application developer
+to call the module's initialization, update, and subscription routines. Another
+change is that `Signal` is gone, replaced by `Sub` and `Cmd`, which correspond
+to the types of the events you're interested in, and the events themselves, respectively.
+
+!! Cmd and Conquer
+
+For this module, I decided to expose an additional event type in addition to
+the internal events that drag needs to update its state; I wanted the consuming
+application to get a `Drag` event whenever a drag occurred. To do that, I
+needed the module's `update` function to create a `Cmd`. There's no
+function in Elm 0.17 to simply create a `Cmd`, so this was my first stumbling
+block. Fortunately, the Elm Slack channel is always helpful, and szabba
+provided me with a snippet of code that did just that: `Task.perform (always <| Drag (dx, dy)) (always <| Drag (dx, dy)) Time.now`
+
+!! The Finished Product
+
+Here's what the [[finished module|https://github.com/hoelzro/elm-drag]] looks like, with module documentation
+omitted for brevity:
+
+```elm
+module Drag exposing (Model, Msg, initialModel, subscriptions, update)
+
+import Task
+import Time
+
+import Mouse
+
+type alias Model = {
+    isDown : Bool,
+    currPosition : (Int, Int)
+  }
+
+type Msg =
+  MouseUp   Mouse.Position |
+  MouseDown Mouse.Position |
+  MouseMove Mouse.Position
+
+initialModel : Model
+initialModel = {
+    isDown = False,
+    currPosition = (0, 0)
+  }
+
+subscriptions : (Msg -> msg) -> Model -> Sub msg
+subscriptions constructor model =
+  let ups   = Mouse.ups <| constructor << MouseUp
+      downs = Mouse.downs <| constructor << MouseDown
+      moves = Mouse.moves <| constructor << MouseMove
+      subs = if model.isDown then [ ups, downs, moves ] else [ downs ]
+  in Sub.batch subs
+
+dragCmd : ((Int, Int) -> msg) -> (Int, Int) -> (Int, Int) -> Cmd msg
+dragCmd constructor (px, py) (cx, cy) =
+  let dx = px - cx
+      dy = py - cy
+      task = always <| constructor (dx, dy)
+  in Task.perform task task Time.now
+
+update : ((Int, Int) -> msg) -> Msg -> Model -> (Model, Cmd msg)
+update constructor msg model =
+  case msg of
+    MouseUp _        -> ({ model | isDown = False }, Cmd.none)
+    MouseDown {x, y} -> ({ isDown = True, currPosition = (x, y) }, Cmd.none)
+    MouseMove {x, y} ->
+      let newModel = { model | currPosition = (x, y) }
+          cmd = if model.isDown
+            then dragCmd constructor model.currPosition (x, y)
+            else Cmd.none
+      in (newModel, cmd)
+```
+And here's some example code that uses it:
+
+```elm
+import Html.App as App
+import Html exposing (Html, text)
+
+import Drag
+
+type alias Model = {
+    dragModel : Drag.Model,
+    dragDistance : Int
+  }
+
+type Msg =
+  DragMsg Drag.Msg |
+  Drag (Int, Int)
+
+init : (Model, Cmd Msg)
+init =
+  let initialModel = {
+    dragModel = Drag.initialModel,
+    dragDistance = 0
+  } in (initialModel, Cmd.none)
+
+subscriptions : Model -> Sub Msg
+subscriptions model = Drag.subscriptions DragMsg model.dragModel
+
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
+  case msg of
+    DragMsg msg ->
+      let (newDragModel, dragCmd) = Drag.update Drag msg model.dragModel
+      in ({model | dragModel = newDragModel}, dragCmd)
+    Drag (dx, dy) -> ({ model | dragDistance = model.dragDistance + (abs dx) + (abs dy) }, Cmd.none)
+
+view : Model -> Html Msg
+view model = text <| toString model
+
+main : Program Never
+main = App.program {
+    init = init,
+    update = update,
+    subscriptions = subscriptions,
+    view = view
+  }
+```
+You may have noticed that I highlighted a few lines in `Main.elm`; I wanted
+to talk about what I feel is a weakness of 0.17 compared to previous versions
+of Elm. The highlighted lines all have something in common: they are all spots
+in the main application code that need to concern themselves with how the
+dragging module works. Before, `Drag.elm` took care of its own
+intialization, event subscriptions, and updating; but now, that responsibility
+falls to the user.
+
+''UPDATE - 2016-06-15''
+
+[[Ahri on Reddit|https://www.reddit.com/r/elm/comments/4o13ts/porting_a_module_to_elm_017/d49xdsb]]
+asked me to demonstrate what the code for `Main.elm` would look like in 0.16, so
+here it is:
+
+```elm
+import Drag
+import Html exposing (Html, text)
+
+initialState : Int
+initialState = 0
+
+view : Int -> Html
+view dragDistance = text <| toString dragDistance
+
+update : (Int, Int) -> Int -> Int
+update (dx, dy) dragDistance =
+  dragDistance + (abs dx) + (abs dy)
+
+main : Signal Html
+main = Signal.map view <| Signal.foldp update initialState Drag.drag
+```
+''END UPDATE''
+
+Elm 0.17 is great for lowering the barrier to entry to the
+language, but I'm afraid that it may make things harder on authors of modules like
+this one, and I'm afraid of the increased boilerplate that consuming these
+modules requires. "Official" modules like `Random` don't need this; you don't
+need to help them set themselves up or manage their state. A quick peek at the
+code reveals something called an //effect module//, but I'm guessing that's an
+internal concept that the core team isn't quite ready for the world to see.
+
+I know that 0.17 and the ideas introduced with it are still very fresh; I'm
+confident that the core Elm team will come up with ways for authors to write
+their own event modules in a way similar to `Random`, keeping Elm easy and
+fun for module and application authors alike!

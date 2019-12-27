@@ -1,0 +1,46 @@
+created: 20111019163907000
+tags: ssh [[Blog Post]]
+modified: 20180727145147000
+title: SSH Shortcuts
+
+! SSH Shortcuts
+
+Let's say that you have a server you SSH into very often. Let's also say that `sshd` on that server is running on a non-standard port to avoid annoying scanners (we'll using 53718 in this example). To SSH into this server, you run the following:
+
+```
+ssh -p 53718 rob@example-server.com
+
+```
+What a mouthful! There's got to be a way to avoid typing that much! A technique I've often seen people use is to create a shell alias for this:
+
+```
+alias example='ssh -p 53718 rob@example-server.com' # in bash
+
+```
+So now all I'd have to do is run `example`. Piece of cake, right?
+
+But what if you're using `scp`? Or `sftp`? Or `rsync`? Or `git remote add`? Or Vim's netrw plugin? Suddenly your simple shell alias doesn't seem so cool!
+
+However, there is a solution to this! Enter your SSH config file.
+
+Your SSH config file, located at `~/.ssh/config`, can do a //lot// of cool things. To replicate our example above, we'd add this to our configuration:
+
+```
+Host example
+  HostName example-server.com
+  User rob
+  Port 53718
+```
+Now all I need to do is `ssh example`, and voilà! It works! It's four characters longer than the alias, but the shortcut is applied to the following commands as well:
+
+```
+scp example:that-important-file.txt .
+sftp example
+rsync -ar example:my-project/ .
+git remote add example ssh://example/~/my-project
+vim scp://example/that-important-file.txt
+  
+```
+If you're interested in shortening the Git example even further, see my [[blog post|Adding Remote Shortcuts to Git]] about it.
+
+Your SSH configuration file is very powerful; I recommend checking out `man ssh_config` for more options to play with!

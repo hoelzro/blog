@@ -1,0 +1,60 @@
+title: Avatar Blacklist Userscript for Identica
+modified: 20150421153421000
+created: 20150421153421000
+tags: identica userscript
+
+! Avatar Blacklist Userscript for Identica
+
+I'm on a microblogging site called [[Identica|http://identi.ca]], and there are a lot of interesting people in the various groups there. However, sometimes while I find
+a user's content interesting, I don't like looking at their avatar for whatever reason. I'm not going to name names, but to get around this, I wrote this userscript to display
+the default avatar for select users.
+
+```javascript
+// ==UserScript==
+// @match http://identi.ca/*
+// ==/UserScript==
+
+(function() {
+    var onLoadCallback = function() {
+        var blacklist = {
+          // put the usernames of the people whose avatars you
+      // would like to block as the keys in this object; the
+      // values can be anything
+        };
+        var replacement = 'http://theme.identi.ca/1.0.0/neo/default-avatar-profile.png';
+
+        var handleImage = function() {
+            var parentTitle = $(this).parent().attr('title');
+            var alt         = $(this).attr('alt');
+
+            if(alt in blacklist || parentTitle in blacklist) {
+                this.src = replacement;
+            }
+        };
+
+        $('img.avatar').each(function(_, element) {
+            handleImage.call(element);
+        });
+        var script = document.createElement('script');
+        script.src = 'http://brandonaaron.net/javascripts/plugins/livequery.js'
+        $(script).load(function() {
+            $('img.avatar').livequery(function() {
+                handleImage.call(this);
+            });
+        });
+        document.body.appendChild(script)
+    };
+
+    var callback = function() {
+        var script = document.createElement('script');
+        script.textContent = "(" + onLoadCallback.toString() + ")()";
+        document.body.appendChild(script);
+    };
+
+    if(document.readyState == 'complete') {
+        callback();
+    } else {
+        document.body.onload = callback;
+    }
+})();
+```

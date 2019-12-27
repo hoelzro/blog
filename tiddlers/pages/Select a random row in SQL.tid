@@ -1,0 +1,14 @@
+tags: perl sql mysql postgresql
+created: 20150421153421000
+title: Select a random row in SQL
+modified: 20150421153421000
+
+! Select a random row in SQL
+
+Should work in either MySQL or PostgreSQL. I can't speak to its efficiency, but it's got to be better than `ORDER BY RAND()`.
+
+```perl
+my ( $max ) = $dbh->selectrow_array('SELECT MAX(id) FROM MyTable'); # assuming id is a unique integer key on MyTable
+my $rand_id = int(rand($max)) + 1;
+my @row     = $dbh->selectrow_array('SELECT * FROM MyTable WHERE id >= ? LIMIT 1', undef, $rand_id);
+```

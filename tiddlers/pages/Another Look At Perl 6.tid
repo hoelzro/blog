@@ -1,0 +1,19 @@
+tags: perl perl6 [[Blog Post]]
+created: 20120709091915000
+modified: 20130909143555000
+title: Another Look At Perl 6
+
+! Another Look At Perl 6
+
+About once a year, when the planets align and I have enough free time, I usually check up on the Perl 6 community and see how things are going, trying to rekindle some enthusiasm for the language. Every year, I move away from Perl6 once again, either because my free time has dried up, or the synopses are too long to read, or I get angry about how they renamed `STDOUT` to `$*OUT`.
+
+This year, my interest was ignited by Patrick Michaud's lightning talk about speed ups in Rakudo Perl 6 over the last year. So this time, I decided to read the [[Perl 6 book|https://github.com/perl6/book]]. It's pretty short (about 130 pages), so I go over a section or two a day if I have a few minutes. The book is a good introduction to the language, and introduces a lot of cool features (the type system is my favorite so far). However, the following statement is what I feel is the most important and most exciting part of the book:
+
+```
+...All of the examples in this book will run with the Rakudo Perl 6 Compiler...
+```
+Every cool feature in this book //works//. I remember reading the Perl 6 specification in college, thinking "Oh, that would be cool, if only it were implemented!". A quick look at the [[Perl 6 Implementation Feature Matrix|http://www.perl6.org/compilers/features]] shows how much of the language has been implemented, and how hard the Rakudo folks have been working.
+
+Some coworkers and I were talking about adding a chatbot to our XMPP chatroom last week; I've written a few chatbots in Perl 5, but I wanted to try something new for this. So I spent a good chunk of my weekend working on [[Hexe|https://github.com/hoelzro/hexe]], an XMPP chatbot written in Perl 6. I intend to blog about the experience once the bot is more complete (it still needs a lot of work!), so stay tuned!
+
+-Rob

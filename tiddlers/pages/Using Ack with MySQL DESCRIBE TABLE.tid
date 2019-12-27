@@ -1,0 +1,13 @@
+modified: 20130909143555000
+title: Using Ack with MySQL DESCRIBE TABLE
+tags: ack mysql [[Blog Post]]
+created: 20121018094518000
+
+! Using Ack with MySQL DESCRIBE TABLE
+
+When using MySQL, you can use `DESCRIBE TABLE` to view the columns that a table contains; this is helpful for getting to know a table you're not familiar with, or to refresh your memory on a table you haven't seen in a while. However, sometimes, you're looking for a particular column in a long list (the table I used this on has over forty columns), and you have an idea on what the name of the column is. If you run into this situation, don't fret, and definitely don't strain your eyes looking through the list yourself! Let [[ack|http://betterthangrep.com/]] do the work for you:
+
+```
+mysql> \P ack --passthru search-term
+```
+The previous snippet, when entered into the MySQL client shell, will highlight all occurrences of 'search-term' in the output. When you're done, you can use `\n` to turn the highlighting off.

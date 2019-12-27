@@ -1,0 +1,127 @@
+title: Idea Fight!
+modified: 20191211163527000
+tags: elm [[Blog Post]]
+created: 20160822011941000
+
+! Idea Fight!
+
+I have a lot of ideas for side projects, but as most people will tell you,
+having ideas is easy - it's executing them that's hard and important. While
+I'm a skilled idea-haver, I am //really// bad at prioritizing them, as well as
+executing them.
+
+Part of the problem is the limits of the hardware in my head: human beings are
+really bad at assigning a quantitative value to things. A few years ago I saw
+Paul Fenwick talk about this at OSCON; here's
+[[a link to a video|https://www.youtube.com/watch?v=OnX5v0uwNjc&t=700]] in which he
+explains <<footnote """The link goes to the part of the talk in which he discusses our
+inability to assign value, but the whole talk is worth watching!
+""">>. As Paul
+points out, we are really bad at assigning values to things, but we are really
+good at comparing two similar objects to determine which is better. So, yet
+again, I had an idea - what if I could leverage that strength to overcome my
+weakness?
+
+After thinking about the algorithm, I implemented a program to use the user's
+comparative faculties to help them realize their best ideas. I call it: Idea
+Fight! You can try it [[here|http://idea-fight.hoelz.ro]].
+
+!! How Does It Work?
+
+What Idea Fight does is take in a list of ideas from the user, shuffles them up,
+presents the user pairs of ideas. The user picks the idea in the pair that
+they like best (whatever that means to the user), and Idea Fight keeps track of
+which ideas are better than others. Eventually, after enough selections, a winner
+emerges; if the user keeps going, Idea Fight will present them with the second-best,
+third-best, etc, until the list of ideas is completely ordered. It's up to the
+user when they want to stop - maybe they just want to pick the best idea, or the top
+three.
+
+!! How Does It *Really* Work?
+
+That last section was a bit hand-wavy - if you want to know the details, read on! (Otherwise,
+feel free to skip to the "Things Learned About Elm" section.)
+
+The way Idea Fight works is something that I'm calling //partially ordered
+forests// <<footnote """A fellow Elm user on the Elm subreddit mentioned that //heaps// would be a more
+standard term for this
+""">>. It's a collection of tree structures that represent the choices
+that the user has made so far. If a node/an idea is the parent of another, it
+means that the user thinks that the parent is the better of the two. A node
+may have zero or more children, and we don't know anything about how sibling
+nodes compare to one another (if we did, one would be an ancestor of the other
+and they wouldn't be siblings!)
+
+Let's see partially ordered forests represented visually, using the English
+cardinal numbers 1-8. Here's what a partially ordered forest
+representing those values looks like:
+
+
+  <div id='demo' style=''>
+  </div>
+
+  <script type='text/javascript' src='/media/partial-tree-demo.js'>
+  </script>
+
+
+Notice that all of the values start with no relationship to one another; you can
+click the "Advance" button to see how the algorithm re-orders the tree based on
+the user's choice, which we're omitting here because the ordering of these values
+is well-known.
+
+Finding the top value takes `O(n)` steps (which makes sense, since you need
+to examine every value in an unordered collection to find the maximum). If you
+want to get a total ordering, it takes `O(n log n)` steps (which also makes
+sense, since it's basically a sort). So if you think about it, this algorithm
+is pretty much a partial merge sort.
+
+This algorithm is not trivial; fancy algorithms are harder to implement, so I
+tend to advocate simpler, easier to use and understand algorithms to save on
+human time when the data set is small enough. However, a more efficient
+algorithm is a big deal when it's a human operator carrying out the operations
+that drive the algorithm, like for Idea Fight or for my
+[[Salt cartography hack|Winning at Salt Cartography Using Algorithms and Statistics]]. Either way, you're saving human time. =)
+
+!! Things Learned About Elm
+
+I wrote Idea Fight as an Elm application so that people could use it just by
+visiting a page in their browser. The more I work with Elm, the more I like it -
+implementing a partially ordered forest was a breeze in Elm! Here are some insights
+I had about Elm while implementing Idea Fight:
+
+!!! The True Nature of Debug.crash
+
+If you're not familiar with Elm, you may not be familiar with `Debug.crash` either.
+What it does is causes a fatal error in your application and stops it from working.
+
+I made an uncomfortable amount of calls to `Debug.crash` present in Idea
+Fight while working on it; you'll usually do this if you're handling a branch
+in a conditional that should be impossible at that location in the program.
+For example, I present the user with a choice between two ideas, and then I
+tell the program which is better. I compare the values given with the
+selection made by the user. I can't have the type system insist that the
+selections be equal to exactly one of the choices, so if that situation occurs,
+I crash. The user shouldn't be able to make that situation happen - if it
+does, it's my fault. That led me to an epiphany: `Debug.crash` is like 5xx HTTP
+results (I screwed up), and `Maybe`/`Result` (the regular way of
+communicating errors in Elm) are 4xx HTTP results (you screwed up).
+This reminds me of Go's `return nil` vs `panic`, as well as
+Lua's `return nil` vs `error` error handling models.
+
+!!! Maybes vs Empty Lists
+
+My data model for the "competition" mode of the application started as just a simple forest
+value, which has a list of zero or more trees in it. The competition module needs to shuffle
+the provided values before the user can get started choosing, so it initialized the model
+with an empty forest.
+
+After working on the application for a while, I realized that an empty forest doesn't really
+model what I mean in the application. When I was handling an empty versus non-empty forest,
+what I really meant was "is the model initialized or not?", so I updated the model to reflect
+that. And while I could have used a `Maybe (Forest String)` for this, I felt that this too did not
+communicate the situations in which the model lacked a forest, so I ended up just making a
+data type that looked like this to communicate exactly what I meant:
+
+```elm
+type Model = Uninitialized | Initialized (Forest.Forest String)
+```

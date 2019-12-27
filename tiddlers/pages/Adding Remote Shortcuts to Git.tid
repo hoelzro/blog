@@ -1,0 +1,44 @@
+title: Adding Remote Shortcuts to Git
+modified: 20180715201602000
+tags: git favorites [[Blog Post]]
+created: 20110825215220000
+
+! Adding Remote Shortcuts to Git
+
+If you're like me, chances are you're a Git user that uses a small set of hosts for repositories very frequently. The example I'll use here is [[GitHub|https://github.com]].
+
+To clone another user's repository, you end up typing out something like this:
+
+```
+git clone https://github.com/miyagawa/cpanminus.git # If you're a Perl programmer and you're not using cpanm, you *really* should be!
+```
+If you want to clone one of your one repositories, you end up with something like this:
+
+```
+git clone git@github.com:hoelzro/linotify.git
+
+```
+Now, that isn't //that// much typing, but there's got to be a shorter way! Wouldn't it be nice if I could just type this?
+
+```
+git clone github:miyagawa/cpanminus
+
+```
+Or this?
+
+```
+git clone hoelzro:linotify
+
+```
+Well, it turns out that with a few changes to your .gitconfig, you can!
+
+You can add a URL section to your gitconfig, with an insteadOf attribute that describes the prefix you'd like to use.
+Here's how the previous two examples look in my .gitconfig:
+
+```
+[url "git@github.com:hoelzro/"]
+    insteadOf = hoelzro:
+[url "https://github.com/"]
+    insteadOf = github:
+```
+Rinse and repeat for your various sources!

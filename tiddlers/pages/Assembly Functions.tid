@@ -1,0 +1,65 @@
+modified: 20150421153421000
+title: Assembly Functions
+created: 20150421153421000
+
+! Assembly Functions
+
+Things about x86 assembly that I always forget. These examples assume
+the functions are using the cdecl calling convention, and Intel assembly syntax.
+
+!! General Template
+
+```asm
+GLOBAL myfunc ; only if you *actually* want it to be global
+
+myfunc:
+  ; set up frame pointer
+  PUSH EBP
+  MOV  EBP, ESP
+
+  ; function implementation
+
+  ; tear down frame pointer
+  LEAVE
+  RET
+```
+!! Accessing Arguments
+
+```asm
+
+; extern int atomic_compare_and_set(int *location, int old_value, int new_value);
+
+atomic_compare_and_set:
+  PUSH EBP
+  MOV  EBP, ESP
+
+  ; [EBP]      contains the old value of EBP
+  ; [EBP + 4]  contains EIP to return to
+  ; [EBP + 8]  contains location
+  ; [EBP + 12] contains old_value
+  ; [EBP + 16] contains new_value
+
+  ; *** implementation ***
+
+  MOV EAX, $RESULT ; return value goes into EAX
+
+  LEAVE
+  RET
+```
+!! Dealing with pointers
+
+```asm
+
+; extern int get_value(int **p)
+
+get_value:
+  PUSH EBP
+  MOV  EBP, ESP
+
+  MOV EAX, [ESP + 8] ; EAX now contains p   (an int **)
+  MOV EAX, [EAX]     ; EAX now contains *p  (an int *)
+  MOV EAX, [EAX]     ; EAX now contains **p (an int)
+
+  LEAVE
+  RET
+```

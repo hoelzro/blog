@@ -1,0 +1,184 @@
+title: Max Out Your Programming HP and MP With Elixir
+modified: 20160510012656000
+created: 20160510012656000
+tags: lotm elixir [[Blog Post]]
+
+! Max Out Your Programming HP and MP With Elixir
+
+Hello, and welcome back to [[the language of the month|Language of the Month]]!. For
+April, I decided to try my hand at a language that's been very
+popular with the Ruby community, and is causing quite a stir
+in the Elm community. It's called [[Elixir|http://elixir-lang.org/]]!
+
+!! Why Learn Elixir?
+
+Elixir brings some interesting features to the table; it's built on top
+of Erlang's BEAM virtual machine, which means that spawning processes
+is extremely lightweight, and programs written in Elixir are encouraged
+to make use of many task-focused processes. Like Erlang, it's ok (and
+expected!) for processes to fail; unlike Erlang, however, Elixir favors
+a more Ruby-like syntax as opposed to Erlang's Prolog-inspired one.
+Elixir was on my list of languages to learn because I figured it would
+be a good way to learn how to organize a program around many small
+processes. Let's dig in!
+
+!! Learning the Language
+
+The [[getting started|http://elixir-lang.org/getting-started/introduction.html]] guide on the
+official website is //really// good; it's a quick but very through introduction to the language,
+and provides a good overview of `mix`, Elixir's build tool and package manager, as well.
+
+!! Distinctive Features
+
+Elixir is full of features that work together to make a programmer happy!
+
+!!! Pattern Matching
+
+Like many functional programming languages, Elixir supports pattern matching;
+not pattern matching as in matching a string against a regular expression, but
+rather comparing the structure of some data against a pattern. If the pattern
+matches, any variables in the pattern are bound to the part of the structure
+that matched it. For example:
+
+```elixir
+def handle({:ok, result}) do
+  IO.puts "Operation succeeded: " <> to_string(result)
+end
+
+def handle({:error, msg}) do
+  IO.puts "A problem occurred: " <> to_string(msg)
+end
+```
+Elixir allows us to define multiple variants of the `handle` function, and
+it will execute the version whose pattern matches. This allows the programmer
+to write very focused functions that handle a single situation and keeps the
+code nice and organized.
+
+!!!! Put a Pin in It
+
+Elixir has some interesting behavior when you try to pattern match with an
+existing variable in the pattern:
+
+```elixir
+{username, password} = get_login_details()
+hash = hash_password(password)
+{:exists, hash} = get_password_hash_for_user(username)
+```
+In other languages I've used, such as Erlang and Prolog, if the hash
+returned by `get_password_hash_for_user` is different from the one returned
+by `hash_password`, the pattern match will fail. In Elixir, however,
+the pattern //does// match, and will bind `hash` to the one returned
+by `get_password_hash_for_user`. Fortunately, Elixir provides a way to express
+the other meaning via the pin operator:
+
+```elixir
+{:exists, ^hash} = get_password_hash_for_user(username)
+```
+It's nice that we can express this in Elixir, but this is my first wart in
+the language. I try not to get hung up on syntax, but to me, it's too easy
+to mistakenly and silently blow away a variable's value and make a match succeed in
+ways you didn't expect it to. In my opinion, the pin operator's semantics
+should be reversed; that is, you should have to explicitly specify when you
+want to rebind a variable.
+
+!!! Spawn
+
+The most important feature of Elixir - at least to me, whose goal is to learn
+concurrent programming - is `spawn`. `spawn` is Elixir's function for
+creating new processes; you give it a function, and in return, it gives you a
+process identifier, or pid for short. Each process in Elixir has a mailbox
+that we can send messages to via this pid; this the only way for Elixir
+processes to communicate. The advantage of this method of communication is
+that if a process crashes, you don't need to worry about dragging down some
+undefined shared state. To receive messages, you call the `receive` form,
+which we'll see a bit later.
+
+!!! Low Level of Abstraction over Erlang
+
+Another nice feature of Elixir is that although the syntax is different from
+Erlang, a lot of the semantics are very close, and sometimes identical. This should
+make picking up Elixir as an Erlang developer very easy, and makes interoperability
+between Erlang and Elixir pretty simple.
+
+!!! Very Clean and Consistent Syntax
+
+One thing that I noticed while going through the tutorial is how clean and regular
+Elixir's syntax is. Like I said before, I try not to get caught up on syntax, but
+having cleaner syntax with simpler rules never hurts! One example of this are `do` blocks,
+like we use with the `def` form:
+
+```elixir
+def greeting(name) do
+  "Hello, " <> name
+end
+```
+`do` blocks are just syntactic sugar for a `do:` keyword argument with a block,
+so the above desugars to this:
+
+```elixir
+def greeting(name), do: "Hello, " <> name
+```
+So `do` blocks aren't special; they're just a keyword argument (keyword arguments,
+in turn, are just an argument that happens to be a list of 2-tuples). Having regular
+and simple syntax is handy when you're developing tooling, or when your language
+supports...
+
+!!! Macros!
+
+Like [[last month's language|What's That Racket?]], Elixir has support for
+macros, which come in handy for reducing boilerplate and creating expressive
+code. One thing I found myself repeating a lot when writing Elixir was
+something along these lines:
+
+```elixir
+def my_process() do
+  receive do
+    # handle message
+  end
+
+  my_process
+end
+```
+So I ended up making a `receive_forever` macro to eliminate a lot of the boilerplate:
+
+```elixir
+defmacro receive_forever(block) do
+  quote do
+    f <- fn(f)
+        receive do
+          unquote(block)
+          f.(f)
+        end
+    end
+    f.(f)
+  end
+end
+
+def my_process() do
+  receive_forever do
+    # handle message
+  end
+end
+```
+Pretty cool, huh? One quick caveat, though; this code won't actually work! Since macros
+are modifying the compilation process, you need to define a macro in a separate module to
+be able to use it in code. That was something that was very surprising and confusing when
+working on my macro, but makes a certain amount of sense.
+
+One thing that concerned me when writing this macro was my `f` variable - what would
+happen if the user happened to use an `f` variable in the enclosing code and in the
+block? Well, never fear! Elixir's macros are what's called //hygenic macros//; this
+essentially means that variables introduced in the macro don't contaminate the generated
+code.
+
+!! Moving Forward
+
+I have a fun idea for the program I'm going to implement in Elixir; I feel like the two
+are a really natural fit. Digging into Elixir has inspired me to check out the Erlang
+OTP, which allows for building extremely robust and fault-tolerant systems. A lot of
+people are very excited about the [[Phoenix|http://www.phoenixframework.org/]] web framework
+for Elixir, so I might end up building something with that if the right idea comes my way.
+It seems to be a natural pairing to using Elm on the frontend.
+
+From my experience with it so far, Elixir is a fun language to work with, and I highly
+recommend trying it out!

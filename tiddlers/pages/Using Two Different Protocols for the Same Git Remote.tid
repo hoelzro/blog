@@ -1,0 +1,35 @@
+title: Using Two Different Protocols for the Same Git Remote
+modified: 20180720175335000
+tags: git [[Blog Post]]
+created: 20120111200144000
+
+! Using Two Different Protocols for the Same Git Remote
+
+If you read my post on [[Adding Remote Shortcuts to Git]], you may have found it useful for
+specifying shortcuts for easy cloning. In case you haven't read it, the summary is that to clone my linotify repository
+on GitHub, I need only type the following:
+
+```
+git clone hoelzro:linotify
+```
+This is because I set up an alias of sorts that translates `hoelzro:` to `git@github.com/hoelzro/`. This works very well,
+but sometimes it might be nice for read-only traffic to use a protocol other than SSH. Maybe you're on a new machine and you forgot to
+associate its public key with the remote side <<footnote """With GitHub this is easy, but what if you're hosting
+your code on a webserver that only uses public key-based authentication?
+""">>. Maybe you have `ssh-agent` configured to time out identities after a while,
+and you don't want to type your password just to run `git fetch`. I can't tell you how many times I've typed `git fetch`, only to be prompted
+for my key's password. How annoying! Wouldn't it be nice if I could tell Git to use the HTTPS protocol for reading from a repository, and SSH for writing?
+
+After delving into the `git-config` manpage a bit, I discovered another gem similar to `insteadOf`: `pushInsteadOf`. So I modified my `.gitconfig` to use this <<footnote """This illustrates another advantage of the `insteadOf` configuration option: I change it once in my `.gitconfig`, and the changes apply to every one of my repositories using that shortcut on my machine. If I decided one day that I wanted to move all of my repositories off of GitHub and onto a private server, I wouldn't need to set up new remotes in each of my repositories.
+""">>:
+
+```ini
+[url "git@github.com:hoelzro/"]
+  pushInsteadOf = hoelzro:
+[url "https://github.com/hoelzro/"]
+  insteadOf = hoelzro:
+```
+''EDIT'': I changed this to `<nowiki>https://</nowiki>`, because `<nowiki>git://</nowiki>` is vulnerable to man-in-the-middle attacks.
+
+Now when I run `git fetch` or `git pull` on my repostories, I never get prompted to enter my SSH key's password, since reading from my repository
+is done via the HTTPS protocol.

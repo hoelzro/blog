@@ -1,0 +1,37 @@
+modified: 20191211163205000
+title: Controlling MPD with Mac Media Keys
+tags: osx tmux pmus mpd [[Blog Post]]
+created: 20120726144511000
+
+! Controlling MPD with Mac Media Keys
+
+I use a Macbook Pro for my work at Booking, and I use music (or sometimes [[background noise|https://github.com/hoelzro/useful-scripts/blob/master/bg-noise]]) to avoid distractions while at work. However, I'm not a terribly big fan of iTunes; I much prefer the simplicity of [[MPD|http://mpd.wikia.com/wiki/Music_Player_Daemon_Wiki]]. My client of choice for MPD is [[Practical Music Search|http://pms.sourceforge.net/]] (pmus), which is curses-based and provides a nice shuffle feature. However, I want to avoid going back-and-forth between pmus and my work when I want to pause or skip tracks, so I managed to repurpose OS X's media keys to manipulate MPD and pmus. Here's how I did it.
+
+! Remove default bindings
+
+By default, OS X responds to the media keys by starting up iTunes (if it's not running) and forwarding the command on to iTunes. Removing this default behavior isn't obvious, but once you discover the solution, it's quite easy. I ended up using [[KeyRemap4MacBook|http://pqrs.org/macosx/keyremap4macbook/]]; it requires a reboot after installation, but after it's done installing, you only need to open it in System Preferences and tell it to remove the behavior for the media keys.
+
+! Adding Applescript to manipulate pmus
+
+Unfortunately, OS X doesn't allow you (to my knowledge) to execute arbitrary command lines when you press a key. Fortunately, [[Quicksilver|http://qsapp.com/]] does, at least in the form of Applescript. So I saved the following snippets to their own Applescript files:
+
+```applescript
+do shell script "/usr/local/bin/tmux send-keys -t pmus l"
+```
+```applescript
+do shell script "/usr/local/bin/tmux send-keys -t pmus h"
+```
+```applescript
+do shell script "/usr/local/bin/mpc toggle"
+```
+The scripts for the next/previous song may look a little different than expected; it's because for the next song, I often rely on pmus' shuffle feature. Simply sending the 'next' command to MPD would not populate the next song from the shuffle, so I needed to use a workaround using [[tmux|http://tmux.sourceforge.net/]]. This also means I need to run pmus from within a tmux session named 'pmus'.
+
+======= Creating keybindings for the scripts ======
+
+Now that those are done, open Quicksilver's preferences, go to the 'Triggers' tab, and add a hotkey for each script. You can simply drag and drop the script from Finder into Quicksilver for this.
+
+! Enjoy!
+
+That was the last step! Enjoy your pmus-bound media keys!
+
+-Rob

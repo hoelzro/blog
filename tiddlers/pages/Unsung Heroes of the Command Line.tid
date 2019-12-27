@@ -1,0 +1,142 @@
+created: 20160530235826000
+tags: tools command-line favorites [[Blog Post]]
+modified: 20190103201655000
+title: Unsung Heroes of the Command Line
+
+! Unsung Heroes of the Command Line
+
+Since the command line is my primary way of interacting with my computer, I
+often will take steps to optimize my usage of it. Most command line users know
+the basics: `ls`, `cd`, `grep`, etc - these are instrumental building
+blocks in using the command line. However, there are often more specialized
+programs out there that can really save you some time, and I'd like to share a
+few notable examples of these kinds of specialized programs that have made my
+life easier over the last year or two. If you don't know them, hopefully
+you'll find them useful; if you //do// know them, hopefully it will just
+indicate that we both have good taste in our tools. =)
+
+!! mojo
+
+Over the past few years, I find myself doing more and more work with data
+online. Calling out to various web services or fetching content from a
+URL has become an essential part of being a developer. When it comes down
+to simply fetching the data, I reach for `curl`. However, if I have to
+do some slicing and dicing, I look to my good friend `mojo`.
+
+`mojo` is a command line utility shipped with the
+[[Mojolicious|http://mojolicious.org/]] project - it's a kind of web toolkit
+for Perl programmers. You don't need to be skilled in Perl to make use
+of `mojo`, however. `mojo get` allows you to fetch the contents at a URL,
+select particular elements via CSS3 selectors, and then transform the result
+using various methods. For example, let's say I want to get the `src` attribute
+of each `img` element on a page. This is how I could invoke `mojo get` to get
+the job done:
+
+```
+  $ mojo get http://example.com img attr src
+```
+The `img` part is of course the element selector; the arguments following it
+are a method name (any method in [[Mojo::DOM|https://metacpan.org/pod/Mojo::DOM]] may be used) plus any
+arguments for the method. I've found `mojo get` to be invaluable in scraping
+a document and extracting some content from it for use further down the command
+line.
+
+!! jq
+
+Continuing along the online data trend, I find myself working with JSON pretty often
+too. Instead of writing a script to extract data from a JSON, you can use
+[[jq|https://stedolan.github.io/jq/]]. It's a handy program that describes itself
+as "sed for JSON data", and I feel like it lives up to this idea. Just invoking the
+`.` operator (which selects the current object) will pretty-print a chunk of JSON:
+
+```
+  $ cat chunk-of.json | jq .
+```
+You can select a particular key in a document by adding it after the `.` operator:
+
+```
+  $ cat chunk-of.json | jq .result
+```
+''jq's '' selector syntax is pretty easy to understand and to recall - I can reliably
+remember how to do the basics each time I use it. For other instances, the documentation
+is always available for consultation!
+
+!! uniprops & unichars
+
+I try to write software to be Unicode-aware, which often means something like
+checking for the `Letter` property rather than simply looking for `a-z` and
+`A-Z`. To help me in this effort, I make use of two scripts from the
+[[Unicode::Tussle|https://metacpan.org/pod/Unicode::Tussle]] CPAN distribution: `uniprops` and `unichars`.
+
+To use `uniprops`, you can give a character or codepoint, and it will tell you
+about all of the Unicode properties that character exhibits. For example:
+
+```
+  $ uniprops а
+  U+0430 ‹а› \N{CYRILLIC SMALL LETTER A}
+      \w \pL \p{LC} \p{L_} \p{L&} \p{Ll}
+      All Alnum X_POSIX_Alnum Alpha X_POSIX_Alpha Alphabetic Any Assigned
+         InCyrillic Cyrillic Is_Cyrillic ID_Continue Is_IDC Cased Cased_Letter LC
+         Changes_When_Casemapped CWCM Changes_When_Titlecased CWT
+         Changes_When_Uppercased CWU Cyrl Ll L Gr_Base Grapheme_Base Graph
+         X_POSIX_Graph GrBase IDC ID_Start IDS Letter L_ Lowercase_Letter Lower
+         X_POSIX_Lower Lowercase Print X_POSIX_Print Unicode Word X_POSIX_Word
+         XID_Continue XIDC XID_Start XIDS
+```
+`unichars` approaches the property problem from the opposite angle; instead of
+telling you which properties a character has, it gives you a list of which
+Unicode characters have a particular property:
+
+```
+  $ unichars '\p{Cyrillic}
+   Ѐ  U+0400 CYRILLIC CAPITAL LETTER IE WITH GRAVE
+   Ё  U+0401 CYRILLIC CAPITAL LETTER IO
+   Ђ  U+0402 CYRILLIC CAPITAL LETTER DJE
+   Ѓ  U+0403 CYRILLIC CAPITAL LETTER GJE
+   Є  U+0404 CYRILLIC CAPITAL LETTER UKRAINIAN IE
+   Ѕ  U+0405 CYRILLIC CAPITAL LETTER DZE
+   І  U+0406 CYRILLIC CAPITAL LETTER BYELORUSSIAN-UKRAINIAN I
+   Ї  U+0407 CYRILLIC CAPITAL LETTER YI
+   Ј  U+0408 CYRILLIC CAPITAL LETTER JE
+   Љ  U+0409 CYRILLIC CAPITAL LETTER LJE
+```
+!! combine
+
+If you've done text processing on the command line, there's a good chance
+you're familiar with `comm(1)`. It's a program that you give two text files
+along with an option switch that indicates different set operations to perform
+on the lines in those files. For example, `comm -13 A B` prints lines unique
+to B, and `comm -12 A B` prints lines in both A and B. From my examples, you
+get a good idea of how difficult `comm` can be to use; I would always have to
+consult the man page or sit and think the invocation I would need to make to
+get the results I needed. Frustrated, I cried out to the Internet:
+
+
+<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">comm(1) has the weirdest way of specifying what you want, but it&#39;s so useful =/</p>&mdash; Rob Hoelz (@hoelzro) <a href="https://twitter.com/hoelzro/status/682239111978192897">December 30, 2015</a></blockquote>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+
+Fortunately, a fellow programmer heard my plea:
+
+
+<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr"><a href="https://twitter.com/hoelzro">@hoelzro</a> COMBINE(1) is way more straightforward if you want to compare sets of lines.<br />apt-get install moreutils</p>&mdash; Vladislav Naumov (@vnaum) <a href="https://twitter.com/vnaum/status/682245404579250176">December 30, 2015</a></blockquote>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+
+Ever since that fateful day, I have not used `comm` once. `combine` does
+exactly what I need, and does so using a syntax that's so straightforward.
+My examples from above change to `combine B not A` and `combine A and B`, respectively.
+
+!! Discovering More Tools
+
+`combine` is part of the moreutils package, available on many platforms; I recommend looking
+at other tools in the package to see if you find something else that solves a problem you have,
+or better yet, a problem you didn't //know// you had!
+
+If `jq` apppeals to you, but you work with other kinds of structured data, you may find this
+repository on GitHub interesting:
+
+[[https://github.com/dbohdan/structured-text-tools]]
+
+Are you there any specialized tools you feel make your life a lot easier? If so, please let me
+know!

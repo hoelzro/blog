@@ -1,0 +1,178 @@
+created: 20160616050026000
+tags: salt r favorites [[Blog Post]]
+title: Winning at Salt Cartography Using Algorithms and Statistics
+modified: 20191211163225000
+
+! Winning at Salt Cartography Using Algorithms and Statistics
+
+I spend way too much of my free time playing [[Salt|https://saltthegame.com/]]
+- a game where you sail around a procedurally generated ocean, fending off
+pirates and hunting for treasure. A fairly recent addition to the game was
+cartography; you can add islands and features upon them to a map to stay
+oriented in the world. In the world, there exists a cartographer named
+Hachure, who will evaluate what you've mapped so far and reward you depending
+on how many islands you've mapped and how accurate your mappings are. So
+imagine my dismay when I had him evaluate my map for the first time and saw
+this:
+
+<$image source="//hoelz.ro/images/salt-inaccurate-map.png" alt="salt-inaccurate-map.png" width="800" height="450" />
+
+<$image source="//hoelz.ro/images/salt-inaccurate-map-2.png" alt="salt-inaccurate-map-2.png" />
+
+<$image source="//hoelz.ro/images/salt-inaccurate-map-3.png" alt="salt-inaccurate-map-3.png" />
+
+//94%?!//
+
+Unacceptable! I immediately felt a need to find the offending entries and remove them
+from my map!
+
+... But how to find the culprits?
+
+Fortunately for me, the mapping data is available on disk as a JSON
+document <<footnote """Sadly, this no longer seems to be the case =(
+""">>. So now this becomes an issue of devising an algorithm to identify a
+bad subset of entries, where the only test you have is a black box oracle that
+tells you how many entries in the current set are bad. While this //is//
+cheating at the game a little bit, I consider it pretty fair, since it's just
+saving me time from doing something by hand. ;)
+
+!! Time Complexity
+
+After taking a superficial look at this problem, I thought to
+myself "Oh, subsets and sets with a test? Sounds NP-complete!"
+I suppose I was just jumping at a chance to work on an NP-complete
+problem, because not only is this problem solvable in polynomial
+time, it's even solvable in `O(n)` time <<footnote """An example of an NP-complete
+version of this would be if some combination of map entries made the
+map bad, and you wanted to determine the minimum size of such a
+combination.
+""">>:
+
+```
+bad entries = {}
+for item in map entries:
+    set map to contain only item
+    ask oracle how many are bad
+    if more than 0 are bad, then
+        add item to bad entries
+```
+Unfortunately, the test for a set of map entries takes a while;
+it takes a good minute or so for Salt to start and load my save.
+That means running through the above algorithm would take about
+100 minutes. I don't have any qualms about code taking 100 minutes
+to find me an answer, but since it would be a human operator (ie.
+me) running these tests by clicking buttons, I want to lower the
+number of tests as much as possible. I don't even mind if this
+takes me more than 100 minutes to figure out - it'll be much
+more fun to stretch my brain!
+
+!! Improving Upon the Naïve Algorithm
+
+There's an easy improvement we can make to this algorithm. Instead of testing
+one entry at a time, we can test them in pairs. After going through 55 tests,
+if we found a pair with 2 bad entries, we know they're both bad; if we found
+one with 1 bad entry, we test one of the entries of the pair to see if it or
+its counterpart is the bad one. So, worst case scenario, 62 tests; a substantial
+improvement over the original 109!
+
+!! Divide and Conquer
+
+It turns out we can do an even better job than 62 tests. If we were just
+looking for one, this would be simple; just take half of the entries and try
+those. If there's a bad entry, recurse on that half; otherwise, recurse on the
+other half. Since we're dividing the problem space in half at each test, this
+algorithm is `O(log n)`, which means this would take about ''log₂(109) =
+6.768184 ≅ 7'' tests. Unfortunately, we have seven bad entries here, but maybe
+this can serve as some inspiration!
+
+Even though we have more than one bad item, we can still apply the divide
+and conquer idea. If we find 0 bad items in a half, we can discard it;
+we can also discard the other half if we found that the half we're testing
+contains //all// the bad items. If we find bad items in both halves, we
+can recurse into both halves until we find a subset with a single bad
+item, and then apply the algorithm I mentioned in the previous paragraph
+to find it.
+
+I'm not even going to try to analyse the time complexity in terms of big-O notation
+<<footnote """Who am I kidding? ;) Yes I am going to try - I would guess something like ''O(b
+* log(n/b
+""">>'', where b is the number of bad entries.)), but it turns out we can
+get a pretty reasonable guess for how many tests this should take. Let's
+consider the possibilities!
+
+!! Is Probability the Answer? Probably.
+
+Let's say we're looking at our first 55 items. What's the probability
+that those fifty-five items contains 0, 1, 2, 3, 4, 5, 6, or 7 bad items? I'm
+thankful that I took an introductory statistics course earlier this year,
+because the ideas presented in that course started to come back to me.
+It reminded of problems like "what's the probability of 5 out of 20 coin
+flips coming up heads?". However, this is a bit different; while a coin
+flip is not affected by previous flips, this is more like trying to determine
+how likely it is to draw a certain number of white balls from a collection of
+white and black ones - once you draw a white ball, the probability of drawing
+another goes down. Unfortunately, introductory statistics didn't prepare me
+for this - we only covered binomial (like coin flips), normal, and uniform
+distributions.
+
+After some poking around on Wikipedia, I discovered what's called the
+[[Hypergeometric distribution|https://en.wikipedia.org/wiki/Hypergeometric distribution]]. It's similar to the binomial distribution
+in that it involves tests with a binary outcome, but it differs in that
+it calculates probabilities without replacement. So, exactly what we need!
+
+In R, you can use the `dhyper` function to calculate probabilities for
+a hypergeometric distribution. With that knowledge at hand, we can calculate
+the expected number of tests that running through this algorithm should take.
+
+Let's consider the very first test in the program: testing a random subset of
+55 entries. We can see the probabilities of the various outcomes of that
+test like so:
+
+```
+  # logic(total=109, nbad=7)
+  > dhyper(0:7, m=7, n=102, k=55)
+  [1] 0.005943616 0.047672750 0.157611948 0.278447776 0.283907536 0.167068665
+  [7] 0.052537316 0.006810393
+```
+We can then recursively apply this logic to determine the expected number of
+tests we need to take for the subproblem each outcome represents, which would
+look something like this:
+
+```
+  # 0 bad entries in the tested half, 7 in the untested
+  > logic(total=54, nbad=7) # 22.36303 tests
+  # 1 bad entry in the tested half, 6 in the untested
+  > logic(total=55, nbad=1) + logic(total=54, nbad=6) # 26.13599 tests
+  # 2 bad entries in the tested half, 5 in the untested
+  > logic(total=55, nbad=2) + logic(total=54, nbad=5) # 27.7867 tests
+  # 3 bad entries in the tested half, 4 in the untested
+  > logic(total=55, nbad=3) + logic(total=54, nbad=4) # 28.56915 tests
+  # 4 bad entries in the tested half, 3 in the untested
+  > logic(total=55, nbad=4) + logic(total=54, nbad=3) # 28.5926 tests
+  # 5 bad entries in the tested half, 2 in the untested
+  > logic(total=55, nbad=5) + logic(total=54, nbad=2) # 27.85717 tests
+  # 6 bad entries in the tested half, 1 in the untested
+  > logic(total=55, nbad=6) + logic(total=54, nbad=1) # 26.25435 tests
+  # 7 bad entries in the tested half, 0 in the untested
+  > logic(total=55, nbad=7) # 22.53071 tests
+```
+We can then multiply these with their probabilities and sum the result (adding
+1 for the test we would do at this level) to get the expected number of tests:
+
+```
+  > 1 + sum(dhyper(0:7, m=7, n=102, k=55) *
+      c(22.36303, 26.13599, 27.7867, 28.56915, 28.5926,
+          27.85717, 26.25435, 22.53071))
+  # 29.01791 tests
+```
+Rounding up, we get 30 tests. Not bad!
+[[Here|https://gist.github.com/hoelzro/ec31e1e94f179ce81e7ff1e5d33513eb]] is an
+R script that performs the calcuation for expected tests, and
+[[here|https://gist.github.com/19573fbe0486fc6de0f3df0016639a05]] is a Perl 6
+script that implements the algorithm by rearranging the map contents and
+prompting me for the cartographer's answer. When I actually ran it, it took me
+27 tests to finish!
+
+This was a fun little exercise in algorithm design, plus I got to spread my stats
+wings a bit. I love it when I can use my programming knowledge to improve things
+like gaming!

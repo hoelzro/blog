@@ -1,0 +1,200 @@
+tags: lotm smalltalk [[Blog Post]]
+created: 20160618004418000
+modified: 20160618005304000
+title: Talking Small
+
+! Talking Small
+
+For the May [[language of the month|Language of the Month]], I got to play with a language that I've
+been looking forward to sinking my teeth into for a long time: Smalltalk. I've had a
+fascination with Smalltalk since I learned of it in college, but I didn't "get"
+it at the time due to lack of learning materials.
+
+Like Lisp, Smalltalk has multiple implementations to choose from; while Lisp
+implementations tend to be more like dialects (split across the Common
+Lisp and Scheme languages), Smalltalk implementations are more like
+separate languages that share grammar but differ in vocabulary. Many of the
+offerings are commercial; a few, such as Squeak, GNU Smalltalk, and Pharo, are
+free as in speech and as in beer. Pharo 5.0 recently came out, so let's give that a spin!
+
+!! Learning To Talk the (Small)talk
+
+Once you've downloaded and started Pharo, learning the language and the
+environment is pretty simple. You need only open a playground (a sort of
+scratch buffer for any kind of text, including code), type in `ProfStef go`,
+right click and click 'Do it'. This starts up an interactive tutorial that
+introduces you to the basics of the language and libraries.
+
+For a more in-depth Smalltalk education, I consulted
+[[Pharo By Example|http://pharobyexample.org/]]. It's a free book that covers
+the language, the Pharo libraries, and the tooling more in depth.
+Unfortunately, the version on that site is a little out of date; I recommend
+checking out the PDFs distributed in
+[[this GitHub repo|https://github.com/SquareBracketAssociates/UpdatedPharoByExample]] for a more up-to-date experience.
+
+The preface to Pharo by Example contains this quote, which I think is very important
+to internalize as one is familiarizing oneself with Smalltalk. As someone who
+//really// likes to dig deep and learn how things work on why, I find this
+especially pertinent:
+
+> Try not to care. Beginning Smalltalk programmers often
+> have trouble because they think they need to understand
+> all the details of how a thing works before they can use it.
+> This means it takes quite a while before they can master
+> Transcript show: 'Hello World' . One of the great leaps in OO is
+> to be able to answer the question “How does this work?”
+
+>
+
+> - Alan Knight
+
+!! Smalltalk is Small (ish)
+
+Smalltalk as a language is //very// minimalistic; some boast that its syntax is
+simple enough to fit on an index card. This means that to deliver on power, it
+relies heavily on its standard library. The Smalltalk environment, which I'll
+cover briefly, is also extremely important - it's the part that Smalltalk is so
+famous for. The de-emphasis on syntax is why you won't see a lot of code in
+this post.
+
+One thing that interests me about the small size of the Smalltalk language is
+this: why don't more Smalltalkers write their own implementation as an
+exercise, the way that Lispers do? I'm guessing it has to do with the size of
+the standard library you'd have to reproduce to have something workable, or the
+tooling is too difficult to reproduce for a single person. It might also come
+down to culture - considering that quote from above, it seems that Smalltalkers
+have pride in leaving some work for others and focusing on what matters to
+them.
+
+!! And Now For Something Completely Different
+
+One of the reasons that people recommend learning Smalltalk is that everything
+is so //different//. You don't really have files to work with; your code is
+contained in native, living structures that you can poke and prod with tooling
+or snippets of code. All of your code lives in what's called an //image//; you
+can think of these sort of like Docker images, if you're familiar with those,
+but Docker images focus more on transience and immutable infrastructure. You
+can acheive that with Smalltalk images, but it also allows you to develop
+incrementally in a way that feels really natural. Even the tools you're given
+are citizens of this community of objects - you can inspect and modify them as
+you wish.
+
+!! Tooling
+
+Speaking of tools, Smalltalk has some of the best. Here are just a few
+examples of some of the incredible tools that Pharo ships with.
+
+!!! Method Finder
+
+When you start working with Smalltalk, seeing all of the classes and their
+methods splayed before you can be a bit intimidating. "How do I convert a
+string to lowercase?", you might wonder. You can use the browser to scan
+through the various string methods, or you can try the spotter to search for
+methods containing words like 'lower' or 'down'.
+
+You know what you want to do; you want to transform the string '' 'Foo' '' into
+'' 'foo' ''. Wouldn't it be cool if you could just ask Smalltalk which method(s)
+you can use to do that? Well, you can! If you open the Method Finder and click
+the box to search by example, you can enter the following, and the method finder
+will reply with `'Foo' asLowercase`:
+
+```
+  'Foo' . 'foo'
+```
+I wanted to find a method to clamp a number to a particular range; here's an
+example of how I used the method finder to do that for me:
+
+<$image source="//hoelz.ro/images/method-finder.webm" alt="method-finder.webm" />
+
+This makes me think of Haskell's [[Hoogle|https://www.haskell.org/hoogle/]],
+only in a dynamically typed language, and driven by examples rather than types.
+
+!!! Coding in the debugger
+
+I'm an admitted printf-debugger. I don't use debuggers themselves too often;
+I'll use gdb to examine the occasional core dump or segfault, but I tend to
+rely on printf. That being said, using Pharo's debugger was a fun experience.
+A lot of Smalltalkers talk about "coding in the debugger", which means they
+write code that they know will fail, focusing on the higher-level details of
+the problem they're solving. A typical example is invoking a method you
+haven't written yet; when you're finished thinking at the high level and run
+the code, the debugger complains "hey, I don't understand this method!", and
+politely offers to create the method for you. You don't need to do anything
+special for this - the debugger is always waiting to help you out. I feel like
+this is a strong embodiment of the Alan Knight quote from above.
+
+After you create and implement the method, you can tell the debugger to
+proceed, which will invoke the method you //just// wrote and your application
+will carry on its merry way. Here's a trivalized example of that in action:
+
+<$image source="//hoelz.ro/images/coding-in-the-debugger.webm" alt="coding-in-the-debugger.webm" />
+
+!!! Ch-ch-changes
+
+Let's say you're working on your Smalltalk program, and you do something silly like
+write an infinitely recursive function. That's one drawback to Pharo - it's single
+threaded (as far as the OS is concerned), and it implements its own scheduler, so
+if you bog down that scheduler, your entire environment will freeze.
+
+This actually happened to me while I was working on a program in Pharo, and my only
+recourse was to kill the VM. Imagine if while working in a more traditional language
+and testing your program, that your program locked up, and the only way to proceed
+would be to kill your REPL along with your editor.
+
+Fortunately, Pharo ships with a tool to pull you out of the fire here.
+Whenever you make a change to Pharo code, whether it's deleting a method,
+adding a class, or changing a method, that change gets logged in what's called
+a //changes file//. There's a tool to work with this file, which allows you to
+recover from a catastrophe. It also allows you to review the entire history of
+your image and all of your code within - to bring back my editor analogy from
+above, it's as if your editor had an undo history that persisted across
+invocations, forever.
+
+!! Drawbacks
+
+While working with Smalltalk is fun and a learning experience, there were a few things I //didn't// like
+so much.
+
+Long if/else chains are unwieldy. You end up with something like ''condition
+ifTrue: [ ... ] ifFalse: [ condition2 ifTrue: [ ... ] ifFalse: [ ... ]]'', and
+it doesn't feel great. There's probably an idiomatic way of doing this that
+I'm missing, though.
+
+Classes are organized into packages to enhance searchability, but that's more
+like a convention - the namespace is flat. I wonder how often name collisions
+are a problem in the Smalltalk world!
+
+In Smalltalk, multi-argument methods use a keyword-like "split name" scheme, so
+instead of this:
+
+```
+  email.sendWithSubject(subject, 'me@example.com')
+```
+...you end up with this:
+
+```
+  email sendWithSubject: subject to: 'me@example.com'.
+```
+To me, this makes a lot of sense and enhances the readability of the language,
+but it's not perfect. There are no keywords in method calls - the method's
+name is 'sendWithSubject:to:' - so if you want something like keywords, you need
+create a method for each combination of "keywords" you support. Because of
+this, some Smalltalkers tend to use setter methods and chain them
+together, like so:
+
+```smalltalk
+email := Email new.
+email subject: subject.
+email to: 'me@example.com'.
+email send.
+
+"I'm a comment!  There's a shorter way to write this since the invocant
+remains the same:"
+
+email := Email new.
+email subject: subject;
+      to: 'me@example.com';
+      send.
+```
+I really enjoyed digging into Smalltalk, and I can't wait to share the program
+I wrote with you. Stay tuned for a writeup on that in the near future!

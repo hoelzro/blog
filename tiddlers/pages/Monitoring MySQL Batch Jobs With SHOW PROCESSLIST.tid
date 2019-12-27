@@ -1,0 +1,51 @@
+title: Monitoring MySQL Batch Jobs With SHOW PROCESSLIST
+modified: 20130909143555000
+tags: mysql [[Blog Post]]
+created: 20120116183827000
+
+! Monitoring MySQL Batch Jobs With SHOW PROCESSLIST
+
+Right now, I'm working on a Perl script that needs to do some data analysis on a MySQL table with nearly three billion rows. I don't
+have to process every row, so I have a WHERE clause to use, and since the table is partitioned by month, I decided to process the data set
+chunked by partition. So the query to fetch a chunk looks something like this:
+
+```mysql
+SELECT value FROM Data
+WHERE ...
+AND   sample_time BETWEEN ? AND ?
+```
+However, this query is run against 50-something partitions, and the whole process can take some time. Wouldn't it be nice to get a notion
+of which chunk the script is retrieving?
+
+Well, we //could// examine the output of SHOW FULL PROCESSLIST:
+
+```
+mysql> SHOW FULL PROCESSLIST;
+| Id     | User  | Host  | db   | Command | Time    | State         | Info                                                                                     |
+| 567973 | ***** | ***** | **** | Query   |       0 | Sending data  | SELECT value FROM Data WHERE ... AND   sample_time BETWEEN '1296540000' AND '1298959199' |
+```
+Unfortunately for me, sample_time is an integer timestamp, and I can't calculate the date from a timestamp at the drop of a hat, nor can I easily determine which partition that timestamp range
+represents in my list of partitions. What I really want to know is which iteration of the partition-processing loop my script is on, and how many partitions that loop is iterating over.
+
+So I changed my SQL statement in my script to this (`$num` and `$total` are, of course, Perl variables in my script):
+
+```mysql
+/* $num/$total */
+SELECT value FROM Data
+WHERE ...
+AND   sample_time BETWEEN ? AND ?
+```
+Now when I run SHOW FULL PROCESSLIST, I get something a little more useful:
+
+```
+mysql> SHOW FULL PROCESSLIST;
+| Id     | User  | Host  | db   | Command | Time    | State         | Info                                                                                                 |
+| 567973 | ***** | ***** | **** | Query   |       0 | Sending data  | /* 12/60 */ SELECT value FROM Data WHERE ... AND   sample_time BETWEEN '1296540000' AND '1298959199' |
+```
+This technique is not MySQL-specific, as long as your DBMS has some way of viewing which queries are running.
+
+This technique has the advantage of putting progress information somewhere hidden so you can retrieve it, in case you decide halfway through the
+script's execution that you should have provided the -v flag. Unfortunately, it is not without its disadvantages:
+
+* Any performance gains from prepared statements are lost, since you have to prepare a new statement for each chunk. I won't see a huge difference in my script (since I'm only running fifty or so queries, and the bottleneck is the database retrieval time), but your mileage may vary.
+* If you're not careful what information you're injecting for the reporting, you may leave your statements vulnerable to SQL injection.

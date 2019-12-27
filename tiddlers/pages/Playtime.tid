@@ -1,0 +1,24 @@
+title: Playtime
+modified: 20130909143555000
+created: 20130605163326000
+tags: programming fun [[Blog Post]]
+
+! Playtime
+
+Lately, I've noticed that I've devoted a lot of my time to open source projects or projects at work.
+While these are important, the kind of work these involve can get a bit repetitive at times, and I
+haven't really allocated a lot of time for "play" programming. By that, I mean writing things for
+fun, or experimenting with new things. To quote Albert Einstein:
+
+```
+Play is the highest form of research.
+```
+So in the coming weeks/months, I'm going to be setting aside time for "play programming." This
+might include playing with a [[new mobile OS|https://sailfishos.org/]]. It might include playing
+with [[different|http://www.rust-lang.org/]] [[programming|http://golang.org/]] [[languages|http://www.scala-lang.org/]].
+It might even include [[new frontiers of programming|https://github.com/hoelzro/rose-kernel]] that I don't have a lot
+of experience with.
+
+If you're interested in following my experiences, I'll be documenting them here, so stay tuned. =)
+
+-Rob

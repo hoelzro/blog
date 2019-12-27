@@ -1,0 +1,191 @@
+modified: 20160127145700000
+title: Anonymous State Variables And How They Work
+tags: perl6 [[Blog Post]]
+created: 20160127145700000
+
+! Anonymous State Variables And How They Work
+
+When debugging code, I will often add a counter variable to a loop
+so I can keep track of what's going on, or so that I can process
+a fraction of my data set while I'm iterating on a piece of code:
+
+```perl6
+my $event-no = 0;
+for get_events() -> $event {
+    $event-no++;
+    process-event($event);
+    last if $event-no >= 5;
+}
+```
+If you're just debugging, or if you're trying to save space in a one-liner,
+Perl 6 actually has a notion of //anonymous// state variables, indicated
+by a `$` without a name <<footnote """you can also use the kv method on many iterable
+objects to accomplish something similar, but anonymous `$` is more generic
+""">>:
+
+```perl6
+for get_events() -> $event {
+    process-event($event);
+    last if ++$ >= 5;
+}
+```
+However, be warned; usages like this will ''not'' work:
+
+```perl6
+for get_events() -> $event {
+    process-event($event);
+    $++;
+    last if $ >= 5;
+}
+```
+Now, why is that?
+
+!! Use the Source
+
+Well, let's have a look at the Rakudo source, shall we?
+
+As you can imagine, looking for how `$` is parsed in the Perl 6 Grammar would
+be a difficult task. So let's have the compiler itself help us! We'll take a
+small example:
+
+```
+  for ^10 { $++ }
+```
+and have Rakudo spit out the AST it generates, looking specifically for variables:
+
+```
+  $ perl6 --target=ast -e 'for ^10 { $++ }' | grep Var
+      - QAST::Var(attribute $!do) 
+      - QAST::Var(attribute $!do) 
+    - QAST::Var(local __args__ :decl(param)) 
+          - QAST::Var(lexical $¢ :decl(contvar)) 
+          - QAST::Var(lexical $! :decl(contvar)) 
+          - QAST::Var(lexical $/ :decl(contvar)) 
+          - QAST::Var(lexical $_ :decl(contvar)) 
+          - QAST::Var(lexical GLOBALish :decl(static)) 
+          - QAST::Var(lexical EXPORT :decl(static)) 
+          - QAST::Var(lexical $?PACKAGE :decl(static)) 
+          - QAST::Var(lexical ::?PACKAGE :decl(static)) 
+          - QAST::Var(lexical $=finish :decl(static)) 
+                - QAST::Var(lexical $ANON_VAR__1 :decl(statevar)) 
+                - QAST::Var(lexical $_ :decl(param)) 
+                      - QAST::Var(lexical $ANON_VAR__1) :BY<EXPR/POSTFIX W> :nosink<?> :WANTED $
+                        - QAST::Var(lexical $ANON_VAR__1) :BY<EXPR/POSTFIX W> :nosink<?> :WANTED $
+          - QAST::Var(lexical $=pod :decl(static)) 
+          - QAST::Var(lexical !UNIT_MARKER :decl(static)) 
+            - QAST::Var(local ctxsave :decl(var)) 
+            - QAST::Var(contextual $*CTXSAVE) 
+              - QAST::Var(local ctxsave) 
+                - QAST::Var(local ctxsave) 
+                - QAST::Var(local ctxsave) 
+```
+You might not noticed it right away, but in there is a suspicious declaration:
+`$ANON_VAR__1`. Now that we have a search string that's going to yield more
+relevant results, a simple search using a tool like [[ack|http://beyondgrep.com]]
+leads us to `src/Perl6/Actions.nqp`. Let's dive in!
+
+```perl6
+# taken from rakudo@85d20f3
+sub declare_variable($/, $past, $sigil, $twigil, $desigilname, $trait_list, $shape?, :@post) {
+    ...
+    elsif $desigilname eq '' {
+        if $twigil {
+            $/.CURSOR.panic("Cannot have an anonymous variable with a twigil");
+        }
+        $name    := QAST::Node.unique($sigil ~ 'ANON_VAR_');
+        $varname := $sigil;
+    }
+    ...
+}
+```
+So what this chunk of code (the only result when searching for `ANON_VAR`) tells is that when we
+declare a variable and it has no name after its sigil, we should generate a unique name.
+
+!! How Did We Get Here?
+
+That's fine, but how do we get here from the grammar? One dirty little trick I
+do in this situation is throw an exception and see where the backtrace leads
+me:
+
+```diff
+sub declare_variable($/, $past, $sigil, $twigil, $desigilname, $trait_list, $shape?, :@post) {
+    ...
+    elsif $desigilname eq '' {
+        if $twigil {
+            $/.CURSOR.panic("Cannot have an anonymous variable with a twigil");
+        }
++       if nqp::atkey(nqp::getenvhash(), 'ROB_DEBUG') {
++           $/.CURSOR.panic("here I am!");
++       }
+        $name    := QAST::Node.unique($sigil ~ 'ANON_VAR_');
+        $varname := $sigil;
+    }
+    ...
+}
+```
+After re-compiling, we run with my `ROB_DEBUG` environment variable turned on, and with `--ll-exception`,
+to make sure the internals are included in the stack trace:
+
+```
+  $ ROB_DEBUG=1 perl6 --ll-exception -e 'for ^10 { $++ }'
+```
+I won't include the stack trace for brevity's sake, but you can generate it yourself if you'd like to follow
+along. By looking for the first stack trace entry that mentions `Grammar.nqp` that occurs after the entry
+that mentions `Actions.nqp:3160` (where I inserted the exception), that leads us to `token variable` in
+`Grammar.nqp`:
+
+```perl6
+# also taken from rakudo@85d20f3
+token variable {
+    :my $*IN_META := '';
+    [
+    | :dba('infix noun') '&[' ~ ']' <infixish('[]')>
+    | <sigil> <twigil>? <desigilname>
+      [ <?{ !$*IN_DECL && $*VARIABLE && $*VARIABLE eq $<sigil> ~ $<twigil> ~ $<desigilname> }>
+        { self.typed_panic: 'X::Syntax::Variable::Initializer', name => $*VARIABLE } ]?
+    | <special_variable>
+    | <sigil> $<index>=[\d+]                              [<?{ $*IN_DECL }> <.typed_panic: "X::Syntax::Variable::Numeric">]?
+    | <sigil> <?[<]> <postcircumfix>                      [<?{ $*IN_DECL }> <.typed_panic('X::Syntax::Variable::Match')>]?
+    | <?before <sigil> <?[ ( [ { ]>> <!RESTRICTED> <?{ !$*IN_DECL }> <contextualizer>
+    | $<sigil>=['$'] $<desigilname>=[<[/_!¢]>]
+    | {} <sigil> <!{ $*QSIGIL }> <?MARKER('baresigil')>   # try last, to allow sublanguages to redefine sigils (like & in regex)
+    ]
+    [ <?{ $<twigil> && $<twigil> eq '.' }>
+        [ <.unsp> | '\\' | <?> ] <?[(]> <!RESTRICTED> <arglist=.postcircumfix>
+    ]?
+    { $*LEFTSIGIL := nqp::substr(self.orig(), self.from, 1) unless $*LEFTSIGIL }
+}
+```
+That chunk of code probably doesn't make a lot of sense to you if you're just
+starting out with Perl 6, let alone the Rakudo source. The important branch is
+consider is this one:
+
+```perl6
+| {} <sigil> <!{ $*QSIGIL }> <?MARKER('baresigil')>   # try last, to allow sublanguages to redefine sigils (like & in regex)
+```
+This branch accepts variables consisting solely of a sigil. So what ends up happening is that `token variable` matches each
+instance of bare `$` in the source code, and each occurrence ends up calling `Actions::declare_variable`, resulting in
+distinct variables, demonstrated by this snippet:
+
+```perl6
+for ^3 {
+    say ++$;
+    say ++$;
+}
+=output
+1
+1
+2
+2
+3
+3
+```
+So you are only allowed to do //very// simple operations with anonymous state variables. Keep in mind you can also do things with
+anonymous array or hash variables:
+
+```perl6
+for ^10 {
+    say((@).push($_));
+}
+```
+...but their cumbersomeness discourages usage in serious code.

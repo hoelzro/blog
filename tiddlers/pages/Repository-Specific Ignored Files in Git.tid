@@ -1,0 +1,31 @@
+created: 20111019154233000
+tags: git favorites [[Blog Post]]
+modified: 20160711180343000
+title: Repository-Specific Ignored Files in Git
+
+! Repository-Specific Ignored Files in Git
+
+Have you ever been working in a Git repository and wanted Git commands like `git status` to ignore certain files, but you didn't want to contaminate the
+project's `.gitignore` file with your specific ignore rules? Well, with `.git/info/exclude`, you can!
+
+Let's say you want to ignore a file called `notes`. I do this a lot, because I don't like polluting the revision history when I make changes to notes I have about a project.
+
+Instead of doing this:
+
+```
+echo notes >> .gitignore
+```
+do this:
+
+```
+echo notes >> .git/info/exclude
+```
+`.git/info/exclude` is never shared between repositories, so you can keep some files to yourself without the extra output from `git status` and friends.
+
+You can also add ignore patterns specific to your computer using `~/.gitconfig`; simply add the following (or something like it):
+
+```
+[core]
+  excludesfile = /home/myuser/.gitignore
+```
+Now `/home/myuser/.gitignore` will also be consulted for ignore patterns.

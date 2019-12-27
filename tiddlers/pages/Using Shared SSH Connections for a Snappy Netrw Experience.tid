@@ -1,0 +1,39 @@
+tags: vim ssh [[Blog Post]]
+created: 20110916220406000
+modified: 20130909143555000
+title: Using Shared SSH Connections for a Snappy Netrw Experience
+
+! Using Shared SSH Connections for a Snappy Netrw Experience
+
+If you're a Vim user like me, you may know of a little plugin called netrw. For
+those of you who are not familiar with it, it's a plugin that allows you to transparently
+edit remote files from within Vim. Instead of scp'ing a file over, editing it, and scp'ing it back,
+you can just do something like this:
+
+```
+vim scp://mymachine/groceries.txt
+```
+(I have an entry aliasing ''mymachine'' in `~/.ssh/config`, so I don't have to type `%%scp://rob@mymachine.mydomain.com:myport/groceries.txt%%` :-) )
+
+This plugin is a godsend for people who do a lot of work on remote files. However, if you're a compulsive saver like me, hitting '':w'' every other line
+typed, or if you're using the file browser mode of netrw to explore a remote filesystem, it can feel a little slow; also, if you don't have password-less SSH
+set up, you need to type your password every time! Fortunately, there's a solution to both of these issues: connection sharing.
+
+SSH has the ability to use existing connections for new clients, so if I have a connection open to my home box, and I run another SSH process connecting back to
+home, I don't need to open a new SSH session. It only makes a difference of second or so, but when you're using netrw, that's a huge difference.
+
+In order to turn this on, you can use the `-M` and `-S` options to `ssh`, or you can do what I do and turn on connection sharing by default by adding the following to `~/.ssh/config` (this way, all SSH-related programs, including scp, sftp, and rsync get the benefit):
+
+```
+Host *
+    ControlMaster auto
+    ControlPath /home/rob/.ssh/socks/%r@%h:%p
+```
+Obviously, you don't need to do this for every host.
+
+Now, if you do this and you know you'll be using netrw extensively for a period of time, just open up a connection to your intended destination:
+
+```
+ssh mymachine
+```
+And until you stop that process, interactions with remote filesystems at your destination will feel near-instantaneous, assuming your files aren't gargantuan!

@@ -1,0 +1,127 @@
+modified: 20161110145540000
+title: Milwaukee Hack 'n' Tell Retrospective
+created: 20161110145540000
+tags: programming fun [[Blog Post]]
+
+! Milwaukee Hack 'n' Tell Retrospective
+
+A few weeks ago I participated in a hack 'n' tell organized by [[RokkinCat|http://www.rokkincat.com/]]
+and held at [[Ward 4|http://www.ward4mke.com/]] in Milwaukee. RokkinCat organizes these because, as
+they explain in their [[blog post|http://www.rokkincat.com/blog/2016/10/08/what-is-a-hackntell]], Wisconsin
+is last in startup activity, and I was happy to participate to try and make my home state a better place to work and live.
+
+Like my [[previous hackathon|Yesterday I Did a Hackathon, and Here's What I Learned]], I
+feel like I accomplished a lot and learned a lot as well, so I wanted to talk about
+what I felt led to a successful day. I'm definitely going to be tooting my own horn a little bit here,
+but I feel like I managed to implement some "productivity secrets" that a younger me or other developers
+might find helpful!
+
+!! Effective Strategies for Productivity
+
+!!! Learn Something or Make Something
+
+On [[episode 272 of Ruby Rogues|https://devchat.tv/ruby-rogues/272-rr-game-development-and-rubymotion-with-amir-rajan]],
+the guest Amir put forth a mantra - something along
+the lines of "When you're working on a project, you need to decide if you want to learn
+something or make something". This really spoke to me, because oftentimes I will come up
+with an idea for a useful tool, and I'll think to myself "oh, this sounds like a great
+opportunity to learn {LANGUAGE,LIBRARY,WHATEVER} $X!"
+
+This raises the barrier to starting the project considerably, since now not only do I have
+to carve out time for working on the idea itself, but I also need to attain a base level
+of competence with that new thing I'm trying out. And even if I manage to summon the
+willpower to start, I work that much more slowly as I try to navigate what the project
+needs as well as the idiosyncrasies of whatever I'm learning.
+
+For this hack 'n' tell, I really wanted to be pragmatic and clear out some of
+the project ideas I've had recently. So I approached the hack 'n' tell with
+two things in mind:
+
+* I would only select ideas for projects that didn't require me to learn anything, or only required me to learn a small thing. For example, learning a new utility library was ok; learning how to write browser extensions was not.
+* I would stick to languages and libraries I was already familiar with.
+
+Regarding the second point, I decided to use two languages I feel confident
+with: Perl and Elm. Perl isn't the most glamorous choice these days, but
+if you know it well, you can really get a lot done fast. Elm is a little
+trendier, but I feel that the hype is justified - Elm has a lot of things
+going for it that allow you to be really productive when working with it.
+
+!!! Preparation
+
+There's a Confucius quote that...well, frankly I looked up specifically for this post
+to sound insightful, but that doesn't make it any less relevant:
+
+```
+  In all things success depends on previous preparation, and without such previous
+  preparation there is sure to be failure.
+```
+I am a chronic under-preparer - I feel that I would be much more successful in
+my life if I could make a better habit of preparing for things. So during the
+week preceding the hack 'n' tell, I spent probably an hour or so going through
+my list of coding ideas I keep in my Getting Things Done system. If I felt
+that I couldn't finish a given idea in a day, or, as I said above, if I needed
+to learn something completely new, I dismissed the idea for the hack 'n' tell.
+From this, I used [[Idea Fight|http://idea-fight.hoelz.ro]] to order my ideas
+and come up with a "top five" list. This helped me remove the decision process
+from when I was supposed to be productive, and wow did it work! I also
+made sure to gather all of the materials I needed in advance - I downloaded data sets,
+gathered documentation, etc to make sure I could just focus on making something.
+
+!!! Decide on an MVP
+
+One big problem I have with ideas is I tend to dream big - //really// big. I'll dwell
+on a new idea for hours, or on and off over days, raising constant "what if"s about
+how //amazing// the project could be someday.
+
+The key word there is "could" - it's ok to dream, but I need to plant my feet
+on the ground some more. The problem with having project sprinkled with pipe
+dream ideas is it can make starting feel overwhelming, which is why I feel like
+I never start on my ideas!
+
+So after I decided on my top five projects, I spent just a few minutes thinking about
+them. What is the MVP - the minimum viable product - for each of them? You can always
+add your flashy ideas later, but it's good to have a minimal prototype so you have some
+momentum and you can see if the reality of the idea matches your imagination!
+
+!! Challenges, Lessons, and Changes for Next Time
+
+While I feel that the day was pretty productive, there were a few old habits I still
+fell back on:
+
+!!! I didn't commit to Git
+
+Even though I created Git repositories for each project, I failed to make
+incremental commits over the course of the day. I usually beat this drum
+at work and in other projects I work with, so it's something I would
+like to improve upon.
+
+!!! The Code is Messy
+
+Not all of the code, but a good chunk of it is pretty messy. This kind
+of ties into the MVP/prototype lesson from above (is code cleanliness
+part of the MVP?), but there's certainly a spectrum, and I would like
+to move towards the cleaner end of that spectrum.
+
+!!! I didn't socialize enough!
+
+I am a pretty shy person by nature - I struggle with introducing myself,
+but once I get comfortable, I feel like my enthusiasm really shines through.
+I didn't take the opportunity to get to know a lot of people at the hack 'n'
+tell, and that's part of the reason I went there! I could've just stayed
+at home and worked there if I just wanted to code, but I attended to get
+to know some of the fascinating people working on interesting things in
+the Milwaukee area.
+
+At the end of the day, people who wanted to presented their projects to
+the group. There were some really cool projects people were working on -
+one guy was working on a HoloLens program to help physical therapy patients
+out, one group was working on sketches for an animated short they were doing,
+and others were just playing with technology they'd heard about and found
+interesting. Next time I would like to get to know some of the people better.
+
+!!! Focus on Fun
+
+For the next hack 'n' tell I do, I plan on focusing less on productivity
+and more on doing something fun, whether that means making a game, or
+learning something new. While useful things are great, [[having fun|Playtime]]
+by expanding your mind or //making// something fun is important too.

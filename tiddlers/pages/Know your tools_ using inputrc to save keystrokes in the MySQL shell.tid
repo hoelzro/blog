@@ -1,0 +1,59 @@
+modified: 20150330151351000
+title: Know your tools: using inputrc to save keystrokes in the MySQL shell
+tags: shell mysql [[Blog Post]]
+created: 20150330151351000
+
+! Know your tools: using inputrc to save keystrokes in the MySQL shell
+
+I do a lot of work with MySQL, and I often bemoan the lack of a concise
+shortcut to list tables matching a pattern. I much prefer psql's `\d`
+shortcut as opposed to mysql's `SHOW TABLES`. However, since the mysql
+client uses GNU readline, we can leverage readline's macro facility to make
+things easier on ourselves!
+
+Readline is the line editor that mysql uses; you can configure it to do many things,
+but here, I'm going to demonstrate how you can configure it to save you a load of
+keystrokes.
+
+Readline has a key binding facility, where you can bind a key to a function. For example:
+
+```
+  C-f: forward-word
+```
+This binds control-f to the forward-word command, which does exactly what you'd expect.
+But if you use a double-quote encapsulated string, you can also bind a key to a sequence
+of keystrokes:
+
+```
+  C-h: "hello"
+```
+If you have this in your inputrc, when you type control-h, the string "hello" will be
+inserted at the cursor. Here's my macro for `SHOW TABLES`:
+
+```
+  "\C-xs": "show tables like '%%';\e[D\e[D\e[D"
+```
+When I hit control-x and then s (a key chord), "show tables like '%%'" appears in my
+mysql shell, and the cursor is placed between the two '%' characters. (That's what
+the `\e[D` characters are; they're the terminal code for moving the cursor left).
+The quoted string on the left side of the colon is the syntax for defining a key chord.
+
+Since a lot of applications use readline for their line editor, you can do this
+for many applications, such as Bash. However, let's say you don't want to have
+this shortcut available in every readline application, or you want different
+applications to handle the same macro in similar (but different) ways. Inputrc
+supports conditionals, checking the terminal type or the application in use.
+So you can make that macro mysql-specific like so:
+
+```
+  $if mysql
+    "\C-xs": "show tables like '%%';\e[D\e[D\e[D"
+  $endif
+```
+Some programs don't use readline for their line editor; there are other
+libraries available, such as editline, linenoise, and zle (the line editor
+within Zsh). Editline supports a macro facility; I believe zle does as well,
+but I wouldn't count on linenoise supporting it, since its goal is to be
+minimalistic.
+
+If you want to dig into this some more, there's always the [[readline documentation|http://cnswww.cns.cwru.edu/php/chet/readline/rluserman.html#SEC9]]. If you're curious what settings, key bindings, and macros I use, here's a [[my current inputrc file|https://github.com/hoelzro/dotfiles/blob/master/inputrc]].

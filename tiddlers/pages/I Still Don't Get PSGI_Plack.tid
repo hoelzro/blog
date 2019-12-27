@@ -1,0 +1,20 @@
+modified: 20130909143555000
+title: I Still Don't Get PSGI/Plack
+tags: perl plack psgi [[Blog Post]]
+created: 20101011184611000
+
+! I Still Don't Get PSGI/Plack
+
+Ok, I've attended [[Perl Mongers|http://madmongers.org/]] meetings about [[Plack|https://metacpan.org/pod/Plack]]. I've attended [[Miyagawa|http://bulknews.typepad.com/]]'s OSCON talk about it. I've read about middleware and backend-agnostic goodness, and even read a [[blog post|http://www.simon-cozens.org/content/i-finally-get-psgi-and-plack]] titled "I finally get PSGI and Plack!"
+
+I still don't get it.
+
+I mean, I understand that if you're a web //framework// developer, it's the coolest thing since sliced bread. Or sliciest thing. Whatever. It allows you to target one backend (PSGI) instead of a dozen (CGI, FastCGI, mod_perl and friends). But for me, someone who writes web //applications// using [[Catalyst|https://metacpan.org/pod/Catalyst]] for a job, I don't see the benefit. Catalyst already targets different backends, and in particular FastCGI, which we use at work. So switching to a Plack-based architecture doesn't help us there.
+
+I've seen and tried [[Starman|https://metacpan.org/pod/Starman]], and it is FAST! Other servers like [[Twiggy|https://metacpan.org/pod/Twiggy]] would allow me to write web applications that interact with [[AnyEvent|https://metacpan.org/pod/AnyEvent]]. But right now, our FastCGI environment is fast enough, and I don't currently have a need for fancy features like AnyEvent interaction. So I don't see the need to give my sys admin a headache for extra speed that we don't need or to access features I wouldn't use.
+
+Now I hear you say "But Rob, Plack has [[Middleware!|https://metacpan.org/pod/Plack::Middleware]]" And it does! And it's cool! But all of the useful middleware I've found has a Catalyst plugin counterpart, so again, why make the switch?
+
+My understanding of Plack is that it would help me to write a web application framework, but -- other than middleware -- it doesn't affect me much as a web application developer. Am I totally wrong here?
+
+-Rob

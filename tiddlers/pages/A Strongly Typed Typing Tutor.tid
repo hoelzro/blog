@@ -1,0 +1,167 @@
+title: A Strongly Typed Typing Tutor
+modified: 20160928004431000
+tags: lotm elm russian favorites [[Blog Post]]
+created: 20160307130208000
+
+! A Strongly Typed Typing Tutor
+
+My project for the February language of the month was really exciting to work on, because
+it incorporates two of my favorite things: programming, and learning (natural) languages.
+
+Last week, I [[used Perl 6 to find the most common n-grams in on HabraHabr|Finding the most common n-grams in Russian using Perl 6 and HabraHabr]], a Russian news site.
+At the end of the post, I said I would do something with this data to help improve my Russian typing speed.
+What I needed to do next was to build a UI to display n-grams and allow me to type them in. Hmm...what technology
+could I use to build a UI quickly?
+
+I know...[[Elm|Climbing the Elm Tree]]!
+
+!! Demo
+
+The cool thing about writing a program in Elm and blogging about it is that since it's browser-based, I can show it
+off right here, right now! Go ahead, try typing in some characters:
+
+
+  <div id='typing-tutor' style='width: 800px; height: 400px'>
+  </div>
+
+  <script type='text/javascript' src='//typing-tutor.hoelz.ro/en/elm.js'>
+  </script>
+
+  <script type='text/javascript' src='/media/typing-tutor-init.js'></script>
+
+
+This example uses English instead of Russian, because I don't expect many of you to know how to type Russian
+just yet. =) If you want to try the Russian version, it's [[here|http://typing-tutor.hoelz.ro/ru]].
+
+!! It's nice under the shade of the Elm tree
+
+Writing Elm is a pleasure, but there are a few things that I particularly enjoyed.
+
+!!! Small functions are encouraged
+
+Because of the way Elm's syntax works, long functions tend to look very ugly, so I ended up refactoring
+into a lot of smaller functions. I look at this as an advantage, because it encourages the developer to
+deal with things at the proper level of abstraction when writing a function, and smaller functions are easier
+to reason about.
+
+!!! <| and |>
+
+Elm has two operators that help you when chaining calls together; they are similar to Haskell's `$` operator. Their
+names are `<|` and `|>`. If they remind you of shell pipes, I'm sure that's intentional; they work like pipes,
+and the angle bracket character in each indicates in which direction values flow. I built up my program's state changes
+as small functions that do one thing; using `<|` makes them easy to chain together. For example, I lock the UI for one second when
+the user presses the wrong key. When it comes time to unlock the UI, I need to update the state so that
+the UI knows it's no longer locked, but also I need to start the user over in typing the current n-gram. I wrote two
+functions that achieve this: `clearLock` and `resetCard`. If I want to update the state, I could do it this way:
+
+```elm
+clearLock (resetCard state)
+```
+...but using `<|`, in my opinion, is so much clearer, especially when you need to call even more update functions:
+
+```elm
+clearLock <| resetCard state
+```
+!!! HTML library
+
+Elm's HTML library makes it easy to generate chunks of HTML to render parts of your application. For example, this is
+the code that renders a card, which is my program's abstraction over testing the user against a single n-gram:
+
+```elm
+showCard : Card -> Html
+showCard (Card target typed) =
+  let targetDisplay = text target
+      ruleDisplay = hr [] []
+      typedDisplay = renderTyped target typed
+      styleAttr =
+    style [("width", "400px"),
+           ("height", "400px"),
+           ("border", "thin solid lightgray"),
+           ("box-shadow", "5px 5px lightgray")]
+  in div [styleAttr] [ targetDisplay, ruleDisplay, typedDisplay ]
+```
+Pretty straightforward, huh?
+
+!! Caveat Elmtor
+
+While I enjoy Elm overall, I did encounter some quirks in the language. Here are the more signficant ones I discovered.
+
+!!! foldp doesn't get initial signal values
+
+I wanted to use the current timestamp as a seed for the RNG, and I only wanted to seed the RNG once. This seemed
+pretty simple:
+
+```elm
+type alias State = { seed : Maybe Random.Seed }
+
+let startingTimestamp = Signal.map (round << fst) <| Time.timestamp <| Signal.constant ()
+    update = \timestamp state -> { state | seed = Just <| Random.initialSeed timestamp }
+in Signal.foldp update { seed = Nothing } startingTimestamp
+```
+However, there's a caveat with `foldp`: it won't use the first signal value, so the seed is never initialized
+in this case! Fortunately, I did some searching and stumbled upon
+[[this StackOverflow post|http://stackoverflow.com/questions/28606248/what-is-the-correct-way-of-initializing-an-elm-application]]
+that recommends using ''Signal.Extra.foldp' ''. I didn't end up needing to use `Signal.Extra`, but it's good to have that
+in my back pocket for future Elm applications.
+
+!!! Overuse of Debug.crash
+
+A lot of Elm's functions, such as getting the first element of a list, return a `Maybe` result; that is, you need to use a `case`
+statement to extract the actual result and handle the case where there is no result. However, sometimes, I //know// there's a result.
+one example of this is if I generate a random index into a list, and I then want to retrieve the item given that index. The index
+is guaranteed to be within the bounds of the list, but I would still need to handle the `Nothing` case. As a result, I ended up calling
+`Debug.crash` way more than I care to admit.
+
+`Debug.crash` is Elm's panic button; it terminates the application with no chance of recovery. I think that its usage is acceptable
+in sections of code where its invocation is impossible, but the compiler still needs to be satisfied.
+
+!!! Function signatures must be exhaustive
+
+My program has two types of inputs it needs to respond to: timer updates and key presses. I represented this via the following datatype:
+
+```elm
+type Event = Clock Time
+  | Keypress Char
+```
+...which means my update function looks something like this:
+
+```elm
+update : Event -> State -> State
+update event state =
+  case event of
+    Clock t -> -- handle clock update
+    Keypress c -> -- handle key press
+```
+The logic for each type of event is pretty involved, so I figured that it would make sense for each to live in its own function. However,
+when I tried this:
+
+```elm
+handleClockUpdate : Event -> State -> State
+handleClockUpdate (Clock t) state = ...
+```
+The compiler yelled at me:
+
+```
+-- PARTIAL PATTERN ---------------------------------------------------- Main.elm
+
+This pattern does not cover all possible inputs.
+
+54│ handleClock (Clock t) state =
+                 ^^^^^^^
+You need to account for the following values:
+
+    Main.Keypress _
+
+Switch to a `case` expression to handle all possible patterns.
+```
+While this error message is understandable and clear, I'm only ever going to
+call `handleClockUpdate` with a `Clock` event. This is somewhat similar to
+my gripe above about having to use `Debug.crash` to address scenarios that
+I'm confident will never happen; I'm grateful that the compiler is so careful,
+though. I would like to be able to express functions in multiple variants like
+I can in Haskell or Perl 6; hopefully this will come in a later version of the
+Elm language.
+
+If you're curious about the full program, I uploaded it to [[GitHub|https://github.com/hoelzro/elm-typing-tutor]].
+If you're an experienced Elm user, please let me know if there are ways to address the issues I found above, or
+if there's some other ways I can improve my code!

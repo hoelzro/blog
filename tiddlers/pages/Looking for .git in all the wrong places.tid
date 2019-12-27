@@ -1,0 +1,24 @@
+modified: 20150421202743000
+title: Looking for .git in all the wrong places
+created: 20150421202743000
+tags: git [[Blog Post]]
+
+! Looking for .git in all the wrong places
+
+Like many of you, I store my dotfiles in Git repos. However, I quickly encountered a problem with this approach: my configurations
+would often get out of sync between my various machines. Instead of writing a script to check for updates
+or just being diligent about it, I decided that I would integrate my configurations into something on my machines that check for updates already: the system package manager!
+
+Unfortuantely, fixing that problem created a new one. I used to have each configuration directory checked out as a Git repository, so to change or fix something, I only had to make the change, test, commit, and push. But now, it seems that I need to sync my changes between my config directory and a clone to commit and push. However, there's a better way!
+
+!! GIT_DIR
+
+Although Git looks for `.git` in an ancestor directory by default, you can override its normal logic for finding the repository directory via the `GIT_DIR` environment variable. Which means if I want to make a local
+change and push it, I only need to do the following prep work:
+
+```
+  $ cd ~/.vim
+  $ export GIT_DIR=~/projects/vimfiles/.git
+```
+Now all of the regular Git commands work as if `~/.vim` were a normal repository! Interestingly enough, there is a companion environment variable, `GIT_WORK_TREE`, that
+tells Git where the working directory is; if you want to do things the other way around.

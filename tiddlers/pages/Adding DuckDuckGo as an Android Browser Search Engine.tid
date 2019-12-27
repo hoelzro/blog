@@ -1,0 +1,124 @@
+modified: 20130909143555000
+title: Adding DuckDuckGo as an Android Browser Search Engine
+created: 20110303144154000
+tags: android ddg cyanogenmod [[Blog Post]]
+
+! Adding DuckDuckGo as an Android Browser Search Engine
+
+A little while ago, I switched to [[DuckDuckGo|http://duckduckgo.com]] as my primary search engine. However, the default browser on Android only offers me three choices:
+Bing, Yahoo, and Google. I figured that since the browser component of Android is open source, it shouldn't be too hard to add DuckDuckGo to the mix. So here's how
+I did it.
+
+NOTE: I did a full backup using Titanium Backup before doing this. I also did this on a phone running CyanogenMod; you should be able to do this with a regular
+rooted phone, just compile from the Android project source instead of the CyanogenMod source. This worked for me, but I take no responsibility if you brick your phone attempting
+to do this!
+
+!! Download the Android Browser Source
+
+I figured that building the browser APK would be as simple as grabbing the source and running ''ant''.
+Grabbing the source is easy, as the Android Git repository is hosted at [[http://android.git.kernel.org/]].
+However, I use the [[CyanogenMod|http://www.cyanogenmod.com]] firmware for my phone, so I figured it'd
+be a better idea to build from their Git repository:
+
+```
+$ git clone git://github.com/CyanogenMod/android_packages_apps_Browser.git
+
+```
+I took a look at the files I'd just downloaded, and a build.xml file was nowhere to be found. The only
+thing close to resembling a build file was the Android.mk file, and some quick searching showed that that
+file was part of the Android build system. No matter, I thought; I'll just generate a build.xml using the
+android utility and use that! I don't want to build the whole Android project; I just want to build a custom
+browser!
+
+```
+$ android update project -p . --target 7 # Target 7 is the Android 2.2 SDK in my setup, since I'm using CyanogenMod 6
+
+```
+Well, that was painless!
+
+```
+$ ant release # fails!
+
+```
+Unfortunately, that didn't work either; it complained about some missing classes that are apparently only available when building
+the whole of the Android project.
+
+!! Building CyanogenMod from Source
+
+Instead of trying to figure out how to compile the browser by itself, I decided to just check out the full source
+from Github:
+
+```
+$ repo init -u git://github.com/CyanogenMod/android.git -b froyo-stable # again, CyanogenMod 6
+$ repo sync -j16 # go grab lunch or something; this takes a while!
+
+```
+Then, according to the [[instructions on the CyanogenMod wiki|http://wiki.cyanogenmod.com/index.php?title=Compile_CyanogenMod_for_Sholes]], the next step
+is to load a setup script:
+
+```
+$ . build/envsetup.sh
+
+```
+This makes a few convenience functions available for building the Android source, mainly //m//, which builds the whole thing.
+
+```
+$ m
+
+```
+I ran this to make sure that the browser builds, and sure enough, it did!
+
+!! Adding DuckDuckGo to the Search Engine List
+
+Now that I have the build environment set up, I can make my modifications. It turns out that the search engine information is stored in two resource files, //res/values/all_search_engines.xml//
+and //res/values/search_engines.xml//. The former stores the localized names, addresses, and search engine patterns for each search engine, and the latter lists the search engines that the browser
+actually uses. So after a little editing, my //res/values/search_engines.xml// looked like this:
+
+```xml
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+  <string-array name="search_engines" translatable="false">
+    <item>google</item>
+    <item>yahoo</item>
+    <item>bing</item>
+    <item>ddg</item>
+  </string-array>
+</resources>
+```
+...and I added the following to the end of my //res/values/all_search_engines.xml//:
+
+```xml
+<string-array name="ddg" translatable="false">
+  <item>Duck Duck Go</item>
+  <item>duckduckgo.com/</item>
+  <item>http://duckduckgo.com/favicon.ico</item>
+  <item>http://duckduckgo.com/?q={searchTerms}</item>
+  <item>UTF-8</item>
+  <item>http://duckduckgo.com/?q={searchTerms}&amp;o=json</item>
+</string-array>
+```
+Re-build, and lo and behold, there's a Browser.apk under out/target/product/generic/system/app!
+
+''UPDATE'': For CyanogenMod 7's browser source (and possibly Gingerbread's as well), //res/values/search_engines.xml// has become //res/values/donottranslate-search_engines.xml//.
+
+!! Installing the new Browser.apk
+
+Installing the new APK isn't as easy as just opening it in the package manager, since it's located under /system/app, which is read-only by default.
+You need to plug your phone in, turn on USB debugging, remount the filesystem to make it writable, delete the old Browser.apk, and install the new one.
+
+```
+$ adb remount
+$ adb shell rm /system/app/Browser.apk
+$ adb install Browser.apk
+
+```
+I also rebooted for good measure:
+
+```
+$ adb reboot
+
+```
+And here's the end product running on my phone!
+
+<$image source="//hoelz.ro/images/settings.png" alt="Browser Settings" width="240" height="427" />
+<$image source="//hoelz.ro/images/search.png" alt="Browser Search" width="240" height="427" />
+<$image source="//hoelz.ro/images/results.png" alt="Search Resuls from DDG!" width="240" height="427" />

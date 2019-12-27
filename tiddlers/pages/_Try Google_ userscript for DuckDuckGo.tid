@@ -1,0 +1,44 @@
+title: "Try Google" userscript for DuckDuckGo
+modified: 20150421153421000
+created: 20150421153421000
+tags: ddg userscript
+
+! "Try Google" userscript for DuckDuckGo
+
+I love [[DuckDuckGo|http://duckduckgo.com]]. Ninety-nine percent of the time, it gives me exactly what I want. But sometimes, I want to consult Google for its
+results. When DuckDuckGo doesn't come up with anything, it presents you with a link to do this, but with the following userscript, you can get a "Try this search
+on Google" link all the time!
+
+```javascript
+// ==UserScript==
+// @match http://duckduckgo.com/*
+// ==/UserScript==
+
+(function() {
+    var tryGoogleDiv = document.createElement('span');
+    tryGoogleDiv.style.opacity         = 0.6;
+    tryGoogleDiv.style.backgroundColor = 'black';
+    tryGoogleDiv.style.color           = 'white';
+    tryGoogleDiv.style.position        = 'fixed';
+    tryGoogleDiv.style.top             = '65px';
+    tryGoogleDiv.style.left            = '10px';
+    tryGoogleDiv.style.zIndex          = 20000;
+
+    var form    = document.getElementById('search_form');
+    var inputs  = form.getElementsByTagName('input');
+    var q;
+
+    for(var i = 0; i < inputs.length; i++) {
+        var input = inputs[i];
+        if(input.name == 'q') {
+            q = input;
+            break;
+        }
+    }
+    tryGoogleDiv.innerHTML = '<a href="http://google.com/search?q='
+        + q.value + '" target="_blank" style="color: white">Try this same search with Google!</a>';
+
+    var parent = document.getElementById('content');
+    parent.insertBefore(tryGoogleDiv, parent.firstChild);
+})();
+```

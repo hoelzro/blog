@@ -1,0 +1,41 @@
+tags: cloud linuxoutlaws [[Blog Post]]
+created: 20111025194844000
+modified: 20180720175751000
+title: Why OwnCloud
+
+! Why OwnCloud
+
+In the latest Linux Outlaws episode ([[episode 234|http://sixgun.org/episode/lo234/]]), Dan and Fab go over the latest [[OwnCloud|http://owncloud.org/]] release.
+Fab states his opinion that there's no point to running your own cloud service, since cloud services are all about delegating infrastructure control to a third party.
+In my opinion, cloud services are about three things:
+
+!! It's accessible everywhere
+
+One of the reasons that I use a lot of the services I use (like Google Reader) is that I can access their features wherever I may be. At home and bored? Pull up Google Reader.
+At work and need a break? Pull up Google Reader. Visiting my parents and have time to kill? Pull up Google Reader. Waiting in line somewhere? Pull up Google Reader. Its killer feature
+(for me at least) is that I can use it anywhere. However, this is another feature that OwnCloud boasts as well, depending on how you set it up. You could put it behind a VPN, or on
+a public server you own, etc.
+
+!! No need to worry about infrastructure
+
+Here's Fab's main point: with cloud services, you have the following advantages:
+
+* No need to worry about setting up a web server, database, PHP/Ruby/whatever; it's done for you.
+* You don't need to run a server at home.
+* You don't need to keep your computer on all the time, saving the environment and your electric bills.
+
+If you're using OwnCloud or similar products just for yourself, I have no arguments against the first bulletpoint; however, things like OwnCloud are also attractive to organizations and companies that want to provide a cloud-like experience for their employees or customers, but want to retain control. I can log into my work's wiki whenever I like to read content on it, but I don't have to worry about maintaining it. Unless I'm on call that week, that is. =P
+
+As far as running a server at home goes, if you have a desktop computer, you can make a simple server out of that; you could also buy a plug computer for a fairly low price and use that. You could even install [[OpenWRT|https://openwrt.org/]] on your router to provide some of the same services. (On a side note, I highly recommend playing around with OpenWRT; it's a little more work than buying a router and setting it up, but it's well worth it.) Or you could run on a hosting provider, if you're willing to shell out some money for one.
+
+As far as the third point goes, it doesn't even apply to plug computers (because of their extremely low power consumption) or to an OpenWRT-based router (because it's on anyway). And if you take my advice and set up OpenWRT on your router at home, you can mitigate power consumption on your desktop by setting up Wake on LAN and turning it on remotely only as needed.
+
+!! It's social (sometimes)
+
+This is the big advantage that cloud-based services have that things like OwnCloud have trouble replicating. In my earlier example of Google Reader, I couldn't care less if it were socially integrated (although users of its social features might); if there were an alternative I could run myself, I probably would. However, for services like [[GitHub|https://github.com/]], I rely on the fact that many people can see what I do there. The same goes for services like [[Identica|http://identi.ca]] (even though I could run my own version of Status.net); if I were running my own instance, people might find it frustrating to communicate with me. However, this is where Status.net gets it right with federation; if I could set up my own [[Gitorious|http://gitorious.org/]] instance that people could submit pull requests against via their GitHub accounts, I'd be much more likely to do so.
+
+! The advantage of managing your own cloud
+
+I've gone over the advantages of letting a third party manage a cloud service for you, so it's only fair that I close with the advantage that managing your own cloud service gives you.
+It's not just the obvious advantage that your data are your own and no one else's; the //code// is as well. If I want a new feature on Google Reader (barring anything I can do via user scripts, browser extensions, or accessing the API once it's been made public), I have to ask Google and wait and see. If they don't think it's worth the time and effort, I don't get my feature. Even if they do, I might have to wait a long time for it to be rolled out. Same goes for GitHub. However, if I run an OwnCloud instance and I want a feature, all I need is to find the time to do it myself, or
+find someone else who thinks my idea is also worth implementing and collaborate with them.

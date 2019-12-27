@@ -1,0 +1,87 @@
+tags: hackathon lua love2d [[Blog Post]]
+created: 20121228230324000
+modified: 20130909143555000
+title: Yesterday I Did a Hackathon, and Here's What I Learned
+
+! Yesterday I Did a Hackathon, and Here's What I Learned
+
+Yesterday, I attended a game creation hackathon at the [[Dutch Game Garden|http://www.dutchgamegarden.nl/]] in Utrecht, courtesy
+of [[HackersNL|http://hackersnl.nl/]]. We had eight hours to create a game based on content from "Open Culture Data sets", which
+is a grouping of data sets involving the Netherlands. We had at our fingertips the works of the Rijksmuseum, sounds of the Netherlands,
+maps from the Dutch golden age, among other things. At the start, I had no idea what I would work on. I thought I might make a Memory-style
+game where the cards have Dutch works of art on them. However, I eventually had a better idea: I ended up writing a game where you play a
+thief that sneaks around the Rijksmuseum at night, stealing works of art and hiding from the guards. But the game isn't important: what's
+important here is the knowledge I gained during this experience, which I would like to relate to you now. A lot of it are things I already
+knew, but the experience really helped to drive it home! I'm mainly writing this to gather my thoughts and serve as a reference to my future self,
+but hopefully you will be able to learn something too, get motivated to take part in a hackathon, or at least relate to the experience.
+
+! I can put a lot of code out in seven to eight hours
+
+I made every attempt to optimize my workflow for output of code, and it paid off. I avoided looking at my news feeds, Twitter, and Status.Net,
+and I stayed off of chat and IRC. I seldom checked my e-mail, and I only visited my browser to view documentation. I was able to churn
+out what I felt was a good amount of code. It wasn't the highest quality of code, but it was far from my worst. It seems obvious, but it's
+amazing what removal of distraction can do for your productivity. This is probably the lesson I want to apply most in my job and my open
+source development.
+
+! Sticking with the familiar was wise...
+
+I had a few ideas on what to use for my game (even though I had no idea what kind of game to write); I was thinking of playing with
+[[Squeak Smalltalk|http://squeak.org/]] (something that's been on my list of languages to thoroughly research for a while), or perhaps using
+[[Perl 6|http://perl6.org/]] and its SDL library. However, I ended going with [[Lua|http://www.lua.org/]], a language I know and adore but I don't use often enough.
+Using Lua really helped, because I didn't have to think about particulars of the syntax or the standard library.
+
+! ...but there's a lot to love about LÖVE
+
+I ''did'' take a bit of a leap when it came to choose my framework for writing this game: I ended up using [[LÖVE|https://love2d.org/]], a 2D game
+framework for Lua. I had no exposure to LÖVE before yesterday (other than a few small samples), and I was amazed at how
+easy it was to pick up and use. If I end up writing more games in the future, I will likely reach for LÖVE first, and I will recommend it to
+aspiring game developers who wish to use Lua.
+
+! Reinventing the wheel is dangerous
+
+I kept the game very simple: I used colored boxes for the character and features of the level. So when it came time to add collision detection
+(to make sure the player can't walk through walls), I decided to do it myself, secure in the fact that I wouldn't need something "as heavy as
+a full collision detection library". Detecting collisions between bounding rectangles is fairly simple, but it had been some time since I had
+written anything like it, and it's hard to get perfect. At first, it worked, but the player couldn't walk down corridors. Then that worked,
+but a player positioned //just// the right way could slip through walls. All in all, I ended up wasting about an hour on this "simple" task;
+an hour that could have been spent adding some cool new feature.
+
+! Premature optimization is the devil
+
+When I implemented collision detection, I could have researched some advanced algorithms to make sure that I was only checking bounding boxes
+in the vicinity of the player, or I could have implemented some logic to load images in the background while the player reads the introduction.
+In the end, I did none of these things, and I feel it really helped. The game ran perfectly smooth when I demoed it at the end of the day,
+without any profiling or optimization on my end. This doesn't just apply to speed and memory usage; when I was about to add some maze-generating
+code to add obstacles for the player to hide behind, another hackathon participant suggested that I simply use level layout files. This saved me
+a ''lot'' of time (writing the level loader took five to ten minutes), so I learned not to add the fancy, complicated feature right away if a quick,
+simple, and effective substitute will do for the prototype.
+
+! Revision control is your friend!
+
+This is probably the advice that I know in my head and in my heart, but I still need to put into practice better. Sometimes, when I start
+a new project, I simply create the project directory and start coding. Only after I have put an hour or two of coding behind me do I think
+to do a `git init`. By this time, I have added the basic skeleton for the project, added some features, and fixed a few bugs. Making sure
+I start with revision control off the bat is probably the lesson I need to apply the most.
+
+For some reason, I didn't use ''any'' revision control for the hackathon. I didn't think it would slow me down; I guess I thought it wouldn't
+matter because I probably wouldn't be touching the code again after the hackathon, and I had no intention to publish it. However, this time
+(like every time I 'forget' to use revision control), I ended up breaking things horribly halfway through writing a new feature, and I had to
+back out a lot of changes to get things working again.
+
+! Next Time...
+
+I had a lot of fun at this hackathon (as another participant pointed out, it has a different feel than writing code for work or for open source),
+and I would like to do it again some time. The next time I do it, though, I aim to make a few changes.
+
+!! Use revision control right away
+
+Like I said above, revision control is your friend. It doesn't take that much time, it's cheap, it can save your skin from time to time, and it
+provides an interesting overview of what you did when.
+
+!! Gather statistics of some sort
+
+Next time, I would really like to know how many lines of code I generate per hour, what files I touch most at what times, and maybe even what kinds
+of changes (adding vs moving vs deleting code) I make over time. So, before my next hackathon, I intend to write a little script named `trackathon`.
+This script would simply watch your project directory using inotify, and make note of changes you make to the project's files over time. By the
+end of the day, I hope to have some interesting graphs summarizing how the day went. It probably won't be terribly useful, but it will probably
+be cool to look at and fun to do!

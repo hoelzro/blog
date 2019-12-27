@@ -1,0 +1,77 @@
+title: What I Learned Writing a Dropbox Clone - Part 4 - Conclusion
+modified: 20150317031825000
+tags: [[Blog Post]]
+created: 20150317031825000
+
+! What I Learned Writing a Dropbox Clone - Part 4 - Conclusion
+
+```
+  commit f52479b
+  Author: Rob Hoelz <rob@hoelz.ro>
+  Date:   Sat Jan 3 16:33:56 2015 -0600
+  
+      Add notice about activity of this project
+  
+```
+These posts are largely independent of each other, but if you'd like some
+context, you should probably read
+[[the first post|What I Learned Writing a Dropbox Clone - Part 1 - Introduction]].
+
+For this final post, I'll talk about more "soft skill" type lessons I learned;
+lessons that seem to be common knowledge to many, but I still need to
+internalize in my day-to-day work.
+
+!! Keep It Simple
+
+The first thing I should have kept in mind is that the first release doesn't
+need to be perfect. My first iteration didn't have to address a lot of the
+more advanced things I thought of like decentralization, federation, perfect
+conflict handling, etc.
+
+I often think "oh, it'll be harder to add that stuff in later", recalling
+nightmarish systems I've worked on where internationalization or security were
+not a priority in the design of the system, only to become one later. But just
+because you're not building that feature into the system at the outset doesn't
+mean you can't plan the design to make adding it later easier.
+
+I also relied too heavily on doing a lot of things myself, especially the hard
+things. I didn't use a framework for the server; I dealt with raw PSGI (which
+is Perl's analogue to Ruby's Rack or Python's WSGI). Instead of dealing with
+all of the quirks of inotify, I should probably just have used Git as a data
+store for the prototype. The inotify and transactional filesystem code was by
+far the hardest part of the project <<footnote """which was another reason the project was
+sunk: I had a Macbook at my job in Amsterdam, and I didn't have the energy to
+port that code to use FSEvents or kqueue
+""">>, and I should've waited until I
+could ride the rush of a release to refine it.
+
+!! Release Early, Release Often
+
+I worked on Sahara Sync for about a year before I gave up on it; release 0.01
+(a typical first version number for Perl code on the CPAN) never saw the light
+of day. I had a working version of hostd about a month after I started; that
+would have been a good candidate for a first release to get feedback, interest,
+and perhaps some help in working on clientd.
+
+!! Make Yourself Heard
+
+I had plans to do this after 0.01, but I think I should have done it //way//
+earlier: I should have been talking Sahara Sync up. I didn't promote Sahara
+Sync at all; I don't even know if I talked much about working on it on social
+networks. If I'd promoted it, I may have gotten some interested developers
+involved to help me with the code, or at least provide moral support when I was
+feeling burnt out at the end.
+
+!! You Have Reached the End of the Desert
+
+Even though the project didn't go anywhere, I'm still proud of what I
+accomplished, and I learned a lot while working on it, both technical and
+non-technical. I'm happy with the overall design I created, and I think I had
+some really great ideas on what can all be done with a Dropbox-like system.
+
+I've thought about picking up the project again, but in the last three years, the
+space has really changed: what was once a sparsely populated void has now
+exploded with projects. If I end up using one of them, I may see if some of
+the ideas I particularly liked about Sahara Sync would be compatible, and try
+to make a contribution upstream. Perhaps then, a bit of Sahara Sync would live on
+in a different way.

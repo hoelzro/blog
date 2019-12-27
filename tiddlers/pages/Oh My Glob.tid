@@ -1,0 +1,180 @@
+created: 20131118215242000
+tags: perl favorites [[Blog Post]]
+modified: 20160711180343000
+title: Oh My Glob
+
+! Oh My Glob
+
+My recent posts on the inner workings of perl have made me reflect on some
+of the more advanced, lesser-known parts of the Perl language. One of these
+features that I'd like to talk about today is the typeglob.
+
+Typeglobs are involved in pretty much every Perl program, even if you're not aware of
+them: they're used for I/O, global variables, the export system, and much more.
+
+!! What the Stuff is a Typeglob?
+
+If you've been exposed to older Perl, you may be familiar with the following construct:
+
+```perl
+open FH, '<', '/dev/null';
+# Modern Perl would prefer open my $fh, '<', '/dev/null';
+```
+Even if you've never seen that form of `open`, you are no doubt familiar with `STDIN`,
+`STDOUT`, etc. Now, if you have to pass a filehandle to a subroutine, how do you do it?
+If you didn't know, this is how:
+
+```perl
+my_sub(\*STDOUT);
+```
+What's with that wacky syntax? I know that backslash creates a reference, but what's with the `*`
+character? That, my friend, indicates a typeglob.
+
+Every //global// variable (note, not locals declared with `my`; those are on the pad) is associated
+with a typeglob in what's called a //stash//. There is one stash per package, and each global variable
+with the same "root" name (ex. `$name`, `@name`, `%name`, and `&name`) are associated with the
+same typeglob in memory. Typeglobs also contain information on the associated filehandle (like `STDIN`)
+and format (which I will not discuss here).
+
+!! Typeglobs. Huh. Yeah. What Are They Good For?
+
+Absolutely nothing? I think not!
+
+!!! Aliasing
+
+One thing you can do with typeglobs is aliasing:
+
+```perl
+*ff_name = *File::Find::name;
+```
+Now, if you want to refer to `$File::Find::name`, you can refer to it as `$ff_name` instead.
+However, this links ''every'' entry in the `name` typeglob in the `File::Find` package to `ff_name`.
+We can tell Perl to be more particular by putting a reference on the right-hand side instead:
+
+```perl
+*ff_name = \$File::Find::name;
+```
+This links `$File::Find::name` and `$ff_name` as before, but leaves `@ff_name` and the others alone.
+This is actually the underyling mechanism that Exporter uses to implement the importing of symbols.
+
+!!! Dynamic definition of subroutines
+
+I don't write a lot of JavaScript, but it really irks me when I come across something like this:
+
+```javascript
+eval("this." + key + " = value");
+```
+Just the same, this makes me angry in Perl:
+
+```perl
+eval <<"END_PERL";
+sub $name {
+  my ( \$self ) = @_;
+  return \$self->{$name};
+}
+END_PERL
+```
+Because just like you can avoid an `eval` in JavaScript in the above example, you can avoid the `eval` in the
+Perl example too:
+
+```perl
+# Not so dynamic...
+*name = sub {
+  my ( $self ) = @_;
+
+  return $self->{$name};
+};
+
+# Now we're talking!
+do {
+  my $title = 'name';
+  no strict 'refs'; # lexically enable symbolic refs; don't do this lightly!
+
+  *$title = sub {
+    my ( $self ) = @_;
+
+    return $self->{$name};
+  };
+};
+```
+This snippet of code shows how we can dynamically create a subroutine with a name determined at runtime (or compile
+time, if you wrap the whole thing in a `BEGIN` block). Note that code like this may seem cool and handy, but it
+can really fail [[The Grep Test|http://jamie-wong.com/2013/07/12/grep-test/]]. So use this technique sparingly!
+
+You may also notice that I defined the subroutine using symbolic references, a faux pas in modern Perl. There ''is''
+a way to do this without symbolic references; they're called symbol tables, but that's a story for another time.
+
+!!! Introspection
+
+If you have a reference to a glob object, you can ask it for its various associated data:
+
+```perl
+my $glob = get_glob('STDIN');
+*{$glob}{SCALAR} # \$STDIN
+*{$glob}{ARRAY}  # \@STDIN
+*{$glob}{HASH}   # \%STDIN
+*{$glob}{CODE}   # \&STDIN
+*{$glob}{IO}     # \*STDIN
+```
+You can also ask its name, and which stash it belongs to:
+
+```perl
+say *{$glob}{NAME};   # 'STDIN';
+say *{$glob}{PACKAGE} # 'main'
+```
+If the corresponding datum doesn't exist in your Perl program, the reference will be `undef`, ''except'' in the
+case of `SCALAR`, which will be a reference to a scalar containing `undef`. It's impossible to tell if that's
+an existing scalar containing `undef` or a previously non-existing entry.
+
+Of course, getting your hands on the glob is the hard part; this is another job for which you need those magical symbol
+tables if you want to avoid symbolic references.
+
+!!! Subroutine Localization
+
+If you've been using Perl for a while, you're no doubt familiar with the `local` keyword. It allows you to do cool
+stuff like this:
+
+```perl
+do {
+  local $Data::Dumper::Terse = 1; # enable terse output lexically
+
+  print STDERR Dumper($my_big_data_structure);
+};
+# $Data::Dumper::Terse has had its value restored!
+```
+However, did you know you can do this with subroutines, too?
+
+```perl
+package Coworkers::Code {
+    sub _some_private_routine {
+        ...
+    }
+
+    sub some_public_routine {
+        ...
+        _some_private_routine(@some_arguments_you_want_to_know_about);
+        ...
+    }
+}
+
+my $private_routine = \&Coworkers::Code::_some_private_routine;
+# intercept calls to Coworkers::Code::_some_private_routine
+local *Coworkers::Code::_some_private_routine = sub {
+    use Data::Printer;
+    p \@_; # print arguments
+
+    return $private_routine->(@_); # dispatch to actual routine
+};
+
+Coworkers::Code::some_public_routine();
+```
+This seems like it can cause some serious action at a distance (which it can), but it can be an invaluable tool when debugging, or when carefully
+used in things like testing code without spending hours mocking LWP::UserAgent. Use wisely!
+
+!! More Information
+
+I hope you learned something from today's post; if you'd like to know more about typeglobs, please consult [[perldata|http://perldoc.perl.org/perldata.html#Typeglobs-and-Filehandles]] and [[perlref|http://perldoc.perl.org/perlref.html]].
+
+(''EDIT'': By popular demand, the obligatory gif of LSP:)
+
+<$image source="//hoelz.ro/images/lsp-omg.gif" alt="lsp-omg.gif" />

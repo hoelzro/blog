@@ -1,0 +1,160 @@
+modified: 20160711180343000
+title: Finding the most common n-grams in Russian using Perl 6 and HabraHabr
+created: 20160305071041000
+tags: russian language perl6 favorites [[Blog Post]]
+
+! Finding the most common n-grams in Russian using Perl 6 and HabraHabr
+
+I've been teaching myself Russian for some time; in fact, I would probably be a
+lot better at it if I spent time actually //learning// Russian instead of
+thinking of ways of hacking my language learning process...which is exactly
+what we'll be doing here.
+
+¯\_(ツ)_/¯
+
+Since most of my communications in Russian are text-based, I would really like to
+increase my typing speed. I figured that if I could train my muscle memory to
+type common patterns, this would help do just that. We can do this
+by finding the most common [[n-grams|https://en.wikipedia.org/wiki/n-gram]] in the Russian language. Fortunately, this
+is easy to do with the power of Perl!
+
+!! Getting articles from HabraHabr
+
+[[HabraHabr|https://habrahabr.ru/]] is a Russian tech blog site, and should serve
+as a good corpus of data. So let's write some shell code to get the words used
+in the top twenty pages:
+
+```shell
+touch habrahabr-links # This is necessary if you have noclobber on like I do
+for i in {1..20}; do
+  mojo get http://habrahabr.ru/page$i/ 'a.post_title' attr href >> habrahabr-links
+  sleep 10 # be a good netizen
+done
+
+touch habrahabr-words
+for link in $(cat habrahabr-links); do
+  mojo get $link | get-html-body | perl6 -e '
+    my @words = slurp.words;
+    for @words -> $word {
+      next unless $word ~~ /<:Cyrillic>/;
+      say $word.subst(/<-:Cyrillic>+$/, q{}).subst(/^ <-:Cyrillic>+/, q{});
+    }' >> habrahabr-words
+  sleep 10 # be a good netizen
+done
+```
+This is pretty straightfoward shell code, but I want to go over some of the specifics:
+
+* The `mojo` command comes from [[Mojolicious|https://metacpan.org/pod/Mojolicious]], a web development framework which includes various utilities such as the fabulous `mojo get`. It allows us to download a page and extract exactly what we need via CSS3 selectors - perfect for scraping!
+* The `get-html-body` command is a simple Perl script I wrote using `Mojo::DOM`, also from the Mojolicious framework. It simply reads in HTML, strips out any tags, and prints what's left.
+* There's a multi-line Perl 6 oneliner here (what a fantastic oxymoron). Perl 6 preserves its heritage of the powerful oneliner!
+* The Perl 6 code (should be) pretty straightforward; the `<:Cyrillic>` regex syntax may be unfamiliar, however. Perl 6 is fully Unicode-aware, and its regexes allow you to filter for Unicode properties, which is exactly what we're doing here!
+
+!! Extracting n-grams
+
+Now that we have our word list, let's extract our n-grams from it. We'll deal
+with n-grams for n up to 5; I figured this should be long enough. We'll even
+extract single letters:
+
+```shell
+for n in {1..5}; do
+  perl6 -e '
+    multi ngrams(Str $word, Int :$n where * == 1) {
+        $word.comb(/./)
+    }
+
+    multi ngrams(Str $word, Int :$n) {
+        return [] if $word.chars < $n;
+        my @chars = $word.comb(/./);
+        gather for ^(@chars - $n + 1) {
+            take @chars.rotate($_)[^$n].join('')
+        }
+    }
+
+    my $n = +@*ARGS.shift;
+    for lines() -> $word {
+        .say for ngrams($word.lc(), :$n).grep(/^ <:Cyrillic>+ $/)
+    }
+' $n habrahabr-words  >| habrahabr-${n}grams
+```
+One Perl 6 feature I would like to point out here is //multi subs//.
+You can see that the `ngrams` sub has two definitions with slightly
+different signatures; the `where * == 1` on the top means that it
+will only be called if `:n(1)` is passed in. Otherwise, the more
+generic variant is called. This allows us to create more specialized
+variants of a sub for special values, or to break up the logic for an
+algorithm into nice, discrete chunks.
+
+!! Finding the most common n-grams
+
+Since there are 33ⁿ n-grams (because there are 33 letters in the Russian
+alphabet), I probably only want to focus on the most frequent 100 or so. Let's
+use a Perl 6 program to find the percentage breakdown of each n-gram:
+
+```perl6
+use v6;
+
+my @occurrences =
+    gather for lines() -> $line {
+        take (+$0, ~$1) if $line ~~ /^ \s* (\d+) \s+ (.*) $/;
+    };
+
+my $total = [+] @occurrences».[0];
+
+for @occurrences -> ($count, $text) {
+    printf("%.3f %s\n", $count * 100 / $total, $text);
+}
+```
+The notable Perl 6 feature here is `gather`/`take`; this creates a generator
+that allows you avoid unnecessary intermediate variables. Other noteworthy features
+are the reduce metaoperator (`[...]`), which takes an operator and creates a
+list-reducing operator out of it (so in this code, `[+]` means "sum"), and the hyper
+metaoperator `>>`, which creates a vectorized version of an operator.
+
+Now we can round it out with some shell-fu to finish the job:
+
+```shell
+sort /tmp/habrahabr-1grams | uniq -c | sort -n | perl6 /tmp/percentages.pl
+```
+Here's what it looks like for the various Russian characters:
+
+```
+  0.039 ъ
+  0.131 ё
+  0.323 щ
+  0.349 э
+  0.540 ш
+  0.540 ц
+  0.547 ф
+  0.571 ю
+  0.866 ж
+  0.869 х
+  1.207 й
+  1.292 г
+  1.377 ч
+  1.773 з
+  1.831 б
+  1.905 ь
+  1.934 ы
+  1.982 я
+  2.192 у
+  2.728 д
+  3.206 п
+  3.333 м
+  3.503 к
+  3.961 л
+  4.222 в
+  5.024 с
+  5.424 р
+  6.325 н
+  7.015 т
+  7.576 и
+  8.361 а
+  8.586 е
+  10.469 о
+```
+Compared to the [[frequency table at on Wikipedia|https://en.wikipedia.org/wiki/Russian_alphabet#Frequency]], it looks
+pretty close! There are some biases, however; I found that "февра", as in
+февраль, the Russian word for "February", occurred quite a bit, but these biases are
+probably small enough not to matter for my purposes.
+Speaking of my purposes, now that I have this data, what should I do with it?
+That, my dear reader, is a story for next week...

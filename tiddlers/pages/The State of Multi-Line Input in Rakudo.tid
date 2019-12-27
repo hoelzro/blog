@@ -1,0 +1,71 @@
+title: The State of Multi-Line Input in Rakudo
+modified: 20160215130730000
+created: 20160215130730000
+tags: perl6 [[Blog Post]]
+
+! The State of Multi-Line Input in Rakudo
+
+Last week, I created an experimental branch for multi-line input in the Rakudo
+REPL. I merged this branch on Friday, but I wanted to talk about where we stand,
+and where I see us going in the future.
+
+!! Multi-Line Input
+
+It used to be that when you tried to enter a multiple line statement (such as a block)
+in the Rakudo REPL, you'd get an unsurprising but frustrating error:
+
+```
+  > for ^10 {
+  ===SORRY!=== Error while compiling <unknown file>
+  Missing block
+  at <unknown file>:2
+  ------> <BOL>⏏<EOL>
+```
+Lack of proper multi-line input was one of the most common complaints I saw
+about the Rakudo REPL; I always dismissed it as "too hard to do" (for reasons
+which I'll present in a moment). However, by borrowing a trick from the Lua
+standalone REPL, I was able to get a rudimentary but useful multi-line REPL to
+work. All the REPL does now is if compiling the code throws an exception of
+type `X::Syntax::Missing`, and the exception occurs at the very end of the
+input stream, it assumes that the missing input will provided by the user in a
+future line and enters into a multi-line input mode. So now, if you try to
+enter a for loop, instead of seeing the above, you'll see this:
+
+<$image source="//hoelz.ro/images/rakudo-multi-line.gif" alt="rakudo-multi-line.gif" />
+
+(You can disable this behavior by setting the environment variable `RAKUDO_DISABLE_MULTILINE` to
+a non-zero value)
+
+This approach, however, comes with caveats; anything that happens at compile time will happen
+repeatedly, once for every input line:
+
+```
+  > BEGIN say 'hi'; for ^1 {
+  hi
+  * .say;
+  hi
+  * }
+  hi
+  0
+```
+The reason for this is the parser is re-compiling that same input over and over again, so
+things like `BEGIN` blocks are run over and over again. It's easy enough to understand that
+and avoid things like `BEGIN` blocks, but it also inteferes with other constructs that have
+a compile-time effect, like classes:
+
+```
+  > class C {
+  *   has $!attr;
+  * }
+  Package 'C' already has an attribute named '$!attr'
+```
+Unfortunately, this isn't an easy fix; we would need to make Rakudo able to snapshot its parse state
+upon seeing an end-of-text so that we could resume a parse given more input. I'm open to other approaches
+if anyone has suggestions!
+
+!! Moving Forward
+
+Other than addressing the issue above, I would like to make Linenoise and Readline history more aware of
+multi-line entries. I have a host of other ideas in
+[[this gist|https://gist.github.com/hoelzro/6bb9aa5163c7f79016ff]]; please feel free to reach out
+if you have thoughts on what I have in there, or if there's something that I've missed!

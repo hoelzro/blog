@@ -1,0 +1,154 @@
+tags: perl6 [[Blog Post]]
+created: 20160120052625000
+title: Getting End-of-Document POD and Declarative POD to Play Nice in Perl 6
+modified: 20160120052625000
+
+! Getting End-of-Document POD and Declarative POD to Play Nice in Perl 6
+
+When I wrote more Perl 5, than I do today, I followed [[Damian Conway's advice|http://shop.oreilly.com/product/9780596001735.do]] about documentation
+and embraced the so-called //end of document// style:
+
+```perl
+package My::Module;
+
+1;
+__END__
+=begin
+
+=head1 NAME
+
+=head1 SYNOPSIS
+
+=end
+```
+I still do this in Perl 6; it just looks a little different:
+
+```perl6
+#| An example module
+module My::Module {
+}
+
+=begin head1
+NAME
+
+My::Module
+
+=end head1
+
+=begin head1
+DESCRIPTION
+
+An empty module written for the purposes of demoing POD6.
+
+=end head1
+```
+However, if you have declarative POD blocks (like the one attached to `module My::Module` in the Perl 6 example),
+you may be in for a slight shock when you render your POD with `perl6 --doc`:
+
+```text
+module My::Module
+An example module
+
+NAME
+
+My::Module
+
+DESCRIPTION
+
+An empty module written for the purposes of demoing POD6.
+```
+Thus was my dilemma: I wanted to have declarative POD blocks so that the documentation of my code was inspectible
+in my programs and on the REPL, but I want the lower-level declarative POD to follow the higher-level overview POD
+I have included at the end of the document. What's a Perl 6 developer to do? If this were Perl 5, I would probably use [[Pod::Weaver|https://metacpan.org/pod/Pod::Weaver]] or something, but in Perl 6, changing POD is a built-in feature!
+
+!! Enter Pod::EOD
+
+First of all, let me just show off the module I wrote to fix this, [[Pod::EOD|https://github.com/hoelzro/p6-pod-eod]]:
+
+```perl6
+#| An example module
+module My::Module {
+}
+
+DOC INIT {
+    use Pod::EOD;
+    move-declarations-to-end($=pod);
+}
+
+=begin head1
+NAME
+
+My::Module
+
+=end head1
+
+=begin head1
+DESCRIPTION
+
+An empty module written for the purposes of demoing POD6.
+
+=end head1
+```
+All it does is make sure that non-declarative POD comes first:
+
+```text
+NAME
+
+My::Module
+
+DESCRIPTION
+
+An empty module written for the purposes of demoing POD6.
+
+module My::Module
+An example module
+```
+So how does this work?
+
+!! DOC blocks
+
+Perl 6 has a special feature for manipulating POD: DOC blocks. When
+the parser encounters `DOC INIT`, `DOC CHECK`, or `DOC BEGIN`,
+it only executes their contents if `--doc` was provided on the command
+line. The POD for the current module is available via the `$=pod` variable
+<<footnote """The `=` twigil refers to POD variables
+""">>, so we pass `$=pod` to
+the one subroutine exported by `Pod::EOD`, and it does the rearranging for us.
+
+There is a lot of potential in `DOC` blocks; you can rearrange POD in other ways,
+assemble POD from other modules in your distribution, dynamically generate and inject
+new POD elements, or remove POD from the final rendering. Since you can control it
+with Perl 6 code, the possibilities are limitless.
+
+You can find more details on DOC blocks [[here|http://design.perl6.org/S26.html#How_Pod_is_parsed_and_processed]].
+
+!! Caveats & Wishes
+
+If you have the following code:
+
+```perl6
+DOC INIT {
+    use Pod::EOD;
+}
+```
+...but you don't have `Pod::EOD` installed, the file with that code in it will fail, even if you're not
+using `--doc`. On one hand, I understand why this would happen; use statements happen at compile time (see
+`if False { use Module; }`. However, [[S26|http://design.perl6.org/S26.html]] (which defines the behavior for `DOC`) implies that code
+within `DOC` blocks doesn't get executed at all unless `--doc` is provided. Documentation-based dependencies
+could be specified in `META6.json` via `doc_requires`, analogous to `test_requires`.
+
+Either way, a nice-to-have for me would be to have nicer error messages for when `DOC` required modules are
+missing; something along the lines of:
+
+```
+You seem to be missing the 'Pod::EOD' module; you'll need to install it
+(via 'panda install Pod::EOD' or 'zef install Pod::EOD') in order to view
+this module's documentation.
+```
+Another wish I have (that probably won't happen until 6.d) is that modules loaded in `DOC` blocks have
+some way of getting at the POD document being parsed without having the user call a sub exported by
+the module. For example:
+
+```perl6
+DOC use Pod::EOD; # this would be so much nicer!
+```

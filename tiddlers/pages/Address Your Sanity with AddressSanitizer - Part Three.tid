@@ -1,0 +1,72 @@
+title: Address Your Sanity with AddressSanitizer - Part Three
+modified: 20151223201651000
+created: 20151222033031000
+tags: moarvm c asan [[Blog Post]]
+
+! Address Your Sanity with AddressSanitizer - Part Three
+
+It took a while for me to get back in the swing of things after I returned from
+Japan, but I eventually got there. The first step to fixing [[that use-after-free bug|Hunted By a Leak - Part Two]] was finding out which test was triggering the failure, which
+meant building a MoarVM with address sanitation (often referred to as ASan)
+support.
+
+[[ASan|http://clang.llvm.org/docs/AddressSanitizer.html]] (also known as
+AddressSanitizer) is a memory error detector developed by Google for Clang that
+has since been ported to GCC. It finds common memory errors, such as
+use-after-free, overflow, double free, or memory leaks. Building a MoarVM with
+ASan support isn't difficult; it's actually as simple as providing `--asan`
+when running `Configure.pl` to configure MoarVM (you probably also want
+`--debug` for useful stack traces). However, ASan needs some tweaking before
+you can really start using it to run the Perl 6 test suite.
+
+Despite the team's efforts, MoarVM still has a few memory leaks. ASan treats leaks as
+failures, so ASan makes invocations of MoarVM fail when building Rakudo. What
+I needed is to figure out how to tell ASan that I don't care about memory leaks
+for the time being.
+
+I soon discovered `ASAN_OPTIONS`, which is an environment variable that can
+be used to tune ASan, but I couldn't find instructions on how to actually use it.
+Timo Paulsen pointed out
+[[https://www.chromium.org/developers/testing/addresssanitizer]] to me, which
+contains the advice that the possible values for `ASAN_OPTIONS` are displayed
+by setting `ASAN_OPTIONS=help=1`. After looking at its output, I set
+`ASAN_OPTIONS` to `detect_leaks=0 exitcode=117`, to disable checking for
+memory leaks, and to set the exitcode of MoarVM invocations to a sentinel value
+I didn't expect to come up naturally (117) so I could easily identify which Perl 6
+scripts were triggering bad memory behavior.
+
+After setting this environment variable and running roast on my new MoarVM, I
+got a few hits for tests that had less-than-ideal memory behavior. ASan
+helpfully pointed out the problem code, which looked like this:
+
+```c
+/* Clean up an arguments processing context for cache. */
+void MVM_args_proc_cleanup_for_cache(MVMThreadContext *tc, MVMArgProcContext *ctx) {
+    /* Really, just if ctx->arg_flags, which indicates a flattening occurred. */
+    if (ctx->callsite && ctx->callsite->has_flattening) {
+        if (ctx->arg_flags) {
+            /* Free the generated flags. */
+            MVM_free(ctx->arg_flags);
+            ctx->arg_flags = NULL;
+
+            /* Free the generated args buffer. */
+            MVM_free(ctx->args);
+            ctx->args = NULL;
+        }
+    }
+}
+```
+It turns out that `ctx->callsite` is invalid at this point (because we're
+cleaning up `ctx`), so getting the value of `ctx->callsite->has_flattening`
+results in an invalid memory access. I happened to know that `arg_flags` is
+only non-NULL if `has_flattening` is truthy anyway, which makes the ''if
+(ctx->callsite && ctx->callsite->has_flattening)'' check redundant. So I
+removed that, which fixed the use-after-free!
+
+This plugged the memory leak I discovered in the previous post, and that got
+rid of the slowdown I was observing when spawning child processes. Huzzah!
+However, this isn't the end of this particular journey with memory issues; as
+I mentioned earlier, MoarVM still has some memory leaks. With my new-found
+confidence in wielding ASan, I decided to try to get rid of some of them. Tune
+in [[next time|Using Valgrind to find memory problems - Part Four]] as I go through fixing more leaks with the help of the heavyweight
+tool in this area: Valgrind.

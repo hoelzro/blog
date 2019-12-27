@@ -1,0 +1,191 @@
+modified: 20160407024450000
+title: What's That Racket?
+tags: lotm racket [[Blog Post]]
+created: 20160407024450000
+
+! What's That Racket?
+
+For my third [[language of the month|Language of the Month]], I figured I would
+cover a language of venerable heritage: Lisp. Part of Lisp's fame centers around the
+supposed enlightenment one achieves when one finally "gets" Lisp.
+
+[[<$image source="//hoelz.ro/images/lisp.jpg" alt="Credit: XKCD" />|https://xkcd.com/224/]]
+
+Now, the trick with learning Lisp is first you need to //pick// one. There is
+more than one flavor of Lisp around, and even among the various flavors, there
+is a cornucopia of implementations. The biggest "flavors" of Lisp around are
+Common Lisp, Scheme, and Clojure. Clojure's claim to fame is that it's backed by
+the Java Virtual Machine, and Common Lisp and Scheme are two sides of the same
+coin. Common Lisp has more of a "kitchen sink" mentality, which resulted in a
+large language; whereas Scheme has much more minimalistic ideals <<footnote """Another
+interesting difference is whether functions belong in a namespace all their own
+or in the same namespace as variables; this is what's known as the Lisp-1 vs
+Lisp-2 distinction.
+""">>. In fact, Scheme is small enough that creating an implementation
+is a weekend project for some.
+
+Scheme's "functions and variables in the same
+namespace" choice, in addition to its minimalism, appeals to me (I know, ironic, given my
+love for Perl!), so I decided that learning a Scheme would be most appealing. Now...//which// Scheme?
+
+Since I wanted to be productive in my new language without having to hunt down
+libraries, let alone figure out how to install them, I figured I would pick a
+Scheme that has the batteries included. A dialect of Scheme that I've known of
+for some time came to mind: [[Racket|http://racket-lang.org/]].
+
+!! Learning the Language
+
+Racket's [[documentation page|https://docs.racket-lang.org/]] has a few tutorials
+on it; I rather like the "quick" intro to Racket, as it introduces you to a picture
+data type that you can play with and operate on in DrRacket, the Racket IDE. This introduction
+to Racket is a lot more visual than other languages' intros, which is defintely a point in
+Racket's favor for teaching beginners.
+
+I've heard that Structure and Interpretation of Computer Programs (SICP) is a
+must read for not only wannabe Lispers, but any programmer, but I'm afraid I
+didn't find the time to really sink my teeth into it; I think I'll be returning
+to it and Lisp in the future.
+
+In my search for learning materials, I tried to find blog posts by other developers
+about Racket, but I came up short. I'm interested in following up with Racket in
+the future, so if you know of some good posts or blogs about Racket, please let me know!
+
+!! Pros of Lisp, and Racket in Particular
+
+!!! Destructuring bind via match
+
+In the program I wrote for this month, I dealt with two-dimensional coordinates a lot, which
+I simply represented as a two-element list. So getting at the component coordinates can be
+done like this:
+
+```scheme
+(define (my-coordinate-function coords)
+  (let [(row (first coords))
+        (column (second coords))]
+    (do-stuff x y)))
+```
+However, manually deconstructing a list via
+`(first coords)` and `(second coords)` <<footnote """If you're familiar with Lisp, you may wonder
+what's up with `first`/`second` instead of `car`/`cadr`. Racket realizes that `car`
+and friends aren't particularly memorable, so they provide handy aliases.
+""">> to
+get at coordinates feels so clunky to me. Fortunately, Racket provides destructuring binding
+via the `racket/match` module. So we can rewrite the above like so:
+
+```scheme
+(define (my-coordinate-function coords)
+  (match coords
+    [(list row column) (do-stuff row column)]))
+```
+This cleans up the code quite a bit, and has the added benefit of allowing you to specify
+multiple patterns, and run the associated code on the first one that matches.
+
+!!! Build your own syntax via macros
+
+Let's have another look at my function from above:
+
+```scheme
+(define (my-coordinate-function coords)
+  (match coords
+    [(list row column) (do-stuff row column)]))
+```
+Since two-dimensional coordinates were at the heart of my application, I ended
+up writing this same boilerplate a ''lot''. They all looked the same, except
+for the function name and the `do-stuff` logic inside.
+
+So what if I wanted some pretty syntax to define a function that takes a
+coordinate pair? This is Lisp's true strength; it allows you to define your
+own syntax via macros:
+
+```scheme
+(define-syntax-rule (define-pair (name a b) body)
+  (define (name coords)
+    (match coords
+      [(list a b) body])))
+
+(define-pair (my-coordinate-function row column)
+  (do-stuff row column))
+```
+It might not be immediately obvious, but macros are just Lisp functions; they're code that generates
+new code. It's all very meta.
+
+<$image source="//hoelz.ro/images/yo-dawg-lisp.jpg" alt="yo-dawg-lisp.jpg" />
+
+This "function takes a coordinate" shorthand is useful for my program, but I can imagine many other
+uses for custom syntax. For example, let's say you want something like a low-level SQL interface,
+but you also want the composability feature of ORMs. You could easily write a SQL macro that
+would allow you to write code like the following:
+
+```scheme
+(define (new-users-sql #:active-only [active-only #f])
+  (define base-sql (sql select '(id username) from users
+    (where (>= date_added '2016-01-01'))))
+
+  (if active-only
+    (sql-compose base-sql '(where (= active 1)))
+    base-sql))
+```
+Another idea could be an intelligent assertion function that could detect more complex
+assertions and tell you why they failed, which could look something like this:
+
+```scheme
+(assert (and (>= x 0)
+             (>= y 0)
+             (<= (+ x width) total-width)
+             (<= (+ y height) total-height)))
+; example failure message: (>= x 0) was false (x is -1)
+```
+A full introduction to macros is outside of the scope of this post, so I'll refer you to the
+excellent [[Fear of Macros|http://www.greghendershott.com/fear-of-macros/]]. Racket also
+allows you to implement custom languages through what's called a //reader//; you can read
+more about that at [[Beautiful Racket|http://beautifulracket.com/]].
+
+!!! ...and much, much more!
+
+There are a number of features in Racket that I find novel and/or useful, but sadly
+I don't have the space to cover them here. If I continue learning it, I may cover them
+in future posts. Here are some of those features if you want to look into them yourself:
+
+* [[X-expressions|http://docs.racket-lang.org/xml/index.html]]
+* [[Dynamic binding|http://docs.racket-lang.org/guide/parameterize.html]]
+* [[Continuations|http://docs.racket-lang.org/guide/conts.html]]
+* [[Contracts|http://docs.racket-lang.org/guide/contracts.html]]
+
+!! (cons) of Racket
+
+!!! You can have any syntax you like, as long as it's sexprs
+
+As I just demonstrated, Racket (and Lisps in general) allow you to define your own syntax;
+you can do anything you want, but you're restricted to using s-expressions <<footnote """The reader
+facility I mentioned above allows you to get around this, but I would argue at this point, you're
+escaping Lisp-land.
+""">>. Lispers argue that Lisp has no real syntax and that after a while, the
+parentheses just fall away; I can see where they're coming from, but it seems to me that this
+very lack of syntax makes it kind of hard to determine what good-looking Racket looks like, and
+that structuring your code is very important for readability. (Then again, which language
+//doesn't// require good structure for readability?)
+
+!!! Language size
+
+Going through the entire Racket reference, as I did for R and Elm, is...hard.
+The Racket Guide and Reference are huge! Is a much bigger language than I
+expected, especially considering it's a Scheme derivative.
+
+!!! Function names
+
+Quite often, trying to find a function that did what I needed was a challenge. For example, I was looking
+for a function to create an list of length `N`, where each element shared the same value (known as `repeat`
+in Elm and Haskell). I looked for "repeat", I skimmed the `racket/list` module documentation, but came up
+with nothing. I ended up writing my own implementation. It was during a third or fourth pass of `racket/list`
+looking for a completely different function that I stumbled upon `make-list`, which does exactly what I need.
+That's not to mention that there's a `build-list` function that does something very similar, but still different,
+from `make-list`. I had other experiences, but some of this might come down to thinking about other names
+for functions that I know from other languages.
+
+!! Enlightenment Attained?
+
+I don't think a month learning Racket on-and-off is enough to really grok Lisp; I definitely see some of the
+"code is data" benefits, but I think I have much more to learn. I think I'll be returning Racket at sometime
+in the future.
+
+Join me next time for a discussion of the program I wrote in Racket!

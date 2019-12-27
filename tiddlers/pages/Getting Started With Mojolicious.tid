@@ -1,0 +1,27 @@
+title: Getting Started With Mojolicious
+modified: 20130909143555000
+tags: perl mojolicious [[Blog Post]]
+created: 20110301053945000
+
+! Getting Started With Mojolicious
+
+I'm undertaking a new project with some friends, and I've decided that this would be a perfect opportunity to learn some new things.
+More specifically, I'd like to learn a Perl web framework other than Catalyst (which I use at work), and I'd like to become more
+familiar with PostgreSQL, since I also use MySQL at work and I've heard so many good things about Postgres.
+I'm finding the latter a lot of fun to work with, especially coming from MySQL (I have a saying at work: If you use the phrases 'I assume'
+and 'MySQL' in the same sentence, you're likely wrong).
+
+The web framework I decided to try out was [[Mojolicious|http://mojolicio.us/]]. I'd heard a lot of buzz about it lately, so I figured I'd give it a try. Now, the Mojolicious team
+has done a great job compiling [[documentation|http://mojolicio.us/perldoc]] on getting familiar with the framework, so I won't cover that here. One thing I've noticed in my short experience
+with Mojolicious is that finding the relevant documentation can prove difficult. Is the documentation for ''url_for'' in Mojolicious or Mojolicious::Controller?
+Where can I find out the IP address from which the current request originated? If you're starting out with Mojolicious like me, my rule of thumb is to check
+the following four modules first if the guides haven't yielded anything useful:
+
+* Mojolicious
+* Mojolicious::Controller
+* Mojo::Message (and its subclasses)
+* Mojo::Transaction
+
+And if that doesn't help, I keep a copy of the most recent Mojolicious source on hand for easy grepping!
+
+I'll continue to post more beginner tips for using Mojolicious as I use the framework more. Many thanks to the Mojolicious team for making such a great framework!

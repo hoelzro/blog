@@ -1,0 +1,14 @@
+title: A Google Reader Alternative: Tiny Tiny RSS
+modified: 20130909143555000
+tags: google reader [[Blog Post]]
+created: 20130319214452000
+
+! A Google Reader Alternative: Tiny Tiny RSS
+
+Well, if you haven't already heard, Google is discontinuing Google Reader as of July 1st. I used to be a Google Reader junkie, but I have since moved away from it, and since everyone seems to be looking for an alternative, I thought I would mention the "service" I moved to: [[Tiny Tiny RSS|http://tt-rss.org/redmine/projects/tt-rss/wiki]].
+
+First of all, I don't know of any public installations of Tiny Tiny RSS that new users can register on. So, in order to make us of it, you'll need your own server capable of running PHP and cronjobs. I understand that this doesn't fit everyone's needs, but for me, it was exactly what I was looking for.
+
+Setup is very simple, and there's even an Android application for communicating with your installation when you're on the go. I highly recommend giving it a shot!
+
+-Rob

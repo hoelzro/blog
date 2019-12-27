@@ -1,0 +1,54 @@
+modified: 20180213181649000
+title: Writing Firefox Web Extensions at Milwaukee Hack and Tell
+tags: firefox webextensions russian [[Blog Post]]
+created: 20180213041311000
+
+! Writing Firefox Web Extensions at Milwaukee Hack and Tell
+
+Just over two weeks ago, RokkinCat conducted their 14th Hack & Tell. Since I wasn't able to participate last October,
+I was eager to spend some time working on some project ideas I've been thinking about! This time, I didn't have a single
+strong idea - instead, I spent my time playing around writing extensions for Firefox using the new(ish) WebExtensions API.
+
+I wrote two extensions, and did a lot of brainstorming on a third (well, the third is really more of a //family// of extensions - more
+on that in a bit).
+
+The first extension, [[Scroll to nearest anchor|https://github.com/hoelzro/fx-scroll-to-nearest-anchor]], was based on a need I've
+perceived in my own browsing - oftentimes I want to link to a particular part of a page, but many pages these days don't make
+linking to internal anchors very easy or obvious. In the past, I've ended up just opening the developer console and writing some
+JavaScript and/or using the element inspector to find the HTML anchor. My friend Maxim mentioned a need for this functionality in
+one of our more recent chats, so that affirmed my desire to work on this!
+
+The second extension, [[Russian Training Wheels|https://github.com/hoelzro/fx-russian-training-wheels]] (name pending), is an
+experiment based on experiences I've had when trying to read articles in Russian. Russian is a highly inflecting language (ex.
+отец "father" can be отец, отца, отцу, отцом, or отце depending on case - and that doesn't count plurals!), and so it takes some practice to recognize words you
+know (the fact that Russian is written in a different alphabet and is also highly irregular also doesn't help!). So, my
+experimental extension tries to offer a prospective student of Russian such as myself some help. You import your vocabulary list,
+and when you highlight a Russian word, it uses a stemming algorithm to compare that word to your vocabulary and tells you if you
+already know it.
+
+The third "family" of extensions is based on integrating the browser more tightly with TiddlyWiki. [[I'm a big TiddlyWiki user|Tiddler's Green]],
+and I have a number of ideas for extensions to make referring to information in my wiki and adding to my wiki while browsing easier. The thing
+is, each of these extensions would have a lot of shared logic - they would need to know how to communicate with the wiki, the wiki would need plugins to know
+how to communicate with //them//, etc. So I figured I could create a framework, a higher-level extension/plugin coordinator I'm calling "TiddlyBroker".
+I haven't actually put down code for this yet, but I'm hoping too soon - if I do, maybe I'll write about it in a subsequent blog post.
+
+!! The power (and limitations) of WebExtensions
+
+I had a few other ideas for extensions - I probably spent the first hour or two of the hack and tell going through notes I'd written about ideas for
+extensions and cross-referencing them with the APIs to see what I could accomplish. For example, I would like to extend the built-in find function
+to add things like regular expression search, stemmed search, whole word search, fuzzy search, etc. (I'm on a bit of a search kick, if you couldn't
+tell!) Unfortunately, this doesn't seem to be possible (yet). I also ran into other limitations with the WebExtensions API - in my "Scroll to nearest
+anchor" extension, for example, I wanted to find the nearest anchor to the mouse cursor. As far as I could tell, there was no way to get the mouse
+position, short of tracking it once the page loaded, which seemed like overkill.
+
+Which brings me to the perception that a sizable chunk of the Firefox community has had about WebExtensions - I've seen this with fellow power users on
+Twitter, and especially in the TiddlyWiki community with the loss of the extremely useful TiddlyFox extension: The WebExtension APIs, in their current form,
+just don't seem powerful enough, and a lot of useful legacy extensions have been left by the wayside. Many useful things are either impossible or only
+possible through some wacky HTML trickery.
+
+Now, I understand: Mozilla is in the unenviable position of having an extension system attached to a collection of
+interpreters that fetch content from the far flung corners of the Internet - it's not like extending your editor, your window manager, or your shell.
+It's a security nightmare, and I think that Mozilla made the correct decision to restrict their initial APIs to make sure that their users are protected.
+(The fact that the browser is faster and lighter as a result certainly doesn't hurt!). I had a very friendly chat with some of the folks on the #webextensions
+channel on IRC - it sounds like new features will be coming in future releases, which would be great. It looks like WebExtensions and the Firefox userbase
+are going to have to learn to grow together.

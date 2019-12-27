@@ -1,0 +1,115 @@
+modified: 20160711180343000
+title: Tracking Slowdowns in Creating Child Processes - Part One
+created: 20151209055759000
+tags: moarvm c favorites [[Blog Post]]
+
+! Tracking Slowdowns in Creating Child Processes - Part One
+
+When I use Perl 5, I do a lot of shelling out to external commands; after all, that's what Perl
+is good at! So it should come as no surprise that I do the same with Perl 6, which means a lot
+of the time and effort I spend helping with Perl 6 is improving the interaction with external commands.
+
+While at the Swiss Perl Workshop back in August, I did a bit of work chasing down a race condition in
+Perl 6's `Proc::Async`, which is Perl 6's higher-level asynchronous API for handling child
+processes. While performing a test I wrote repeatedly to verify that I had fixed the race condition,
+I noticed that individual invocations of child processes started to //feel// slower.
+I added some timing code, and sure enough; over thousands of invocations, `Proc::Async`
+would gradually slow down. Here's the code I wrote that demonstrated the slowdown:
+
+```perl6
+loop {
+    my $start = now;
+    my $child = Proc::Async.new('true');
+    await $child.start;
+    say now - $start;
+}
+```
+!! Why the slowdown?
+
+To find the source of the slowdown, I sprinkled some `printf` statements over
+MoarVM's <<footnote """The flagship virtual machine for Rakudo, which is the canonical Perl 6
+compiler
+""">> asyncronous process API, which drives `Proc::Async`. My initial
+assumptions were that constant creation and destruction of objects was causing
+heap fragmentation, and thus `malloc` was just taking longer to find free
+chunks of memory. However, the `printf`s quickly brought me down to libuv
+<<footnote """MoarVM uses libuv as an OS abstraction library
+""">>, and diving into libuv quickly
+brought me to the true culprit: `fork`. This surprised me, as it turns out
+that even though `fork` will save time copying memory by using copy-on-write
+pages in most kernels, on Linux, the time to successfully `fork` a process
+increases as the parent process grows in RSS, as demonstrated by this program
+and a plotting of its output:
+
+```c
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <unistd.h>
+
+#define NUM_GROWTHS 100
+#define FORK_COUNT 10000
+
+static double
+timespec_to_nanos(struct timespec *ts)
+{
+    double nanos = ts->tv_sec * 1e9;
+    nanos += ts->tv_nsec;
+
+    return nanos;
+}
+
+static double
+delta_timespec_ms(struct timespec *before, struct timespec *after)
+{
+    return (timespec_to_nanos(after) - timespec_to_nanos(before)) / 1e6;
+}
+
+static void
+time_forks(void)
+{
+    struct timespec before, after;
+    int i;
+
+    assert(clock_gettime(CLOCK_MONOTONIC, &before) == 0);
+    for(i = 0; i < FORK_COUNT; i++) {
+        pid_t child;
+        int status;
+
+        child = fork();
+
+        assert(child != -1);
+
+        if(child) {
+            waitpid(child, &status, 0);
+        } else {
+            exit(0);
+        }
+    }
+    assert(clock_gettime(CLOCK_MONOTONIC, &after) == 0);
+
+    printf("%.5f\n", delta_timespec_ms(&before, &after) / FORK_COUNT);
+    fflush(stdout); /* flush so that the child process doesn't get a copy of
+                       buffered output */
+}
+
+int
+main(void)
+{
+    int i;
+
+    for(i = 0; i < NUM_GROWTHS; i++) {
+        time_forks();
+        assert(malloc(1024 * 1024));
+    }
+
+    return 0;
+}
+```
+<$image source="//hoelz.ro/images/fork-slowdown-plot.png" alt="fork-slowdown-plot.png" width="600" height="450" />
+
+I haven't dug into the kernel source code yet to figure out exactly why this is happening, but that
+would make an interesting future blog post! So now, in order to fix the slowdown, I would first
+have to hunt down a memory leak, which I'll cover in the [[next post|Hunted By a Leak - Part Two]].

@@ -1,0 +1,145 @@
+modified: 20180816192712000
+title: Combining Character Caveats
+created: 20160601010526000
+tags: perl6 russian language unicode [[Blog Post]]
+
+! Combining Character Caveats
+
+I'm currently following the [[Fluent Forever|http://fluent-forever.com/]]
+methodology for learning Russian. The method suggests that when you start
+learning vocabulary, you should learn 625 common, concrete words that you
+can easily associate with pictures and feelings. The next step after this
+is to build your vocabulary to include the 1,000 most common words in your
+target language. I recently completed the foundation of 625 words, so
+it was time to move on to the next 1,000. There was just one small problem...
+
+!! Nobody's Perfect(ive)
+
+Russian, along with its Slavic brethren, has a distinction reflected in its
+verbs known as //aspect// (I touched upon this in a [[previous post|English: A Weakly Typed Language]]).
+Nearly all verbs have a counterpart - one is //perfective//, which indicates that
+an action has been completed; the other is //imperfective//, which indicates that
+an action is in progress or happens habitually. For example (apologies if you speak Russian and I screwed up your language!):
+
+```
+  Я **ел** сыр каждый день когда я жил в Амстердаме. - I ate cheese every day when I lived in Amsterdam. (using **есть**, imperfective "to eat")
+```
+versus:
+
+```
+  Я **съел** гамбургер один час назад. - I ate a hamburger an hour ago. (using **съесть**, perfective "to eat")
+```
+So my problem was this:
+
+* My starter list of 625 words didn't indicate which aspect the verb belonged to, nor did it include the counterpart for each verb.
+* My list of the next 1,000 words contains verbs that may be the counterparts to some of the verbs already in my Anki deck. For example, I have говорить (to eat, imperfective) in my deck; if the list of 1,000 has сказать, говорить's partner in crime, it would be odd to include it as a separate card.
+
+So ideally, what I'd like to do is associate the verbs in my Anki deck with
+their counterparts, and prune any verbs I already know (along the their
+counterparts) from the "next 1,000" list.
+
+To make this possible, I needed to find a mapping on perfective/imperfective
+counterparts in Russian. Fortunately for me, Wiktionary has a
+[[comprehensive data set|https://en.wiktionary.org/wiki/Category:Russian_verbs]]
+on Russian verbs. A little web scraping magic and I was in business!
+
+!! Don't Stress Out
+
+The mapping I created based on the Wiktionary data looked like this:
+
+```
+  говори́ть imperfective сказа́ть
+```
+If you look closely, you'll see an acute accent mark (◌́) over и and а. That's
+not really part of standard Russian orthography; you see, Russian's stress is
+unpredictable, so to make it possible for people like me to learn the language,
+or for native speakers to understand how to pronounce new words properly, the
+acute accent is often used in things like dictionaries to mark the syllable
+upon which stress falls. My Anki deck, however, doesn't have these markers - I
+have sound files to tell me which syllables to stress. So in order to
+compare the two sets of data, I needed to strip the marks first.
+
+Since the marks were added via the `COMBINING ACUTE ACCENT` character,
+the solution seemed to be pretty straightforward; it looked like this:
+
+```perl6
+$verb .= subst(/<:Combining_Mark>/, '', :g);
+```
+Just strip all combining mark characters from the verb - seems simple, right?
+
+But when I actually executed that code, I got the original string "говори́ть" back.
+What gives?
+
+!! Normalization
+
+To understand why my code didn't work, it's helpful to understand Unicode
+normalization forms and how Perl 6 implements string operations. Normalization
+forms are a way of canonicalizing a Unicode string to make comparison and
+collation easier. To see how this works in practice, let's look at two
+strings: "á" and "á". Although they look the same, if you paste them into an
+application that can inspect Unicode (I like to just `echo "á" | xxd`),
+you'll see that they're actually two different strings. The first is ''LATIN
+SMALL LETTER A WITH ACUTE''; the latter is `LATIN SMALL LETTER A` +
+`COMBINING ACUTE ACCENT`. In many programming languages, if you compare
+these two strings, they'll show up as unequal, because they //are// unequal
+when you think about them on a codepoint-by-codepoint basis. The solution to
+this is
+[[Unicode normalization|https://en.wikipedia.org/wiki/Unicode_equivalence#Normalization]], which allows us to translate a Unicode string to some
+canonical form which will compare equally. Under NFC normalization, for
+example, combining characters are condensed into precomposed forms if
+available, so both strings end up being just ''LATIN SMALL LETTER A WITH
+ACUTE''. Most programming languages require you to normalize your Unicode
+strings before doing any sort of comparison operation on them; Perl 6 is one of
+the few languages <<footnote """Elixir is the only other language I know of where this is the case as well.
+""">>
+that's an exception here:
+
+```perl6
+say "\c[LATIN SMALL LETTER A WITH ACUTE]" eq "a\c[COMBINING ACUTE ACCENT]"; # True
+```
+The reason this "just works" in Perl 6 is because Unicode strings in Perl 6 are
+normalized into what's called NFG, or "Normal Form Grapheme". You can read
+Jonathan Worthington's explanations of NFG and its implementation
+[[here (PDF)|http://www.jnthn.net/papers/2015-spw-nfg.pdf]],
+[[here|https://6guts.wordpress.com/2015/04/12/this-week-unicode-normalization-many-rts/]],
+and
+[[here|https://6guts.wordpress.com/2015/04/20/this-week-digging-into-nfg-fixing-use-fatal-and-more/]],
+but in a nutshell, NFG means that each element of a string is a single
+character in the way humans think of characters - what we think of when we have
+to write a single character down on paper.
+
+!! Think in Graphemes
+
+My problem was that I was thinking on a //codepoint// level, rather than a
+//grapheme// level. Perl 6 looks at "и́" and friends as a single character -
+there are no combining marks anymore. You would run into this issue in other
+languages if you used NFC normalization <<footnote """...but not with Cyrillic characters,
+because they don't have precomposed forms with accents.
+""">>. So the way I fixed
+this was to use the `Str.trans` method, which maps one set of characters to
+another:
+
+```perl6
+$verb .= trans('а́е́и́о́у́я́э́ы́ёю́' => 'аеиоуяэыёю');
+```
+Alternatively, I could've used the `Str.NFD` method to get an NFD object
+back, and filtered out the `COMBINING ACUTE ACCENT` codepoint before
+converting it back to a `Str`. That felt too low-level to me - it would
+be nice if the `NFD` and related types supported `Str`-like operations
+such as `subst` in the future.
+
+Another alternative, suggested to me by teatime on IRC, would be to use the
+`:codes` adverb:
+
+```perl6
+$verb .= subst(rx:codes/<:Combining_Mark>/, '', :g);
+```
+...which tells the regex engine to think in terms of codepoints, not graphemes.
+Unfortunately, this has yet to be implemented.
+
+After I made the change, I got the result I wanted, and I ended up with a beautiful
+list of words to add to my Anki deck. Success!
+
+I hope that reading this educated you about Unicode a little bit, and will
+hopefully save you some time working with Unicode in the future, whether it's
+in Perl 6 or your favorite language!

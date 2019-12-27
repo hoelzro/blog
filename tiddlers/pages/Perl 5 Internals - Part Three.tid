@@ -1,0 +1,113 @@
+created: 20130911175028000
+tags: perl [[Blog Post]]
+modified: 20131118215118000
+title: Perl 5 Internals - Part Three
+
+! Perl 5 Internals - Part Three
+
+In the [[previous|Perl 5 Internals - Part Two]] post, we talked about some of the optimizations
+that perl performs when conducting string and array operations. This time, we'll be diving into
+how perl implements hashes. But first, a brief clarification...
+
+! "Perl Never Downgrades"
+
+In the first two posts, I made a point of mentioning that "Perl never downgrades"; that is, once a
+scalar has been upgraded to a more inclusive type (ex. from an `IV` to a `PV`), it won't go
+back again. This concept is also reflected in Perl's usage of memory; once it's allocated memory
+to an XV, it won't shrink until that XV is freed up. I was chatting with Yves Orton about these
+blog posts, and he mentioned that there is (at least) one scenario in which perl ''will'' free this
+memory: if you invoke `undef` as a function on a scalar, rather than assigning `undef` to
+said scalar. For example:
+
+```perl
+my $s = 'foobar';
+my $t = $s;
+$s    = undef;
+undef $t;
+
+Dump($s);
+# SV = PV(0x7ff6cb002e70) at 0x7ff6cb02a4f0
+#   REFCNT = 1
+#   FLAGS = (PADMY)
+#   PV = 0x101902700 "foobar"\0
+#   CUR = 6
+#   LEN = 16
+
+Dump($t);
+# SV = PV(0x7ff6cb002f00) at 0x7ff6cb02a550
+#   REFCNT = 1
+#   FLAGS = (PADMY)
+#   PV = 0
+```
+Note how `$s` retained a reference to its character buffer, but it doesn't have any of the `OK`
+flags set, whereas `$t` has freed up its character buffer. Similar behavior occurs if you do
+`undef @array` or `undef %hash`; I encourage you to try it out!
+
+And now, back to our scheduled programming...</awful-pun>
+
+! Hashes
+
+!! Hashing and Splitting
+
+Perl implements [[hashtables|https://en.wikipedia.org/wiki/Hashtable]] in a fairly typical way; a sparsely populated array of linked lists (AKA
+hash buckets). A hashtable implementation runs its keys through a hash function to generate an
+index, and usually applies a modulus operation to generate the final index into the bucket array.
+Perl has a clever microoptimization here: it always makes sure to allocate a bucket array that has a
+size equal to a power of two. Then, instead of using a modulus operation, perl can simply conduct
+a bitwise AND operation to discard the high bits. The modulus operation is by no means expensive,
+but a bitwise AND takes far fewer cycles.
+
+When the load factor (the number of key/value pairs versus the size of the sparse array) gets too
+high, the number of collisions gets to be too high for the hashtable to be fully effective, so the
+hashtable is usually grown and the entries are reinserted. This is known internally as
+//splitting//, considering the routine responsible is named `hv_split`. Perl has a neat optimization for this as well: since it
+uses a bitwise AND to find the final array index, it only needs to consider one extra bit of the
+hash value when splitting the table.
+
+For example, let's say I have a hash whose buckets array is 8 entries long, and two keys whose hash
+values are `0b11111111` and `0b11110111`. If we apply a bitwise AND against `0b00000111` (8 -
+1), we get the bucket index for these keys, which happens to be 7 for both of our keys. However,
+when we increase the bucket array size to 16 (the next power of two), we now bitwise AND the keys
+with 16 - 1, or `0b00001111`, to get the bucket size, which results in 15 for the first key, and 7
+for the second. The second key doesn't change positions! Therefore, when growing the bucket array
+from size `2<sup>n</sup>` to `2<sup>n+1</sup>`, we only need to reorganize entries for which bit
+`n + 1` is set.
+
+If you happen to know how many hash keys you will need (or if you at least have a good idea), you can
+tell Perl to preallocate hash buckets by using `keys(%hash)` as an l-value:
+
+```perl
+keys(%hash) = $num_expected_keys;
+```
+This can save your program from having to repeatedly splitting a hashtable that you're inserting a
+lot of data into.
+
+!! Shared Keys
+
+Consider the following program:
+
+```perl
+my @hashes;
+
+for (1 .. 1_000_000) {
+  push @hashes, { value => $_ };
+}
+```
+This seems like it would take up a lot of space: not only are we creating one million hashes; we're
+also creating one million instances of the string `"value"` and one million numbers, right?
+
+In some languages, you can do what's known as //interning// a string; this means for each individual
+string, there is exactly one copy of that string in memory. Lua does this by default (which makes
+sense, considering how heavily it relies on table lookups based on string keys), and Ruby offers
+the capability to do this with its Symbol type. Fortunately, Perl benefits from a similar trick.
+All strings that are used as hash keys are actually interned into a private hash table (accessible
+in XS via the `PL_strtab` variable); this allows any program using a lot of common hash keys to fit
+into a much smaller space in memory.
+
+! Next Time
+
+Well, that about covers the three primary datatypes in Perl! Join me next time for an overview of
+the optree!
+
+(PS: If you're interested in reading more about hash internals, read my coworker Yves' post about
+making hashes more secure: [[http://blog.booking.com/hardening-perls-hash-function.html]])

@@ -1,0 +1,26 @@
+modified: 20160711180343000
+title: Making SSH_AUTH_SOCK Work Between Detaches in Tmux
+created: 20120727114136000
+tags: tmux ssh favorites [[Blog Post]]
+
+! Making SSH_AUTH_SOCK Work Between Detaches in Tmux
+
+I make heavy use of SSH agent forwarding in my workflow. However, sometimes you'll start a tmux session, do some work, and detach it. When you come back later, whether it's an hour, a day, or a month, your SSH_AUTH_SOCK within the session will no longer be valid, and you'll need to input your password every time you want to do something involving SSH. I came up with a simple solution a while back; if you drop this in your `.bashrc`, it ''should'' just work:
+
+```bash
+if [ ! -z "$SSH_AUTH_SOCK" -a "$SSH_AUTH_SOCK" != "$HOME/.ssh/agent_sock" ] ; then
+    unlink "$HOME/.ssh/agent_sock" 2>/dev/null
+    ln -s "$SSH_AUTH_SOCK" "$HOME/.ssh/agent_sock"
+    export SSH_AUTH_SOCK="$HOME/.ssh/agent_sock"
+fi
+```
+This snippet should also work with GNU screen.
+
+This technique is simple, but it is not without its quirks, however:
+
+* You need to close and restart any open tmux sessions to get this to work.
+* It doesn't play nice with multiple SSH connections to the same host. However, I use ControlMaster in my SSH configuration, so I don't run into this issue.
+
+Let me know if you have any suggestions for improvement!
+
+-Rob

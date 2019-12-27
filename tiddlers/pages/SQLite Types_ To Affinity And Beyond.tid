@@ -1,0 +1,44 @@
+tags: sqlite [[Blog Post]]
+created: 20120416103030000
+title: SQLite Types: To Affinity And Beyond
+modified: 20180917152857000
+
+! SQLite Types: To Affinity And Beyond
+
+If you haven't checked out [[SQLite|http://sqlite.org/]], it's definitely worth taking a look at. It's perfect for a zero-configuration set up when you're doing development, and it's a great database to run a test suite against, especially since you can run a SQLite database completely out of volatile memory. It's even a great choice for small-to-medium size datasets - I have plenty of projects that store their data in SQLite to keep things simple, and even [[Fossil|http://fossil-scm.org]], the version control system that SQLite itself uses, stores its data in SQLite!
+
+One of the things that makes SQLite different from other SQL implementations such as MySQL or PostgreSQL (other than the fact that it's serverless) is the way its typing system works. SQLite's typing system is similar to Perl's in that a column can hold a value of any type. So even with the following table definition:
+
+```sql
+CREATE TABLE number_values (
+  value INTEGER NOT NULL
+);
+```
+I can run `INSERT INTO number_values VALUES ('foo')` and SQLite will happily store 'foo' into the value column. When you do comparisons, SQLite is pretty intelligent about how it treats the types; if you run the following statement:
+
+```sql
+SELECT COUNT(1) FROM number_values WHERE value = '5'
+```
+SQLite will realize that you're looking for a string in an integer column, and automatically coerce the '5' into a 5. This uses a set of rules that the SQLite documentation refers to as //[[type affinity|http://www.sqlite.org/datatype3.html]]//.
+
+This is all well and good, but I found an interesting quirk in the type coercion system while working on a side project. SQLite allows
+you to add user-defined functions, like so:
+
+```perl
+$dbh->sqlite_create_function('is_even', 1, sub {
+  my ( $n ) = @_;
+
+  return $n % 2 == 0 ? 1 : 0;
+});
+```
+After defining the `is_even` function, I can use it in a SQL statement:
+
+```sql
+SELECT COUNT(1) FROM number_values WHERE is_even(value) = 1
+```
+...and SQLite will tell me how many even numbers I have in the `number_values` table. Bearing type affinity in mind, what would you expect the following expression to yield?
+
+```sql
+SELECT COUNT(1) FROM number_values WHERE is_even(value) = '1'
+```
+You may expect the same number that was yielded from the previous SQL statement, but unfortunately, that would be incorrect. The correct answer is '0'. For some reason, no implicit coercion occurs when comparing the result of a function to a value. So, please keep this in mind if you decide to make use of SQLite and add your own functions!

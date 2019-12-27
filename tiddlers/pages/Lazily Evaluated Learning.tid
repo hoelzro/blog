@@ -1,0 +1,50 @@
+tags: learning programming [[Blog Post]]
+created: 20180303181614000
+title: Lazily Evaluated Learning
+modified: 20180303185333000
+
+! Lazily Evaluated Learning
+
+One of the things you'll often hear as a programmer is that to be successful, you need to
+be constantly learning. Sometimes that's learning about a new technology, or learning
+a technology you use more in depth. It feels to me that this is getting harder and harder -
+there are always more frameworks, more programming languages, more tools to learn. Keeping
+up is difficult, especially if you have other people or things
+that demand your time. I have a little trick I've been using for some time, and I'd like
+to share my secret with you, dear reader. I call it //lazily evaluated learning//.
+
+If you know what lazy evaluation is already, you may see where I'm going with
+this, and you can skip this explanation. Put simply, lazy evaluation is a
+technique that some programming languages, such as Haskell, use where a piece
+of code isn't actually run until its result is needed. It looks something like
+this:
+
+```javascript
+let result = reallyExpensiveComputation();
+if(userShouldSeeResult) {
+  displayResult(result);
+}
+```
+In the example above, `reallyExpensiveComputation` is only run if `userShouldSeeResult`
+is true. So, how do you apply this to learning?
+
+The idea behind lazily evaluated learning is to defer learning until you need to know something,
+but keep enough information on //what// you need to know. For example, there is a lot of information
+on writing Haskell out there, such as [[this overview by Alexis King|https://lexi-lambda.github.io/blog/2018/02/10/an-opinionated-guide-to-haskell-in-2018/]].
+I'm not actively learning Haskell right now, but if I start someday, whether for fun or for a project, I have
+a list of articles in my [[personal wiki|Tiddler's Green]] tagged with "improve haskell" that I can
+fall back on.
+
+All you need to do this is have a good source of articles (I like
+[[https://lobste.rs]], but whatever works for you!) and some sort of personal
+archive, preferably with tagging, whether that be something like TiddlyWiki or
+Evernote. Another tool you can use, which especially helps when it's a skill
+you use too rare to remember effectively, but you stil use semi-regularly (for
+me, this is R), is to use a spaced repetition flashcard program like
+[[Anki|https://apps.ankiweb.net]]. This allows you to load a skill into your
+brain very quickly.
+
+I actually have cashed in on this technique in the past: when I started at my current job at Threadless (a Python shop),
+I had dabbled in, but never seriously used, Python. Having a list of Python resources to review when I started
+really helped me to skill up quickly and hit the ground running. This idea has helped me manage the fatigue that
+comes with trying to keep up, and hopefully it can do the same for you!

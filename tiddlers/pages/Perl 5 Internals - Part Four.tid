@@ -1,0 +1,181 @@
+tags: perl [[Blog Post]]
+created: 20131002090350000
+modified: 20131007195228000
+title: Perl 5 Internals - Part Four
+
+! Perl 5 Internals - Part Four
+
+The first three installments of this series covered Perl's core data types: scalars, arrays, and hashes. This final
+installment will cover something a bit different: the optree. Those of you who are familiar with compiler concepts
+are no doubt familiar with the notion of an [[abstract syntax tree|https://en.wikipedia.org/wiki/Abstract_syntax_tree]] (known as an AST for short). The optree is perl's
+take on the AST: it's something similar to, but not entirely the same as, an AST. Before we begin looking at the
+optree, I recommend reviewing the "Subroutines" and "Compiled code" sections of [[perlguts|https://metacpan.org/pod/perlguts]], as well as
+looking at [[perlcall|https://metacpan.org/pod/perlcall]]. It is by no means required, but it might make digesting this content a little
+easier.
+
+!! Inspecting the Optree
+
+Just as we can use [[Devel::Peek|https://metacpan.org/pod/Devel::Peek]] to dig into the internals of Perl data structures, we can use [[B::Concise|https://metacpan.org/pod/B::Concise]]
+to dig into the optree:
+
+```
+# The 'O' module specifies an alternative compiler backend
+$ perl -MO=Concise -E 'say q{hi!}'
+```
+Now that we know how to look at the optree, let's have a look at the output of that command:
+
+```
+6  <@> leave[1 ref] vKP/REFC ->(end)
+1     <0> enter ->2
+2     <;> nextstate(main 47 -e:1) v:%,{,469764096 ->3
+5     <@> say vK ->6
+3        <0> pushmark s ->4
+4        <$> const(PV "hi!") s ->5
+-e syntax OK
+```
+As you can see from this little snippet, the output from [[B::Concise|https://metacpan.org/pod/B::Concise]] is a little harder to interpret than
+that of `Devel::Peek`. The exact format is documented in the perldoc for [[B::Concise|https://metacpan.org/pod/B::Concise]], but we can gloss
+over the details for the purposes of this introduction. First of all, we can see that the operations are organized
+in a tree-like structure (as you would expect from something called the op''tree''). We can also pick a few things
+out of the individual lines. Take for example, the second line of output:
+
+```
+1     <0> enter ->2
+```
+`enter` is the OP name, and `<nowiki>->2</nowiki>` means that the OP to be executed after this one is OP #2.
+This is what perl calls the "execution order thread" (not to be confused with threads as in multithreading).
+Because of this, when perl executes an optree, it only needs to follow the execution order thread instead of having
+to perform a tree traversal.
+
+While the functionality of some of the OPs are obvious from their names, the OP `nextstate` isn't as obvious.
+The purpose of the `nextstate` OP is simple: it's placed in between statements as a sort of "bookkeeping"
+operation; to clean up temporaries and let perl know where in the program it is for diagnostic reasons.
+
+We can also tell [[B::Concise|https://metacpan.org/pod/B::Concise]] to dump the optree in execution order:
+
+```
+$ perl -MO=Concise,-exec -E 'say q{hi!}'
+1  <0> enter
+2  <;> nextstate(main 47 -e:1) v:%,{,469764096
+3  <0> pushmark s
+4  <$> const(PV "hi!") s
+5  <@> say vK
+6  <@> leave[1 ref] vKP/REFC
+-e syntax OK
+```
+Here, you can see the the tree structure in the formatted output has gone away, but now we can see the instructions
+laid out in the order perl would execute them. [[B::Concise|https://metacpan.org/pod/B::Concise]] has many handy options; consult the
+documentation for more information. I personally like the `-src` and `-base` options; for the remainder of
+this post, I'll be using the `-base` option to make the output a little easier to read.
+
+!! Looking at Conditionals
+
+Now that we've covered a very basic program, let's look at a conditional. Conditionals work a little bit
+differently, considering that they need two execution order thread pointers, one of which is used depending on
+whether the condition is true or false at runtime. Observe:
+
+```
+$ perl -MO=Concise,-base10 -E 'my $value = 1; if($value) { say q{hi!} }'
+12 <@> leave[1 ref] vKP/REFC ->(end)
+1     <0> enter ->2
+2     <;> nextstate(main 47 -e:1) v:%,{,469764096 ->3
+5     <2> sassign vKS/2 ->6
+3        <$> const(IV 1) s ->4
+4        <0> padsv[$value:47,50] sRM*/LVINTRO ->5
+6     <;> nextstate(main 50 -e:1) v:%,{,469764096 ->7
+-     <1> null vK/1 ->12
+8        <|> and(other->9) vK/1 ->12
+7           <0> padsv[$value:47,50] s ->8
+-           <@> scope vK ->-
+-              <0> ex-nextstate v ->9
+11             <@> say vK ->12
+9                 <0> pushmark s ->10
+10                <$> const(PV "hi!") s ->11
+-e syntax OK
+```
+Here we can see a scalar assignment (the `sassign`, corresponding to the `my $value = 1` statement) and an
+`and` OP, which is used to implement the `if` statement. If you look closely at the line containing the
+`and` OP, you can see it has two pointers to other OPs; the truthy path, and the falsy one.
+
+!! Some optimizations
+
+Let's see how perl handles an array:
+
+```
+$ perl -MO=Concise,-base10 -E 'my @array = (1); my $index = 0; say($array[0]); say($array[$index])'
+21 <@> leave[1 ref] vKP/REFC ->(end)
+1     <0> enter ->2
+2     <;> nextstate(main 47 -e:1) v:%,{,469764096 ->3
+6     <2> aassign[t2] vKS ->7
+-        <1> ex-list lK ->5
+3           <0> pushmark s ->4
+4           <$> const(IV 1) sP ->5
+-        <1> ex-list lK ->6
+5           <0> padrange[@array:47,49] l/LVINTRO,1 ->6
+-           <0> padav[@array:47,49] lRM*/LVINTRO ->-
+7     <;> nextstate(main 48 -e:1) v:%,{,469764096 ->8
+10    <2> sassign vKS/2 ->11
+8        <$> const(IV 0) s ->9
+9        <0> padsv[$index:48,49] sRM*/LVINTRO ->10
+11    <;> nextstate(main 49 -e:1) v:%,{,469764096 ->12
+14    <@> say vK ->15
+12       <0> pushmark s ->13
+-        <1> ex-aelem sK/2 ->14
+13          <0> aelemfast_lex[@array:47,49] sR ->14
+-           <0> ex-const s ->-
+15    <;> nextstate(main 49 -e:1) v:%,{,469764096 ->16
+20    <@> say vK ->21
+16       <0> pushmark s ->17
+19       <2> aelem sK/2 ->20
+17          <0> padav[@array:47,49] sR ->18
+18          <0> padsv[$index:48,49] s ->19
+-e syntax OK
+```
+The size of the output that [[B::Concise|https://metacpan.org/pod/B::Concise]] is giving us is starting to look a bit daunting,
+but fortunately we don't have to look at all of it. Let's focus in on the array element
+accesses:
+
+```
+# $array[0]
+-        <1> ex-aelem sK/2 ->14
+13          <0> aelemfast_lex[@array:47,49] sR ->14
+-           <0> ex-const s ->-
+```
+```
+# $array[$index]
+19       <2> aelem sK/2 ->20
+17          <0> padav[@array:47,49] sR ->18
+18          <0> padsv[$index:48,49] s ->19
+```
+There are two main differences between these subtrees that I'd like to point out. The first is that
+when using a variable for the index, we see `aelem`, and when using a literal, we see `aelemefast_lex`. Perl
+has a special OP for accessing an array's elements quickly, since it does this so often. Benchmarking the two
+is left as an exercise for you, dear reader!
+
+The second difference is that optree for `$array[0]` has a few of its OPs prefixed with "ex-". What this means
+is that perl has optimized those nodes out of the execution order thread, and will no longer execute them. You
+might be wondering why perl doesn't remove them outright; that's because that by the time the optimizer runs, the
+nodes have formed a complicated structure, making the task difficult. Having the extra nodes also provides extra
+information for people analyzing it (like now, when we're inspecting the optree by hand), and for programs (like
+when you use [[B::Deparse|https://metacpan.org/pod/B::Deparse]] to reconstruct the program).
+
+!! Playing with the optree further
+
+As much as I'd like to keep digging into the optree, it's a fairly complex part of the Perl internals, as you can
+see. I'm hoping that now that you've seen some of the basics, you are eager to try using [[B::Concise|https://metacpan.org/pod/B::Concise]] on
+other code. As an exercise, I recommend looking at the following:
+
+# Subroutine argument handling with `@_` and `shift;`
+# Hash accesses
+# Subroutine/method calls
+
+Please feel free to experiment and share your findings with the community!
+
+!! Conclusion
+
+My coworkers Steffen and Yves shared an important sentiment with us during the training:
+most of these little tricks aren't documented, nor are they immediately clear from reading the code. Only
+after studying the code for a bit can they be intuited.
+
+I hope that these posts have engendered an interest in how the Perl interpreter works among those who read them; going
+through the training and writing these posts certainly has my interest piqued!

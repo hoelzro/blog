@@ -1,0 +1,17 @@
+tags: perl [[Blog Post]]
+created: 20130828183515000
+title: Site Facelift
+modified: 20130828183515000
+
+! Site Facelift
+
+Over the past few weeks, I've been working on giving my site a bit of a facelift. As you can see, the
+style has completely changed; I decided that the site needed a fresher look. Many thanks to my wonderful
+girlfriend Michelle for her stylistic contributions!
+
+It's not just the looks that have changed; the code behind it has been completely revamped. [[DokuWiki|http://dokuwiki.org/]] is
+a great piece of software, but I realized that having a PHP-based site was holding me back from customizing it to meet my wishes.
+Since I do most of my work in Perl, I decided to rewrite it as a [[Dancer|http://perldancer.org]] application.
+
+When I started, I told myself that I wouldn't write any new blog articles until the new site was ready. I've come up with some
+pretty good ideas for articles in the meantime, so stay tuned for some fresh content to go with the fresh look!

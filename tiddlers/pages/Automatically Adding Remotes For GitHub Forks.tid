@@ -1,0 +1,21 @@
+title: Automatically Adding Remotes For GitHub Forks
+modified: 20160411174203000
+tags: git github [[Blog Post]]
+created: 20120625184336000
+
+! Automatically Adding Remotes For GitHub Forks
+
+I do almost all of my open source work via [[GitHub|https://github.com]]. And why not? It's pretty much the standard these days. I love how you can just put something up on GitHub for the whole world to see, and you can follow (and even fix!) your favorite open source projects. Sometimes, if you maintain your own fork of a project, it can lag behind the project leader's, though. Which means after your fork stagnates, you have to clone a copy, and do something like this:
+
+```
+git remote add base github:$user/$repo
+git fetch base
+git rebase base/master
+```
+(If that `github:` prefix looks unfamiliar to you, look [[here|Adding Remote Shortcuts to Git]])
+
+This isn't that big of a deal, but sometimes you forget who you forked from, or you misspell the name, or whatever. It's because of this that I created my own `post-checkout` Git hook that automatically adds a `base` remote for a fork's parent if you're cloning a fork of a GitHub project!
+
+[[https://github.com/hoelzro/dotfiles/blob/master/git-hooks/post-checkout/10-github-fork-remote-setup]]
+
+All you need to do is put this in your Git `init.templatedir` hooks directory, make it executable, and install [[Net::GitHub|https://metacpan.org/pod/Net::GitHub]] and [[LWP::Protocol::https|https://metacpan.org/pod/LWP::Protocol::https]] from CPAN. Then all of your new clones will automatically have the extra remote set up after `git clone` is finished cloning your repo!

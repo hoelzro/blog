@@ -1,0 +1,114 @@
+tags: xmpp perl [[Blog Post]]
+created: 20111027214844000
+title: Using XMPP to Find Out When a Long-Running Process is Done
+modified: 20130909143555000
+
+! Using XMPP to Find Out When a Long-Running Process is Done
+
+Do you often find yourself running a process that you know is going to take a while? Do you also find yourself checking the shell it's
+running in every five minutes to see if it's done? I do this fairly often, so what I used to do is something like this:
+
+```
+my-long-running-process; notify-send Complete "Your long-running process is complete"
+
+```
+This pops up a nice GUI notification letting me know my process is done. However, it has a few disadvantages. One is that it requires me to be at the machine I'm running the job on; sometimes I
+set up a job to run and leave. Another disadvantage is that I may miss the GUI notification if I get up from my desk to grab a cup of coffee or something.
+
+I decided the best alternative would be to write a simple script that would notify me over XMPP that my job had completed. That way, my IM program would let me know I had a message when I got back to my laptop, and my phone would receive the message too. So now what I do is this:
+
+```
+my-long-running-process; notify-rob.pl "Your long-running process is complete"
+
+```
+That's nice, but if I'm running a process while I'm out and about and I'm interested in a summary of the data it outputs, I'd like that included in the message. So I added support for using standard input as the message. Let's say I want to know how long my process took:
+
+```
+(time my-long-running-process) 2>&1 | notify-rob.pl -i
+
+```
+Now when `my-long-running-process` completes, it sends a message with the duration of the job to my phone, as well as any chat clients I have running at the time.
+
+Here's my `notify-rob.pl` script, with the Rob-specific bits removed. If you'd like to use it, you'll need the [[AnyEvent-XMPP|https://metacpan.org/release/AnyEvent-XMPP]] distribution installed for Perl, and perl 5.10 or better.
+
+```perl
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use feature 'say';
+
+use AnyEvent::XMPP::IM::Connection;
+use AnyEvent::XMPP::IM::Message;
+use Getopt::Long;
+
+my $from_stdin = 0;
+my $from_file  = 0;
+
+GetOptions(
+    input    => \$from_stdin,
+    'file=s' => \$from_file,
+);
+
+my $body;
+
+if($from_stdin || $from_file) {
+    my $fh;
+
+    if($from_stdin) {
+        $fh = \*STDIN;
+    } else {
+        open $fh, '<', $from_file or die "Unable to open $from_file: $!\n";
+    }
+
+    $body = do {
+        local $/;
+
+        <$fh>;
+    };
+
+    close $fh;
+} elsif(@ARGV) {
+    $body = join(' ', @ARGV);
+} else {
+    die "usage: $0 [-i] [-f file] [message...]\n";
+}
+
+my $cond = AnyEvent->condvar;
+my $conn = AnyEvent::XMPP::IM::Connection->new(
+    jid              => 'your source JID here',
+    password         => 'your password here',
+    domain           => 'gmail.com', # I use Google Talk for this; you can
+                     # remove the domain, host, port, and
+                     # old_style_ssl options if you use
+                     # a "regular" XMPP server
+    host             => 'talk.google.com',
+    port             => 5223,
+    old_style_ssl    => 1,
+    initial_presence => undef,
+);
+
+my $timer;
+$conn->reg_cb(session_ready => sub {
+    my $msg = AnyEvent::XMPP::IM::Message->new(
+        to   => 'your destination JID here',
+        type => 'chat',
+        body => $body,
+    );
+    $msg->send($conn);
+    $timer = AnyEvent->timer(
+        after => 3,
+        cb    => sub { $cond->send },
+    );
+});
+
+$conn->reg_cb(error => sub {
+    my ( undef, $error ) = @_;
+
+    say $error->string;
+    $cond->send;
+});
+
+$conn->connect;
+$cond->recv;
+```

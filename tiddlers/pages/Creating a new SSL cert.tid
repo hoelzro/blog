@@ -1,0 +1,31 @@
+created: 20150421153421000
+modified: 20150421153421000
+title: Creating a new SSL cert
+
+! Creating a new SSL cert
+
+I always forget the steps to doing this...
+
+This is how [[Nginx|http://wiki.nginx.org/HttpSslModule]] recommends doing it:
+
+```
+openssl genrsa -des3 -out mycert.key 1024
+openssl req -new -key mycert.key -out mycert.csr
+mv mycert.key mycert.orig
+openssl rsa -in mycert.orig -out mycert.key
+openssl x509 -req -days 365 -in mycert.csr -signkey mycert.key -out mycert.crt
+
+```
+This is how [[Prosody|http://prosody.im/doc/advanced_ssl_tls]] recommends doing it:
+
+```
+openssl req -new -x509 -days 365 -nodes -out mycert.crt -keyout mycert.key
+
+```
+This is how [[Postfix|http://www.postfix.org/TLS_README.html#quick-start]] recommends doing it:
+
+```
+openssl req -new -nodes -keyout mykey.pem -out mycsr.pem -days 365
+openssl ca -out mycrt.pem -infiles mycsr.pem
+
+```

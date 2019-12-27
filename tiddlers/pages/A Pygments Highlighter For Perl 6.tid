@@ -1,0 +1,25 @@
+tags: perl6 [[Blog Post]]
+created: 20130105120411000
+modified: 20131006081637000
+title: A Pygments Highlighter For Perl 6
+
+! A Pygments Highlighter For Perl 6
+
+For the past two weeks, I have been working on a Pygments syntax highlighter for Perl 6. It has finally reached a state where I feel it is ready to be tested by the community! If you have some Perl 6 code and some spare time, please test it out. Or if you're interested in helping out the Perl 6 community by testing this code, please feel free to grab the source for an existing Perl 6 module ([[http://modules.perl6.org/]]) and verify that the colored output makes sense. The code is located here:
+
+[[https://bitbucket.org/hoelzro/pygments-main/]]
+
+There are a few known issues right now, but I don't consider them significant enough to deter this announcement. Here they are:
+
+* Lines like `regex special_variable:sym<{ }>` (ones containing an opening brace before the opening braces that signifies the start of the regex/method) don't match properly.
+* Some operators (like `eq`) are not parsed as operators.
+* Parameters to a token (ex. `token something(@params)`) are not correctly highlighted.
+* Adding/subtracting to/from character classes (ex. `<[...] + [...]>`) is not yet correctly highlighted.
+* `role q { ... }` is highlighted as a keyword and a string literal.
+
+In addition to fixing these, I intend to implement the following features:
+
+* Better type detection. Right now, a file is identified as Perl 6 if the shebang line matches 'perl6', or if 'use v6' is found. This can be improved.
+* Speed improvement. I haven't put any time into optimization, and this can likely be improved.
+
+If you find any bugs, or better yet, if you have any improvements to submit, please let me know!

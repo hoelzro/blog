@@ -1,0 +1,103 @@
+created: 20151228003607000
+tags: moarvm c valgrind [[Blog Post]]
+title: Using Valgrind to find memory problems - Part Four
+modified: 20151228003607000
+
+! Using Valgrind to find memory problems - Part Four
+
+Now that I had [[some experience dealing with memory leaks|Address Your Sanity with AddressSanitizer - Part Three]], I decided to try to
+reduce the memory leaks present in MoarVM. After a few quick wins, I found a
+situation where `MVMCallsite` objects referred to by `MVMCompUnit` objects
+<<footnote """`MVMCallsite` objects are the MoarVM representation of Perl 6 signatures,
+and `MVMCompUnit` objects represent the result of a body of source code being
+compiled
+""">> were not being cleaned up when their parent compunit is collected.
+I took it upon myself to plug this leak!
+
+Once again, I started with an extremely naïve change: just free the callsite objects
+(and their associated resources) when a comp unit is collected. I feel comfortable
+starting with naïve changes, because roast, the Perl 6 test suite, is very good at
+exercising all of the special cases that run through the interpreter. And yet again,
+my naïvete got the better of me; I got an invalid free from ASan this time:
+
+```
+  =================================================================
+  ==18779==ERROR: AddressSanitizer: attempting free on address which was not malloc()-ed: 0x7f3ff1b0d4a0 in thread T0
+      #0 0x7f3ff1ddc63a in __interceptor_free /build/gcc-multilib/src/gcc-5.3.0/libsanitizer/asan/asan_malloc_linux.cc:28
+      #1 0x7f3ff123e137 in MVM_free src/core/alloc.h:29
+      #2 0x7f3ff123e137 in MVM_callsite_destroy src/core/callsite.c:93
+      #3 0x7f3ff1368e90 in gc_free src/6model/reprs/MVMCompUnit.c:88
+      #4 0x7f3ff130820c in MVM_gc_collect_free_gen2_unmarked src/gc/collect.c:650
+      #5 0x7f3ff12fcb61 in MVM_gc_global_destruction src/gc/orchestrate.c:502
+      #6 0x7f3ff14ad19f in MVM_vm_destroy_instance src/moar.c:296
+      #7 0x4011aa in main src/main.c:194
+      #8 0x7f3ff0aa460f in __libc_start_main (/usr/lib/libc.so.6+0x2060f)
+      #9 0x401598 in _start (/tmp/nom/bin/moar+0x401598)
+  
+  AddressSanitizer can not describe address in more detail (wild memory access suspected).
+  SUMMARY: AddressSanitizer: bad-free /build/gcc-multilib/src/gcc-5.3.0/libsanitizer/asan/asan_malloc_linux.cc:28 __interceptor_free
+  ==18779==ABORTING
+```
+Interestingly enough, the invalid free was //not// a double free; it was a free
+of memory not managed by malloc. Unfortunately, ASan didn't tell me any
+details about this address - whether it lived on the stack, in static memory,
+or where. So now it was time to break out the big guns: valgrind.
+
+!! Enter Valgrind
+
+If you aren't familiar with it, [[Valgrind|http://valgrind.org/]] is a suite of
+tools for analysing programs. The most well-known tool in the suite is
+Memcheck, which checks for all sorts of memory problems, beyond what even ASan
+can do <<footnote """ASan still remains in my toolkit, however, since it increases program
+execution time by only about 2x compared to Valgrind's 20x-30x
+""">>. An example
+of one of the amazing things it can do is it will track uninitialized values
+throughout your program and notify you if you have an `if` branch based on
+that uninitialized value. It's remarkable not only because of the power it
+offers, but also because of how it works: it actually emulates a CPU!
+
+Valgrind is one of those tools that I had heard about, had little occasion to
+use, but kept it in my back pocket for the one day that I knew I had memory
+problems. To use valgrind with MoarVM, we just need to build it without
+`--asan`, as ASan and Valgrind don't play nice together. Using `--debug`
+is still recommended, however, for the same reasons we used it with ASan (nice stack
+traces). So after rebuilding Moar and running it through Valgrind, I got the
+following report:
+
+```
+  ==4843== Invalid free() / delete / delete[] / realloc()
+  ==4843==    at 0x4C29D2A: free (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+  ==4843==    by 0x4F7D047: MVM_free (alloc.h:29)
+  ==4843==    by 0x4F7D047: MVM_callsite_destroy (callsite.c:93)
+  ==4843==    by 0x4FD410C: gc_free (MVMCompUnit.c:88)
+  ==4843==    by 0x4FB6266: MVM_gc_collect_free_gen2_unmarked (collect.c:650)
+  ==4843==    by 0x4FB314B: MVM_gc_global_destruction (orchestrate.c:502)
+  ==4843==    by 0x503B48C: MVM_vm_destroy_instance (moar.c:296)
+  ==4843==    by 0x400D3E: main (main.c:194)
+  ==4843==  Address 0x5471798 is 0 bytes inside data symbol "obj_arg_flags"
+  ==4843==
+```
+Here we can see that Valgrind provided us a little extra information; namely, that the
+address we're trying to free is in `obj_arg_flags`. `obj_arg_flags` is a statically
+allocated piece of memory; it turns out that MoarVM preallocates a few callsite objects
+it knows will be used repeatedly. So I just needed to update my change to consider this
+(among a few other small things), and another leak was closed!
+
+This is only scratching the surface of what Valgrind is capable of; I'm sure I'll have
+more opportunities to cover it more in the future.
+
+!! Lessons Learned
+
+I took away a few lessons from this exercise; the first one is that if you're
+going to do low-level programming like this, make sure you learn at least the
+basics of ASan and Valgrind. They will make your life so much easier! As
+things stand now, I wouldn't call myself a Valgrind pro, but I know enough now
+to say that I want to use Valgrind on //everything//. Valgrind is one of
+those tools where I feel compelled to read its entire manual.
+
+The second lesson is something I knew, but is a continuous challenge for me:
+write good commit messages! Your future self will thank you. I feel like I did
+a good job with these this time around, and having those commit messages to read
+a few weeks/months later was extremely helpful in this blog post series.
+
+Thanks for reading!

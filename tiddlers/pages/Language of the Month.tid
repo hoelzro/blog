@@ -1,0 +1,114 @@
+modified: 20160711180343000
+title: Language of the Month
+created: 20160205053227000
+tags: lotm favorites [[Blog Post]]
+
+! Language of the Month
+
+So, this year in 2016, I have a number of ambitious goals, two of which are related to this blog.
+The first goal is to write a blog post per week, which I've managed to do successfully thus far
+(although I'm often a bit off of my "publish every Monday morning" mark). The second is even more
+ambitious; so much so that I don't even know if I'll be able to keep with it the entire year.
+
+The second goal is to try out a different programming language each month, and write about the experience.
+Through this, I hope to find new tools I can leverage (ex. R for its array of statistical computing
+functions), concepts I would like to bring back into other languages, and all around have some fun.
+
+Each month will detail my experiences learning and using the language, including a program I wrote using
+it. The programs will be available in [[this Git repository|https://github.com/hoelzro/language-of-the-month]].
+
+This post will serve as a landing page for the various entries; as you can see, it's currently February,
+so I'm a little behind.
+
+!! The Language Categories
+
+Here are some of the language categories that I've meant to play with over the last few years:
+
+!!! Statistical Computing (R)
+
+Two things I've wanted to get better at for a while are statistics and machine learning; not only
+does it seem that these skills will be important as a developer in the future, but you can also
+accomplish some really cool feats armed with this knowledge. R makes doing a lot of statistics
+and linear algebra calculations simple; that along with its visualization tools should make
+for a welcome addition to my programming toolbox!
+
+''UPDATE'': [[Here|R Mateys!]] is the post I wrote about R
+
+!!! Object Oriented Programming (Smalltalk)
+
+Although a lot of language bear the description of "object-oriented", I feel that one of
+them stands above the rest: Smalltalk. With Smalltalk you're not just using a language;
+you're embracing an environment. It's one of those older languages that newer languages
+keeps stealing great ideas from, so naturally it makes my list.
+
+''UPDATE'': [[Here|Talking Small]] is the post I wrote about
+Smalltalk.
+
+!!! Array-based Programming (APL, J, K)
+
+I've never delved into the array-based APL or its descendants, but people tell me that
+as a programmer who enjoys writing Perl, APL would be right up my alley. ;) APL programs
+are frighteningly terse, but like most of the languages on this list, it has a small but
+dedicated following, so they must be doing something right.
+
+!!! Logic Programming (Prolog, Mercury, MiniKanren)
+
+One of my professors in college once described writing Prolog as like having a butler:
+relaxing, because your butler concerns himself with the lower-level details on how to
+manage your household, but awkward, because he sees you get out of the shower when he
+comes to hand you your towel. I've done a bit of programming in Prolog before, and
+I think the analogy is pretty apt! It's definitely mind bending, which is exactly
+what I'm after. This time around, I owe it to myself to check out Art of Prolog, which
+contains some advanced Prolog techniques, and/or perhaps some of the other languages
+in the logic programming space.
+
+!!! Concatenative Programming (Factor, Forth, Postscript)
+
+I've never gotten around to using concatenative (aka. stack-based) programming languages
+before; I don't think Lua's stack-based C API counts! Factor looks like it comes with
+a very sophisticated environment, but I don't want to quickly discount Forth or Postscript;
+Forth can be used for very low-level programming, and there's something appealing about
+writing a Postscript program and having its output directly affect my printer.
+
+!!! Lisp (Racket, Clojure, Common Lisp)
+
+Even if you aren't a Lisper yourself, you have to admit there's something special about Lisp -
+something timeless. Learning a Lisp has been considered by many to be a rite of passage as
+a programmer. It has an extremely ardent following, and it represents the epitome of
+language flexibility. I'm really looking forward to sinking my teeth into a Lisp this year!
+
+''UPDATE'': [[Here|What's That Racket?]] is the post I wrote about Racket
+
+!!! Rebol Family (Rebol, Red)
+
+Rebol (and its descendent Red) stand in a class all their own; they're homoiconic like Smalltalk
+and Lisp, but they don't belong to either family. I'm excited to unlock the mysteries behind
+this family of languages.
+
+!!! Dependent Types (Idris, ATS, Agda)
+
+I'll be frank - I'm not entirely clear on what dependent types are. It seems like it takes
+a rich type system like that of Haskell and enhances it further. That's what this whole
+goal is all about; learning about fascinating new paradigms!
+
+!!! Concurrent Programming (Elixir)
+
+I should probably invest some time in checking out Erlang, but the buzz around the Ruby-like Elixir
+that runs on BEAM (the Erlang VM) is too hard to pass up. I don't know much about Elixir yet, but
+I aim to change that!
+
+''UPDATE'': [[Here|Max Out Your Programming HP and MP With Elixir]] is the post I wrote about
+Elixir
+
+I'm planning on covering one category per month, focusing on a single member of that
+category. I'll cover other languages in that category if I have time.
+
+I hope you enjoy reading about my experiences as much as I enjoy experiencing them!
+
+!! Posts Written to Date
+
+* [[January - R|R Mateys!]]
+* [[February - Elm|Climbing the Elm Tree]]
+* [[March - Racket|What's That Racket?]]
+* [[April - Elixir|Max Out Your Programming HP and MP With Elixir]]
+* [[May - Smalltalk|Talking Small]]

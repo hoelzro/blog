@@ -1,0 +1,107 @@
+title: Thoughts on Static Typing and Smalltalk
+modified: 20160712131351000
+created: 20160712131351000
+tags: smalltalk [[Blog Post]]
+
+!! Thoughts on Static Typing and Smalltalk
+
+I'm a huge fan of static typing - I have fond memories of playing with ML and
+Haskell in college, struck by the shear elegance of the programs I read, and
+how when I wrote programs, they seemed to "just work". Even though most of my
+professional life has been spent writing code in dynamically-typed languages,
+playing with Elm over the last year or so has rekindled my love for static types.
+
+My [[recent foray into Smalltalk|Talking Small]] has shown me the potential power of a
+dynamically typed system. I may be a fan of static typing, but I wonder if
+some of the advantages of static typing are present in a Smalltalk system.
+
+!! Asking the program questions about itself
+
+One of things that draws me to statically typed languages is the ability to
+write tools that answer questions about your programs; you can more easily
+write tools to ask what functions a module provides, what types of arguments a
+function takes, etc., in a statically typed language. Granted, you can fire up
+a parser for your dynamically-typed language and do this too, but a lot of
+dynamically-typed languages allow you to modify a module or function at
+runtime, so if you leverage this technique, you're out of luck. Also, just
+because you know that a function takes an argument `aFile` doesn't
+//necessarily// mean you know what type it's supposed to be; after all, it
+could be a filename, a file object, or a file stream.
+
+However, I'm being a bit unfair to dynamically typed languages; after all,
+dynamically typed programming languages, are often unparalleled in
+their abilities of introspection at runtime. It should come as no surprise
+that dynamically typed languages thrive in a dynamic environment, and static
+languages thrive in a static one. That's the thing, though - for most
+dynamically typed programming languages, their natural state is static - bits
+sitting at rest on a disk somewhere. If you want to introspect your dynamic
+program, you need to embed a REPL or debugger or something in your program, and
+you need to do this for each and every program you work on.
+
+Now, back to Smalltalk - it's the notable exception to the dynamically-typed
+trend above. Since a Smalltalk system is an ecosystem of live objects, it can know a lot
+more about itself than a bucket of bits on disk. This allows the environment
+to contain extremely sophisicated tooling - tooling that seems impossible for a
+dynamically typed language. After playing with Smalltalk for just a short
+period of time, it feels like the "regular" way of doing OO, as in Java or even
+Ruby, a Smalltalk inspiree, is somewhat lacking and one-dimensional. Smalltalk
+allows you to view your program, and even the environment, through a
+multi-dimensional view from many possible perspectives. It's as if you had a
+picture of a dog and were asked to divine certain properties about that dog,
+compared to having the actual dog next to you.
+
+!! Encoding my expectations into the program
+
+Another advantage that statically typed languages offer is they allow me to
+encode my expectations into the program. Even in a dynamically typed system,
+you have expectations on what a valid call to a function is - the argument is a
+string, or the argument implements the `send` method, or whatever. The difference
+is that you need to keep these expectations in your head while you're working. jEncoding
+these expectations helps ease load on the programmer's brain, helps others
+looking at the code understand how it's meant to be used, and helps tools, like
+the ones I describe above, gather information about the program.
+
+With dynamically typed languages, you could encode your expectations in the
+form of a comment, but comments tend not to age well, nor are they verifiable
+by an automated tool like a compiler. It is for this reason that dynamically
+typed languages often encode expectations by way of tests, a technique which
+many statically typed languages advocate as well. Tests are great, but they
+are often separate from the implementation, so it's a step of indirection
+between looking at the code and surmising the author's original intent. Also,
+depending on how the tests are written, it can be difficult to figure out what
+the author's expectations were - god forbid there are bugs in the tests!
+
+Another problem with TDD is that your tests need to be exhaustive, and they need
+to describe every situation for every program you write - for statically typed
+systems, it basically writes (some) tests //for// you based on what it can infer about
+your program.
+
+Smalltalk is considered by many to be the community that invented TDD - xUnit-style testing,
+in fact, was prototyped by Kent Beck in, you guessed it, Smalltalk. Other than tests,
+Smalltalk doesn't really have a way to encode expectations into one's program, but this
+is probably why the testing culture is so strong.
+
+!! Dynamically Typed Languages Aren't All Bad!
+
+Now, judging from the previous few paragraphs, you may think that I loathe dynamically
+typed languages. Far from it! Much of my work is done in Perl (5 or 6), Python, and Lua,
+and I know that they are all of them powerful tools. That doesn't mean I can't appreciate
+the statically typed world from time to time. =)
+
+I think dynamically typed languages are great for the "short story" analogue of
+programs; their flexibility is essential for prototyping. It think, however,
+that I would prefer a statically typed language when writing the programming
+equivalent of a novel. Having not written enough Smalltalk, I can't say if
+Smalltalk is suitable for writing such a program, but the passionate community
+behind Smalltalk seems to hint "yes".
+
+!! Aside: Turning the Question on its Head
+
+I just asked if a system like Smalltalk has my desired properties of a statically
+typed system; let's turn that question around: is being dynamically typed
+a required property of something like Smalltalk? When I talked about this on
+Twitter, [[Serge Stinckwich|https://twitter.com/SergeStinckwich]] informed me of
+[[Strongtalk|http://strongtalk.org]], a marriage of Smalltalk and static typing
+ideals. Sadly, it is no longer maintained. =( I would be very interested to hear
+about other research into this area; perhaps someone's already working on Strongtalk's
+spiritual successor?

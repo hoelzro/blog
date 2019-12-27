@@ -1,0 +1,73 @@
+created: 20121012212858000
+tags: perl6 arch linux [[Blog Post]]
+title: Building Rakudo Perl 6 For Arch Linux
+modified: 20130909143555000
+
+! Building Rakudo Perl 6 For Arch Linux
+
+One of my favorite features of my Linux distribution of choice, [[Arch Linux|https://www.archlinux.org/]], is its [[package manager|http://www.archlinux.org/pacman/]] and the ecosystem built around it. I maintain my own repository of packages; some are custom builds of packages available in the standard repositories (like Vim), others are packages that don't exist in the standard repositories at all. One of the packages I maintain is for [[Rakudo Star|https://github.com/rakudo/star/]], a [[Perl 6|http://www.perl6.org/]] distribution. I encountered some troubles creating a pacman package for the September release of Rakudo Star. I thought I would share my experiences so other package maintainers could learn from them.
+
+The PKGBUILD I was using was copied from one I found on the [[AUR|http://aur.archlinux.org/]], and it was fairly straightforward:
+
+```bash
+perl Configure.pl --prefix=/usr
+make
+make install DESTDIR="$pkgdir"
+```
+However, while this used to work, it does not with the September release of Rakudo Star. I'll be describing the steps I went through to successfully create a package.
+
+! Fixing PERL6LIB
+
+The first error message you see in the `make install` output is the following (plus a a //lot// more):
+
+```
+Could not find XML::Writer in any of: /home/rob/.perl6/lib, /usr/lib/parrot/4.8.0/languages/perl6/lib
+```
+After looking at this message, I realized that the installation process was expecting XML::Writer to have been installed to its permanent location, rather than to the staging area under `DESTDIR`. So fixing this was actually pretty easy:
+
+```bash
+# Before make install
+export PERL6LIB="$pkgdir$(parrot_config libdir)$(parrot_config versiondir)/languages/perl6/lib"
+```
+! Telling NQP Where To Find Perl6/Grammar.pbc
+
+After adding that line to the PKGBUILD, I ran `makepkg` again, to find yet another error message:
+
+```
+/usr/bin/nqp --vmlibs=perl6_group,perl6_ops --target=pir \
+  --output=modules/rakudo-debugger/perl6-debug.pir modules/rakudo-debugger/bin/perl6-debug.nqp
+"load_bytecode" couldn't find file 'Perl6/Grammar.pbc'
+```
+Hooray! Something different! That must mean I made progress. In this line, you can see a program called "nqp" being invoked. NQP (or Not Quite Perl) is a minimalistic Perl 6 implementation used with the [[Parrot|http://www.parrot.org/]] compiler tools to implement compilers for languages for the Parrot platform.
+From the error message, you can see that NQP is looking for a file called 'Perl6/Grammar.pbc', but isn't finding it. That file is the Perl 6 grammar that NQP uses to parse Perl 6 files. After looking at the NQP source code a bit, I couldn't find a good way to tell NQP where to find modules (`PERL6LIB` doesn't seem to work on NQP), but I did notice that in addition to system directories, NQP automatically searches for modules relative to the working directory. It's a dodgy hack, but I managed to fix this error by creating a symlink to the module directory under the working directory:
+
+```bash
+# again, put this before make install
+if [[ -e Perl6 ]]; then
+  unlink Perl6 # don't break successive builds
+fi
+ln -s "$pkgdir$(parrot_config libdir)$(parrot_config versiondir)/languages/nqp/lib/Perl6" .
+```
+! Telling Parrot Where To Find perl_ops
+
+After adding this and running `makepkg` yet again, I encountered this error after a few minutes of building:
+
+```
+/usr/bin/nqp --vmlibs=perl6_group,perl6_ops --target=pir \
+  --output=modules/rakudo-debugger/perl6-debug.pir modules/rakudo-debugger/bin/perl6-debug.nqp
+Could not load oplib `perl6_ops'
+```
+After looking under `$pkgdir`, I noticed a file named `perl6_ops.so`. I figured that the dynamic library loader was used to locate this file, so I just
+set `LD_LIBRARY_PATH` in my PKGBUILD:
+
+```bash
+# for the last time, before make install
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$pkgdir$(parrot_config libdir)$(parrot_config versiondir)/dynext"
+```
+It's important that I appended to `LD_LIBRARY_PATH`'s existing value, because makepkg sets it up with some values and you don't want to break it.
+
+After these three steps, however, I managed to get a working package of Rakudo Star built!
+
+Fellow Archers, enjoy your shiny new Perl 6 installation! For you users of other distributions, please feel free to take what I've written here and make your own packages!
+
+''UPDATE'': As of Rakudo Star 2013.01, the build process has been improved, so a perl Configure.PL/make/make install DESTDIR=$pkgdir style build process will work.

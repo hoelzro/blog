@@ -1,0 +1,104 @@
+title: Embedding Lua and debug.debug
+modified: 20130909143555000
+created: 20110909182110000
+tags: lua vim [[Blog Post]]
+
+! Embedding Lua and debug.debug
+
+Trivia time: if you're using Vim with Lua support compiled in, what happens if you run the following (don't do this on an instance of Vim with any real work on it):
+
+```
+:lua debug.debug()
+
+```
+If you answered, "Vim will hang", you're right. I don't mean to single Vim out (it's one of my favorite programs); if I weren't depending on Awesome to keep all of my work windows in order, I'm sure I'd see similar behavior if I tried the same thing using `awesome-client`.
+
+If you're not familiar with Lua or `debug.debug`, it's a simple little debugger included in the Lua core
+that reads lines from standard input, evaluates them, and outputs the results to standard error. It's pretty simple, but still useful. However, for developers interested in embedding Lua,
+it presents a problem: if a user invokes it in a curses-based or GUI application, deliberately or not, it has the potential to lock up the application because it's waiting for
+input on standard input.
+
+This is a pretty common mistake for people embedding Lua in their projects; a good rule of thumb for debug.debug is to either replace it with your own version that more smoothly
+integrates with your application, or remove it entirely.
+
+''UPDATE'': I've implemented a patch for Vim 7.3 to fix this behavior.
+
+''UPDATE'': My fix is now present in the Vim tree!
+
+```
+diff --git a/src/if_lua.c b/src/if_lua.c
+--- a/src/if_lua.c
++++ b/src/if_lua.c
+@@ -1069,6 +1069,59 @@
+     {NULL, NULL}
+ };
+ 
++static int luaV_debug_debug(lua_State *L)
++{
++    const char *line = "";
++    int vim_eval_index;
++    int retval;
++
++    /* probably not the best implementation, because I don't 
++     * know how to invoke input() from the C API */
++    lua_getglobal(L, "vim");
++    lua_getfield(L, -1, "eval");
++    lua_remove(L, -2);
++    vim_eval_index = lua_gettop(L);
++
++    while(1) {
++        lua_pushvalue(L, vim_eval_index);
++        lua_pushliteral(L, "input('lua_debug> ')");
++        retval = lua_pcall(L, 1, 1, 0);
++        if(retval) {
++            lua_pushliteral(L, "error calling input(): ");
++            lua_insert(L, -2);
++            lua_concat(L, 2);
++            luaV_emsg(L);
++            return 0;
++        }
++        line = luaL_checkstring(L, -1);
++        if(! strcmp(line, "cont")) {
++            break;
++        }
++        msg_putchar('\n');
++        retval = luaL_loadstring(L, line);
++        if(retval) {
++            lua_pushliteral(L, "error compiling chunk: ");
++            lua_insert(L, -2);
++            lua_concat(L, 2);
++            luaV_emsg(L);
++            lua_pop(L, 1); /* pop line */
++            continue;
++        }
++        retval = lua_pcall(L, 0, 0, 0);
++        if(retval) {
++            lua_pushliteral(L, "error running chunk: ");
++            lua_insert(L, -2);
++            lua_concat(L, 2);
++            luaV_emsg(L);
++            lua_pop(L, 1); /* pop line */
++            continue;
++        }
++        lua_pop(L, 1); /* pop line */
++    }
++
++    return 0;
++}
++
+     static int
+ luaopen_vim(lua_State *L)
+ {
+@@ -1082,6 +1135,11 @@
+     /* print */
+     lua_pushcfunction(L, luaV_print);
+     lua_setglobal(L, "print");
++    /* debug.debug */
++    lua_getglobal(L, "debug");
++    lua_pushcfunction(L, luaV_debug_debug);
++    lua_setfield(L, -2, "debug");
++    lua_pop(L, 1);
+     /* free */
+     lua_pushlightuserdata(L, (void *) LUAVIM_FREE);
+     lua_pushcfunction(L, luaV_free);
+```

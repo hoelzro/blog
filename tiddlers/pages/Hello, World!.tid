@@ -1,0 +1,34 @@
+tags: haiku git lua perl vim [[Blog Post]]
+created: 20100928012351000
+modified: 20191211163508000
+title: Hello, World!
+
+! Hello, World!
+
+Well, it's been about a week since I launched this site after
+a long waiting period, so I figured that my first blog post is
+overdue. And instead of writing about my recent journeys into
+SSH configuration files or Moose meta-magic, I'll be metablogging
+a bit. That's right; the first (official) post on this blog will
+be about blogging, or, more specifically, this blog. I decided
+to do a post about starting to blog mainly because this site isn't
+entirely ready for blogging yet (no discussion system, no trackbacks).
+
+I'll begin with a bit of an explanation: you may have noticed that
+this is technically not the first blog entry here; rather, there should
+be a blog post I wrote over a year ago about the wonderful Haiku operating
+system. It is with this blog post that I hope to write at least one
+blog entry per week, whether it is discussing something I discovered while
+doing my job (I'm a Perl programmer at a company here in Madison), expanding
+upon a neat article I read on someone else's blog, or sharing something I discovered
+while working on one of my personal projects.
+
+Please check back once a week or so (or get your RSS reader to do it for you). I'll
+be blogging about my favorite programming languages (Lua and Perl), my favorite revision
+control system (Git), my favorite editor (Vim), open source projects I find interesting,
+among other topics.
+
+Of course, any comments, questions, or friendly criticisms of my posts will be most
+appreciated (once I get the discussion system up and running, that is)!
+
+-Rob

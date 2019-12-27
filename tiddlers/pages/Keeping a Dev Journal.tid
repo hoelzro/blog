@@ -1,0 +1,43 @@
+modified: 20160225040937000
+title: Keeping a Dev Journal
+tags: dev-journal [[Blog Post]]
+created: 20160225040937000
+
+! Keeping a Dev Journal
+
+How many of you track your growth as a developer on a regular basis? I've been
+doing so for the last nine months, and I've found it rather rewarding. I thought
+I would write about it and share my experiences.
+
+!! What's a Dev Journal?
+
+For me, a dev journal is simply a daily record of anything I did that's
+code-related. Any contributions I accepted, any issues I filed on a project,
+any bugs I fixed, or any programs I wrote for fun. I don't include work-related
+coding tasks, although maybe I should.
+
+!! Why Keep One?
+
+The reason I started using a dev journal was to see if I could discern any
+patterns in how I work on code - particularly in my mental state. I have a
+problem when working on code in my spare time: I come up with a lot of ideas,
+and for the ideas that I choose to work on, I will often get distracted by my
+latest shiny idea and abandon the one I'm currently working on, leaving a trail
+of half-completed projects in my wake. This is a pattern I'm hoping to find a
+solution to, so I figured that tracking my day-to-day coding habits and how I
+feel about them would help.
+
+So far, I haven't identified the underlying cause on why I jump from idea to
+idea (let me know if you experience this too, or have in the past!), but
+keeping a dev journal has had other benefits:
+
+* It's a record of accomplishment that I can feel good about. If I ever need a reminder of cool stuff I've done, I can go looking through my dev journal!
+* It encourages me to write better commit messages by fostering a habit of thinking about why I made a change in source code, and also having good commit messages to review when I'm summarizing my day in the journal.
+* It provides ideas or material for blog posts; I was able to recount details that would probably have been lost in my [[MoarVM leak hunt series|Tracking Slowdowns in Creating Child Processes - Part One]] because of my dev journal.
+* It helps me refer back to issues I had in the past so I can arrive at the solution more easily in the future.
+
+Another thing I just started doing (taking a hint from [[this repository|https://github.com/jbranchaud/til]]) is to start
+tracking interesting things I learned that day. You never know when you're going to need to dig that knowledge up!
+
+Do you keep a dev journal? If you already do, or if you want to start keeping one, please let me know what your experience
+has been!

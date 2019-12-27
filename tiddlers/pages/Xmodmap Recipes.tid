@@ -1,0 +1,26 @@
+created: 20150421153421000
+tags: xmodmap
+title: Xmodmap Recipes
+modified: 20150421153421000
+
+! Xmodmap Recipes
+
+!! Swap Control and Caps Lock
+
+```
+remove Lock = Caps_Lock
+remove Control = Control_L
+keysym Control_L = Caps_Lock
+keysym Caps_Lock = Control_L
+add Lock = Caps_Lock
+add Control = Control_L
+```
+!! Input German Letters with the Super Key
+
+```
+! now Super + u inputs ü
+keycode 30 = u U udiaeresis Udiaeresis
+keycode 32 = o O odiaeresis Odiaeresis
+keycode 38 = a A adiaeresis Adiaeresis
+keycode 39 = s S ssharp ssharp
+```

@@ -1,0 +1,110 @@
+created: 20150309175355000
+tags: [[Blog Post]]
+title: What I Learned Writing a Dropbox Clone - Part 3 - Inotify
+modified: 20150317031825000
+
+! What I Learned Writing a Dropbox Clone - Part 3 - Inotify
+
+```
+  commit e864c2d
+  Author: Rob Hoelz <***@*****.**>
+  Date:   Wed Sep 7 22:49:14 2011 -0500
+  
+      Make a note about hard links + inotify
+  
+```
+These posts are largely independent of each other, but if you'd like some
+context, you should probably read
+[[the first post|What I Learned Writing a Dropbox Clone - Part 1 - Introduction]].
+
+In my previous post, I discussed how clientd <<footnote """the daemon responsible for
+detecting and uploading changes
+""">> uploads a file's contents to hostd <<footnote """the
+daemon storing blobs and coordinating clients
+""">> after it has detected a change
+in said file. That raises the question: how do we detect if a file has
+changed?
+
+!! Enter Inotify
+
+`inotify` is a kernel-level API on Linux that allows a program to monitor a
+set of files for changes. Inotify is used by a lot of different types of
+programs: backup software, search/indexing software, etc. It's very powerful,
+but it has its limitations. As you'll see here, some of these limitations you
+can get around, while others you cannot.
+
+!! Monitoring a Tree
+
+The Sahara Sync Sandbox was a directory, but it was more than just that; if you think
+about it, it was really a //tree//. This might not seem to be an important distinction
+to make, but it's important when you realize that `inotify` only allows you to associate
+a watch with a single file or directory.
+
+Of course, you can add watches for many directories to a single inotify handle (and monitoring
+a directory allows you to monitor all of its children by extension), but consider the following
+scenario: let's say you're monitoring a directory, and you get a file creation event. You look
+at the new file and see that it's a directory. So you add a watch for it to monitor its children,
+but what if in that moment between the creation of the new a directory, a new subdirectory were
+to be created underneath it? That's right, you would now be blind to any events happening in that
+subdirectory.
+
+Now, the solution to this is to set up the watch for the directory, then iterate
+over the directory's children, setting up watches for discovered subdirectories along the way. Of
+course, then you encounter the situation where a subdirectory could be created after you set up
+the watch, but //before// you start your scan, so you could end up setting up a watch for a directory
+twice. It's not impossible, but it's a lot you need to get right. And if you don't get it right,
+some changes may not be picked up by clientd, and the user will wonder why their file didn't make
+it over to their other machine.
+
+!! Distinguishing changes we make from those the user makes
+
+`inotify` will tell you //what// changed among the files and directories you're monitoring, but
+it won't tell you //who// made the change. So when clientd makes a change to the sync directory, it
+will receive that change, but it will be unable to determine whether it was the change it just made,
+or an independent one that the user made.
+
+The way I got around this was to have two inotify handles: one to monitor the
+overlay directory <<footnote """A concept I introduced in the previous post; it's a special
+directory used by the client to make atomicity guarantees on filesystem
+operations
+""">>, and one to monitor everything under the sync directory (excluding
+the overlay directory). Also, when clientd makes a change to a file in the sync
+directory, it only ever uses `rename` operations.
+
+The reason for this is that `rename` operations have two very important
+properties. First, as mentioned in the previous post, `rename` allows us to
+make certain atomicity guarantees. Second, `rename` operations generate two
+inotify events, linked by an identifier (called a cookie in the inotify
+documentation). If clientd detects a rename in the sync directory via that
+handle and a rename with the same cookie on the overlay handle, it knows that's
+a change that it made.
+
+!! Determining the nature of a change
+
+When you receive an inotify event, there are several things you don't know:
+
+# You don't know if the file has actually changed at all; a program could simply have opened up the file for writing and closed it without changing anything.
+# If it //has// changed, you don't know which part of it has changed. It could be the whole file, or it be a single byte anywhere within the file.
+# When you're responding to an event, you don't know if another change has been made between the generation of that event and your handling of it.
+
+What this results in is a lot of checking of files' contents. You need to read the entire file
+and generate a checksum due to #1 and #2; because of #3, you may have to perform redundant checks.
+Worse yet, with regards to #3, the file could have been deleted after the change you just detected.
+
+I don't think there's any way around this. With a more advanced filesystem, you may be able to
+ask the operating system if particular chunks of a file have changed, but this violates my requirement
+of not being restricted to specific filesystems. You can mitigate #3 a bit by waiting a bit for extra
+events after receiving the first one. You could probably get around the "write + immediate delete" issue
+by maintaining a hard link to every file in the sync directory in the overlay directory, and process //that//
+before sending the delete event to hostd and cleaning up.
+
+Since I only ever used Sahara Sync for toy examples, I never encountered a problem with this, and I don't
+know if it would be much of a problem in practice. Most files I deal with are either small and often-changing
+(notes, source code, etc) or large and relatively static (images, music, videos). However, things like a
+log file, a virtual machine hard disk image, or maybe even large documents generated by office software could
+put that assumption to the test.
+
+!! Next Time
+
+In the [[next and final post|What I Learned Writing a Dropbox Clone - Part 4 - Conclusion]], I'll wrap up this series, talking about some things more general things I learned,
+as well as what I would do differently on a different project.

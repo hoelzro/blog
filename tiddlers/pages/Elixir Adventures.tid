@@ -1,0 +1,204 @@
+modified: 20160523221616000
+title: Elixir Adventures
+created: 20160523221616000
+tags: lotm elixir [[Blog Post]]
+
+! Elixir Adventures
+
+For my Elixir [[Language of the Month|Language of the Month]] project, I decided to return to
+my roots, in a way. You see, once upon a time, I wrote my first program.
+I had an idea for an space opera RPG, which, in retrospect, was a tacky
+Star Wars/Final Fantasy hybrid. Still, I wanted to bring that idea to
+life in any way I could; thus, I spent a good chunk of time my sophomore
+year of high school spewing out a morass of IFs and GOTOs in BASIC on
+my trusty TI-83+. Eventually, I did have a working game; it was a short
+text-based adventure, a sort of "demo" for the full game I had in my head.
+
+I recently thought about text-based adventures and NPCs roaming about,
+and it seemed to be a natural fit for a concurrent programming language
+like Elixir.
+
+Here's a link to the finished code:
+
+[[https://github.com/hoelzro/language-of-the-month/tree/master/April-2016]]
+
+!! Organization of the program
+
+So the central idea is to have a text-based village with several NPC
+residents; I created three and named them Alice, Bob, and Carol.
+
+Since the whole point of learning Elixir was to teach me to think
+in terms of processes, I broke everything I could into processes,
+the relationships between which looks like this (hover a service
+to see a description):
+
+
+<map name="rpg-service-layout">
+  <area shape="poly" id="node1" title="Manages NPCs by tracking their location and letting them know about clock updates" alt="" coords="312,413,308,406,296,399,279,394,257,391,232,389,207,391,185,394,168,399,156,406,152,413,156,421,168,427,185,433,207,436,232,437,257,436,279,433,296,427,308,421"/>
+  <area shape="poly" id="node2" title="An NPC in the village" alt="" coords="109,509,107,502,101,495,92,490,81,487,68,485,55,487,44,490,35,495,29,502,27,509,29,517,35,523,44,529,55,532,68,533,81,532,92,529,101,523,107,517"/>
+  <area shape="poly" id="node3" title="An NPC in the village" alt="" coords="205,509,204,502,198,495,190,490,180,487,169,485,158,487,148,490,140,495,135,502,133,509,135,517,140,523,148,529,158,532,169,533,180,532,190,529,198,523,204,517"/>
+  <area shape="poly" id="node4" title="An NPC in the village" alt="" coords="311,509,309,502,304,495,295,490,283,487,271,485,258,487,247,490,238,495,232,502,230,509,232,517,238,523,247,529,258,532,271,533,283,532,295,529,304,523,309,517"/>
+  <area shape="poly" id="node5" title="Tracks where the player is and what locations look like" alt="" coords="534,509,529,502,515,495,493,490,465,487,435,485,404,487,376,490,354,495,340,502,335,509,340,517,354,523,376,529,404,532,435,533,465,532,493,529,515,523,529,517"/>
+  <area shape="poly" id="node6" title="Sends clock updates to interested processes" alt="" coords="274,317,272,310,266,303,257,298,245,295,232,293,219,295,207,298,198,303,192,310,190,317,192,325,198,331,207,337,219,340,232,341,245,340,257,337,266,331,272,325"/>
+  <area shape="poly" id="node7" title="Evaluates commands" alt="" coords="294,221,291,214,282,207,268,202,251,199,232,197,213,199,196,202,182,207,173,214,170,221,173,229,182,235,196,241,213,244,232,245,251,244,268,241,282,235,291,229"/>
+  <area shape="poly" id="node8" title="Prints values to the console" alt="" coords="166,317,163,310,157,303,146,298,132,295,117,293,102,295,89,298,78,303,71,310,69,317,71,325,78,331,89,337,102,340,117,341,132,340,146,337,157,331,163,325"/>
+  <area shape="poly" id="node9" title="Parses lines of input into command structures" alt="" coords="210,125,208,118,202,111,192,106,179,103,165,101,151,103,139,106,129,111,122,118,120,125,122,133,129,139,139,145,151,148,165,149,179,148,192,145,202,139,208,133"/>
+  <area shape="poly" id="node10" title="Read input from the user" alt="" coords="173,29,170,22,163,15,153,10,139,7,124,5,109,7,95,10,85,15,78,22,75,29,78,37,85,43,95,49,109,52,124,53,139,52,153,49,163,43,170,37"/>
+</map>
+<img src='/_media/blog/rpg-service-layout.png' usemap='#rpg-service-layout' />
+
+
+You can see these relationships in the graph directly represented
+by the code itself:
+
+```elixir
+map = read_map_from_file("map.txt")
+clock = spawn(fn() -> ElixirRpg.Clock.main() end)
+location_manager_proc = spawn(fn() -> ElixirRpg.LocationManager.main(map) end)
+npc_manager_proc = spawn(fn() -> ElixirRpg.NpcManager.main(clock, location_manager_proc) end)
+evaluator_proc = spawn(fn() -> ElixirRpg.Evaulate.main(location_manager_proc, npc_manager_proc, clock) end)
+parser_proc = spawn(fn() -> parser(evaluator_proc) end)
+printer_proc = spawn(&printer/0)
+send(evaluator_proc, {:look, printer_proc})
+reader parser_proc, printer_proc
+```
+One side effect of doing things this way is that the ideas naturally organize
+themselves into services of a sort; if this were a non-trivial program, it
+would be easy to separate them into services on different machines <<footnote """The Erlang
+runtime has built-in functionality for running different processes on different
+machines, but let's pretend we're working in a concurrent environment that
+can't
+""">>. Passing process handles to the processes the need to communicate with
+them also serves as an interesting form of dependency injection. Elixir allows
+you to bind a process to a symbol by registering it, which would bypass this
+idea. I neglected to register my processes, as I liked being able to control
+exactly who's talking to whom.
+
+!! Coding NPCs
+
+If I have a chance and desire to revisit this project in the future, one of
+first changes I would make would be to make changing NPCs less rooted in code.
+In the current implementation, the map was configured via Unicode art in a file,
+but each NPC needed to live in their own module, and you needed to tell the NPC
+manager program which NPCs were around and which locations they would go to,
+which was tightly coupled to the map. Admittedly, at this point in the program
+I just wanted to be done!
+
+!! Challenges
+
+The implementation was pretty straightforward; however, I did run into some trouble along the way.
+
+!!! Anybody Home?
+
+The biggest problem was that I would sometimes run into a situation where I
+would type in a command into my game, and nothing would happen. As the number
+of processes increased, the number of possibilities for what went wrong went up.
+What usually happened was one of two things:
+
+# Some code would request something from another service, and either a) I would send a request that I wasn't looking for in the service, or b) the service would send a response that didn't look like what the requestor was expecting.
+# My code would "forget" to send a response to the requesting process.
+# One of my cases in a `receive` would forget to continue the loop, so the service would die.
+
+Situation #1 would happen much more often than the other two; here's what code like that looks like:
+
+```elixir
+def client do
+  send(service_proc, {:get_value, self()) # a) not sending what service expects
+
+  receive do
+      {:get, value} -> ... # b) not receiving what service is sending in response
+  end
+end
+
+def service do
+  loop = fn(loop, value) ->
+    receive do
+      {:get, requestor} ->
+        send(requestor, {:get, :response, value})
+        loop.(loop, value)
+      {:incr, requestor} ->
+        send(requestor, {:incr, :response, value + 1})
+        loop.(loop, value + 1)
+    end
+  end
+
+  loop.(loop, 0)
+end
+```
+I ended up resolving these issues by liberally sprinkling ''msg -> raise
+"Unexpected " <> inspect(msg)'' into my `receive` blocks, causing fantastic
+stack traces when I sent/received something I shouldn't, and by adding some
+`after 1_000 -> raise "timeout"` expressions after my `receive`s; this
+helped me fix issues #1 and #2. To fix issue #3, I just made sure each service had
+a `raise "I'm not supposed to exit"` after their `receive` blocks. I'm
+sure that the Erlang ecosystem offers far more sophisicated tools for this kind
+of thing, especially for #3; I believe that's the kind of thing that supervisors
+are good for.
+
+This raised a question with me, however: what happens when an Erlang process'
+mailbox gets a bunch of messages it doesn't select in `receive`? Does the mailbox
+fill up? That could make for an interesting topic of research some day!
+
+!!! Non-trivial Macros
+
+I learned the hard way that non-trivial macros are a bit harder in Elixir than
+they are in Lisp; let's look at the example from above. I tried to make this code:
+
+```elixir
+receive do
+  {:get, requestor} ->
+    send(requestor, {:get, :response, value})
+    loop.(loop, value)
+  {:incr, requestor} ->
+    send(requestor, {:incr, :response, value + 1})
+    loop.(loop, value + 1)
+end
+```
+...look more like this:
+
+```elixir
+receive do
+  handle_method :get, {} do
+    value
+  end
+
+  handle_method :incr, {} do
+    value + 1
+  end
+end
+```
+The tuple in each `handle_method` macro is supposed to
+be the list of arguments that each method takes.
+
+The first part was trying to construct the tuple that was
+to go on the left-hand side of `->` (in the first case,
+`{:get, requestor}`. Splicing symbols, variables from
+macro land, and the variables in the tuple from the invocation
+proved to be less than straightforward. For example, let's
+say your macro is passed a tuple. What does that look like
+to the compiler?
+
+```elixir
+ast = quote do: {foo, bar}
+IO.puts inspect(ast) # {{:foo, [], Elixir}, {:bar, [], Elixir}}
+```
+Sometimes I would see `{:{}, [], [{:foo, [], Elixir}, {:bar, [], Elixir}]}`, which
+just made things confusing. Once I figured out that the tuple is passed
+in as a triple, I was able to construct the LHS tuple pretty easily, but
+I feel that there's a bit of a disconnect between the code and the AST, unlike
+when working with macros in Lisp.
+
+Sadly, even when I got //that// working, my macro ended up not
+working at all - it turns out `receive` is very strict about
+what goes inside; so strict that my macro wasn't even called
+before my code was rejected. I may have been able to introduce
+my own `receive`-like special form that allows `handle_method`
+within the block, but I was macro'd out at this point!
+
+!!! Continuing with Elixir
+
+Elixir was a lot of fun to work with; I definitely feel it was sufficiently
+brain-bending. I wouldn't mind getting to know it and OTP a little better; I
+didn't even get into anything fancy like supervisors. I'll be sure to keep
+it on my toolbelt for any future projects that lend themselves to a concurrent
+or distributed model!

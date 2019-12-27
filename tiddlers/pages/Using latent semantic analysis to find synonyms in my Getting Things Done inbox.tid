@@ -1,0 +1,125 @@
+tags: lotm r nlp favorites [[Blog Post]]
+created: 20160215042332000
+modified: 20191211163225000
+title: Using latent semantic analysis to find synonyms in my Getting Things Done inbox
+
+! Using latent semantic analysis to find synonyms in my Getting Things Done inbox
+
+I try to use the [[Getting Things Done|http://gettingthingsdone.com/]] method
+to keep myself organized, but sometimes I wish that my computer could help
+share the load of that process. During my travels on the Internet, I
+discovered an algorithm called [[Latent Semantic Analysis|https://en.wikipedia.org/wiki/Latent Semantic Analysis]] (or LSA for
+short), which has some interesting natural language processing capabilities. I
+figured this would be a good application for my skills I gained from this
+[[language of the month|R Mateys!]]. Let's explore my GTD inbox using this algorithm
+and my newfound powers of R!
+
+!! Automating My GTD Workflow
+
+The script I want will crawl through my GTD inbox and look for
+keywords in each entry. If an entry has a set of keywords that I have
+indicated belong to a certain project or context, I'll have that entry
+highlighted a certain way and have a keyboard shortcut or something to
+automatically put it in that project and tag it with the proper context.
+For example, if an entry has the word "MoarVM" in it, I know that it belongs
+in the Perl 6 project.
+
+However, in my GTD inbox, I tend to use abbreviations and initialisms, such as
+Fx for Firefox, or MVM for MoarVM. I'm hoping that LSA can detect the
+similarties between these terms so I can find which synonyms I use in my inbox.
+
+!! My GTD System
+
+It might help a bit to understand how my GTD system works. I manage all of my
+GTD stuff in a private Git repo, with directories for GTD projects,
+someday/maybe, and reference, and files under each directory for each project
+and such. The inbox is in a file in the root called `catch-pocket.txt` <<footnote """I
+was reading Dune again when I set this system up, although in retrospect, catch
+pocket was a terrible name, because according to GTD, nothing should re-enter the
+inbox =
+""">>); earlier, it was a file called `catch-pocket.md` until I decided
+that Markdown wasn't a great format for my inbox. For this exercise, we'll
+treat each distinct line that's ever been in my inbox as a document.
+
+!! Getting the Term Matrix
+
+Using some Git/shell fu, we can easily get our list of documents:
+
+```shell
+$ cd ~/gtd
+$ git log --pretty=%h | # get each commit
+  xargs -L 1 git ls-tree  | # run git-ls-tree for each commit
+  perl -anE 'chomp @F; say $F[2] if $F[3] =~ /^catch-pocket/' | # extract blob IDs for inbox files
+  sort | uniq |
+  xargs -L 1 git show > /tmp/pockets # get contents of catch-pocket files over time
+$ perl -nE 'chomp; s/^\s+|\s+$//; say' /tmp/pockets |
+  sort | uniq >/tmp/uniq-pockets # trim whitespace and uniqify
+$ mv /tmp/uniq-pockets /tmp/pockets
+$ perl -CSAD -i -nE 'print if /(\p{Latin})/' /tmp/pockets # remove any lines that have no Latin characters
+```
+Next, I wrote a [[Perl script|https://github.com/hoelzro/language-of-the-month/blob/master/Jan-2016/create-term-matrix.pl]]
+to prepare a term frequency matrix, as well as
+a list of terms and "documents" (distinct lines) so that I can tie matrix
+indices back to the original term and line. Why use Perl when I'm trying to
+learn how to use R? Well, because this part of the process is text processing,
+which Perl is really good at, and more importantly, is something I know how to
+do quickly and well with Perl. I'm advocate of using the right tool for the job. ;)
+
+Now that we have the term frequency matrix, we can apply LSA!
+
+!! What's LSA?
+
+LSA is a natural language processing algorithm that can discover relationships
+between terms and documents, the logic being that similar documents will use
+similar terms, and similar terms will occur in similar documents. The
+algorithm itself is pretty simple; first, you run a
+[[term frequency-inverse document frequency|https://en.wikipedia.org/wiki/tf-idf]], which sort of downplays
+the significance of terms that occur in a lot of the documents (ex. the, a, an),
+and then we run a [[singular value decomposition|https://en.wikipedia.org/wiki/Singular value decomposition]]
+on the result. TF-IDF I understand, but I don't //really// understand how SVD
+works; from what I can tell (and please feel free to explain in the comments
+if you can explain better than I can!), it performs a factorization on a matrix `M` such that
+`M = U * S * V` where `S` contains the //singular values// for `M`. The singular values,
+as I understand, are the sort of "weights" for columns in `U` and rows
+in `V`. After the SVD, we drop some of the lower values in `S` (yielding, let's
+say, `S`'), and multiply `U`, `S`', and `V` together to get `M`', which allows
+us to reason about which terms or documents are similar. To check the terms' simlarity,
+we multiply `M' * t(M')`, which performs a dot product on each term row with each
+other term row, and gives us an idea of how similar those two terms are.
+
+R provides SVD in the standard library, but there's a package on CRAN called
+[[irlba|https://cran.r-project.org/web/packages/irlba/index.html]] that
+peforms the SVD + drop least signficant values using a fraction of the memory that a full
+SVD does. It was nice to have that as an option, but after playing around, R's `svd`
+function ran in much less time.
+
+Here's a link to the source code if you're interested in checking it out:
+[[https://github.com/hoelzro/language-of-the-month/tree/master/Jan-2016]]
+
+!! The Results
+
+In my dataset, there were 5,578 distinct terms; after taking the SVD of the term matrix, I
+only used the most significant 3,000. Here are the terms that were most similar to MVM
+and Fx (the first number is the index, and the last number is the value from `M' * t(M')`):
+
+```
+  "5030" "mvm" "moarvm" "152.279151036764"
+  "5111" "fx" "tab" "161.788023010342"
+```
+So MVM we were able to correlate to MoarVM, but Fx links to "tab". For what it's worth,
+"Firefox" also links to "tab". Here are some other interesting similarities the script
+found:
+
+```
+  "5354" "posix" "fileno" "218.939661907348"
+  "5373" "anki" "deck" "227.89608194928"
+  "5517" "swiss" "workshop" "372.105081904976"
+  "5561" "man" "page" "695.458878687011"
+  "5570" "blog" "post" "881.443386519827"
+```
+So not a lot of synonyms, but there is definitely a relationship between those terms!
+I think that these results could be improved by tweaking the number of SVD values I prune,
+modifying how I select terms from a document, and feeding the algorithm more data. Another
+thought I had was to create synthetic "polyterms" from adjacent terms, so the document
+"perl 6 compiler" would yield the polyterms "perl 6" and "6 compiler". No matter what, it
+was really interesting to play with the algorithm and see what results it came up with!

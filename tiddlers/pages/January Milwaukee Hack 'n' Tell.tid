@@ -1,0 +1,160 @@
+tags: programming fun lua [[Blog Post]]
+created: 20170201054156000
+title: January Milwaukee Hack 'n' Tell
+modified: 20170201054156000
+
+! January Milwaukee Hack 'n' Tell
+
+Once again, I found myself participating in a Milwaukee Hack 'n' Tell, organized by [[RokkinCat|http://www.rokkincat.com/]]
+and conducted at [[Ward 4|http://www.ward4mke.com/]]. I wrote some notes on how the day went in my
+[[dev journal|Keeping a Dev Journal]], so I thought I'd share the experience here!
+
+!! Analog Brainstorming and Recognizing Bad Ideas in Advance
+
+Unlike [[last time|Milwaukee Hack 'n' Tell Retrospective]], I decided to focus on a singular task in an area I don't dabble in often:
+game development. This year, I really want to get at least one of my game ideas off the ground, so to accomplish that
+goal, I decided to sit down with my favorite ideas and brainstorm on them for fifteen to thirty minutes.
+
+Once thing I noticed about myself was that I get a lot more out of brainstorming when I write down the results on paper,
+rather than record them on my phone or computer. I think part of this has to do with the myriad distractions that a
+digital device offers, but I think the free structure of paper (being able to make annotations on existing notes, draw
+pictures, link things together with arrows, etc) also contributes. My wife and I typically go out for coffee once a week
+or so, and using a chunk of my time at a coffee shop for brainstorming has become a pleasant ritual!
+
+The first idea I had that I brainstormed about was a game about building and coordinating space probes that would explore
+the galaxy by making copies of themselves. When I first wrote down the idea a few years ago, I thought it was such a cool
+idea for a game - but during my brainstorm session, I really struggled to think of ways to make the game challenging and fun. This
+brought to mind an [[episode|https://soundcloud.com/finalgamespodcast/ep34maxtemkin]] of the Final Games podcast I listened
+to a few months back, featuring Max Temkin of Cards Against Humanity fame. He mentions that sometimes you just need to
+recognize that an idea is bad and it won't go anywhere. I really appreciated that bit of insight, with a personal spin of sometimes
+it's not the right time for the idea to come out into the world. This is why brainstorming and prototyping before you
+invest too much time is so important!
+
+!! Writing a Fighting Game
+
+Anyway, the idea I ended up working on was a sort a fighting game which I may talk about in depth in a future post. Suffice
+to say, my focus for the hack 'n' tell was getting a simple fighting game working. I decided to try my hand at [[LÖVE|https://love2d.org/]] once
+again - I always enjoy using Lua!
+
+The code I turned out was not-so-great - mainly in terms of duplication and organization (or lack thereof!). The code is, however, better than
+other games I've whipped up in a short period of time, and the path to making it better is a little clearer, so I feel like I made some personal
+progress in this area. I would say that the particular strides I made were making sure that magic numbers were factored out into constants
+with straightforward names, definining the display in terms of the dimensions of the display rather than hardcoded values, and breaking out chunks
+of code into functions when it made sense.
+
+One thing I made sure to do better at this time, as compared to previous hackathons, was the use of revision control. Most of the time,
+I'll put a lot of code down, perhaps with an optimistic `git init` to start the day, and then commit at the end of the day with a slightly
+dissatisfying `git commit -a -m "Did stuff"`. I really like having fine-grained, descriptive commits, so I made sure to make time for
+that this time around. I think it really helped - at the very least, I now have a record of where my head was at over the course of the
+day.
+
+!! Collision Detection
+
+One thing really threw me for a loop this time: collision detection. Writing
+code to detect collisions was a lot harder than I'd anticipated - I think part
+of this was a design decision I made about the API of that routine. Namely, I
+made the choice that if a collision occurs, I would return `nil` or a string
+representing which surface made the impact with the other object (either `"left"`,
+`"right"`, `"top"`, or `"bottom"`). Detecting a "yes or no" collision situation
+is pretty simple - naïvely, you can just check whether any of a bounding box's corners
+are in the bounding box of the other object. Less naïvely (and necessary for the game),
+you need to check if any of the //lines// in the bounding box intersect with the other object.
+That was somewhat tedious to code, but it's a start towards returning which surface was
+impacted by the collision.
+
+In order to implement the impacted surface part, I ended up calculating how
+deep into the other object the various surfaces went, defaulting to `math.huge`
+for those that didn't intersect at all. Once I had that, I simply picked the
+surface with the minimum depth. In retrospect, I probably should have picked
+minimum `depth / velocity_in_that_dimension`.
+
+This code worked fairly well, but there was a pretty bad bug that took me about
+an hour (a whole sixth of the hackathon!) to fix: if you climbed onto a
+platform and jumped straight up, you would fall to the side of the platform
+when you collided with it. What ended up happening is that gravity had
+accelerated the player object to such a velocity that the player's bottom "fell
+through" the platform, which didn't allow the bottom to be counted as a
+collision, but then since the left or right side was intersecting with the
+platform's bounding box, you would get a left or right collision and be forced
+off to the side.
+
+I got really frustrated and kind of froze in how I would fix this. Then I
+applied a timeless strategy: I decided "ok, I'm going to brainstorm on
+solutions for this, and I'll pick the one that I like best". Best, here, being
+a compromise of simplicity, effectiveness, ease of implementation, and speed.
+The funny thing was that I only needed to write down a single solution before I
+decided that I liked it and would go ahead implementing it!
+
+The solution was pretty simple: if you detect a collision but your displacement
+in either dimension exceeded the size of the other object in that dimension
+(this is simple to calculate - the amount of displacement from one frame is
+just your velocity!), do a binary search to find the actual collision at a
+smaller time slice and use that for your collision detection calculations. So
+that looked like this:
+
+```lua
+if not collision_happening(aobj, obj) then
+  return nil
+end
+
+-- 'a' prefix means first object, 'b' prefix means second object
+local go_backwards = true
+while vx >= bwidth or vy >= bheight do
+  avx = avx / 2
+  avy = avy / 2
+
+  if go_backwards then
+    ax = ax - avx
+    ay = ay + avy -- my y vectors are inverted because screen coords grow down =(
+  else
+    ax = ax + avx
+    ay = ay - avy
+  end
+
+  go_backwards = collision_happening(aobj, bobj) -- update aobj and bobj with new x/y first, though
+end
+```
+When the player objects are moving too fast, it takes about 2-3 iterations of that binary
+search loop to find the right resolution for collision detection. The code I
+originally wrote doesn't handle the situation in which the first object
+completely passes through the second, but I figured I could fix that later should
+it happen.
+
+!! Using Coroutines with LÖVE
+
+I had a little extra time towards the end of the day, so I decided to give my
+players (currently blue and red rectangles) a little bit of extra flair: picking
+up objects in the game causes the player to flash green for a bit. I already
+had a similar effect for items, but this time, I ended up using Lua's coroutines
+to implement the effect. So instead of complicating the draw code with crazy
+conditionals on whether or not a player was currently flashing, I just checked
+to see if I had attached a coroutine with the following code and ran it if
+necessary:
+
+```lua
+local function player_flash(self)
+  coroutine.yield() -- we resume() once to kick off the coroutine with parameters
+  for i = 1, 5 do
+    love.graphics.setColor(0x00, 0xff, 0x00, 0xff)
+    coroutine.yield()
+    coroutine.yield() -- skipping a frame just happened to look nicer ¯\_(ツ)_/¯
+    love.graphics.setColor(unpack(self.color))
+    coroutine.yield()
+    coroutine.yield()
+  end
+end
+```
+If I write another prototype or full game with LÖVE, I think I'll just add a "run
+me every frame" coroutine list and implement things there - it should make the
+code a lot easier to follow.
+
+!! Sharpening the Vim Saw
+
+One thing that //does// bother me slightly about Lua is its lack of assignment shortcut operators; that
+is to say, it doesn't have a `+=` or similar operator. Which means instead of writing
+`player.velocity.x += acceleration_x`, you need to write
+`player.velocity.x = player.velocity.x + acceleration_x`. What a mouthful! So, in order to save myself
+some keystrokes, I wrote a little mapping for my Vim configuration that causes Vim to substitute the right
+text if you type `+=` or one of its brethren, and I pushed that change up [[here|https://github.com/hoelzro/vimfiles/commit/bfd30ff2ad2b8fe1b04185c945e795fd18cafd40]].
+
+Many thanks to RokkinCat and the other sponsors for putting on this hack 'n' tell - I can't wait until the next one!

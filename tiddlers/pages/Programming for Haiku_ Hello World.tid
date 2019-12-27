@@ -1,0 +1,202 @@
+modified: 20191211163549000
+title: Programming for Haiku: Hello World
+tags: haiku [[Blog Post]]
+created: 20100910221135000
+
+! Programming for Haiku: Hello World
+
+```
+NOTE: This is a conversion from a WordPress post I made some time ago.  It was originally posted on September 14th, 2009.
+```
+If you're like me, you've been following the Haiku project for a little while, and are probably pretty excited about the recent alpha release. Wait, what? You haven't heard of Haiku? Well, Haiku is an open-source near-re-creation of BeOS, which was a revolutionary operating system for its time. Since I wasn't into computing back then, I can't justify describing Haiku and BeOS here, so here are some links to fill you in:
+
+[[Haiku FAQ|http://www.haiku-os.org/about/faq]]
+[[Haiku on Wikipedia|https://en.wikipedia.org/wiki/Haiku_(operating_system)]]
+[[BeOS on Wikipedia|https://en.wikipedia.org/wiki/BeOS]]
+
+! Getting Started on Haiku
+
+Ok, now that you know what Haiku and BeOS are, you may be interested in contributing to the Haiku project if you are a developer. A lot of people have come onto the Haiku channel on Freenode lately (#haiku) asking for a simple starter application, so this post will give you the code for a simple "Hello, World" application that prints "Hello, Haiku!" to the console whenever you click a button. Here's a screenshot of the finished product:
+
+<$image source="//hoelz.ro/images/hello-haiku.png" alt="Hello Haiku" />
+
+! The Full Application Code
+
+I figured that I'd start off with the full code for the application, so you can get an idea for the structure of the code before we go into each section in detail.
+
+```cpp
+#include <Application.h>
+#include <Button.h>
+#include <Window.h>
+#include <stdio.h>
+
+const int32 HELLO_HAIKU = 'HELO';
+
+class HelloWindow : public BWindow
+{
+    public:
+    HelloWindow(BRect frame) : BWindow(frame, "Hello Window", B_TITLED_WINDOW, 0)
+    {
+    BView *view = new BView(Bounds(), NULL, B_FOLLOW_ALL_SIDES, B_WILL_DRAW);
+    AddChild(view);
+    BButton *button = new BButton(view->Bounds(), NULL, "Hello", new BMessage(HELLO_HAIKU));
+    view->AddChild(button);
+    }
+
+    bool QuitRequested()
+    {
+    be_app_messenger.SendMessage(B_QUIT_REQUESTED);
+    return BWindow::QuitRequested();
+    }
+
+    void MessageReceived(BMessage *msg)
+    {
+    switch(msg->what) {
+        case HELLO_HAIKU:
+        printf("Hello, Haiku!\n");
+        break;
+        default:
+        BWindow::MessageReceived(msg);
+    }
+    }
+};
+
+class HelloHaiku : public BApplication
+{
+    public:
+    HelloHaiku() : BApplication("application/hello-haiku")
+    {
+    }
+
+    void ReadyToRun()
+    {
+    BWindow *win = new HelloWindow(BRect(100, 100, 300, 200));
+    win->Show();
+    }
+};
+
+int main(void)
+{
+    HelloHaiku app;
+
+    app.Run();
+
+    return 0;
+}
+```
+! Building the code
+
+To build this code, you of course need to be running Haiku. Download an image and run it with QEMU or VirtualBox (it's really easy to set up!) or grab a LiveCD from their site [[here|http://www.haiku-os.org]], run it, open a Terminal, and use this to compile the code:
+
+```bash
+g++ -o hello-haiku hello-haiku.cpp -lbe```
+If you're unfamiliar with GCC's compiler options, ''-o'' specifies the output file, and ''-lbe'' tells GCC to link to the be library, which contains all of the object code for this example.
+
+! Code Overview
+
+Alright, let's go over each section of the code together. I assume you have at least a passing familiarity with C++ while going through this, so this first part should look pretty familiar to you:
+
+```cpp
+#include <Application.h>
+#include <Button.h>
+#include <Window.h>
+#include <stdio.h>
+```
+These are include directives for including the headers for the Application Kit (which includes the BApplication class), the BButton and BWindow classes (which are in the Interface Kit), and the standard I/O library for C. This talk of kits may be strange to you, so let me clarify: Software libraries for BeOS (and thus Haiku) are organized into //kits//. Each kit has a specific purpose; for example, the Application Kit is used to communicate with Haiku's application server, while the Interface Kit is used to build GUIs. There are many more kits available, but I'm only going to mention those, since those are all that are used in this tutorial.
+
+```cpp
+const int32 HELLO_HAIKU = 'HELO';
+```
+This line defines a //command constant// for use in our application. Haiku applications use message passing for communicating with other applications, and also for communicating between different components of an application. Each message is identified by a command constant. There are many system-defined command constants; for example B_QUIT_REQUESTED and B_MOUSE_DOWN. In this application, we want a custom message sent to our main window when the "Hello" button is clicked, so we define our own command constant HELLO_HAIKU.
+
+```cpp
+class HelloWindow : public BWindow
+```
+This code defines a specialized Window subclass. We'll go over each of the overridden methods in detail.
+
+```cpp
+HelloWindow(BRect frame) : BWindow(frame, "Hello Window", B_TITLED_WINDOW, 0)
+{
+    BView *view = new BView(Bounds(), NULL, B_FOLLOW_ALL_SIDES, B_WILL_DRAW);
+    AddChild(view);
+    BButton *button = new BButton(view->Bounds(), NULL, "Hello", new BMessage(HELLO_HAIKU));
+    view->AddChild(button);
+}
+```
+This code defines a constructor for our new Window class. It takes a BRect as an argument, which defines its size and position on screen. It provides this and some other information to BWindow's constructor; you can read about the details of that constructor in the documentation at the bottom of this post. Next, it creates a BView, which you can think of as a container for widgets. It adds the view to its list of children, and adds a button to the view's list of children. The arguments for the button are a little more important to this tutorial, so I'll explain them in detail.
+
+* The first argument specifies the size and position of the button. `view->Bounds()` returns a rectangle that will cause the button to fill up the entire view.
+* The second argument specifies the button's name. You can give the button whatever name you want, or NULL if you don't want to give it a name.
+* The third argument specifies the text on the button.
+* The fourth argument specified the message that will be sent when the button is clicked. In this case, the button will send a message using our custom command constant.
+
+You'll notice that we throw away a lot of pointers here and don't clean up after ourselves. This is because the message is destroyed when our button is destroyed, and our button and view are destroyed when the window is destroyed.
+
+```cpp
+bool QuitRequested()
+{
+    be_app_messenger.SendMessage(B_QUIT_REQUESTED);
+    // or be_app->PostMessage(B_QUIT_REQUESTED);
+    return BWindow::QuitRequested();
+}
+```
+This method overrides BWindow::QuitRequested, which is called when the close button (the button on the left side of the window's title tab) is clicked. This code:
+
+```cpp
+be_app_messenger.SendMessage(B_QUIT_REQUESTED);```
+sends a B_QUIT_REQUESTED message to the application, requesting that it quit. You'll notice I also presented an alternative:
+
+```cpp
+be_app->PostMessage(B_QUIT_REQUESTED);```
+This code does a similar thing to the code above, except PostMessage doesn't wait for a reply message. Also, you'll notice that PostMessage uses be_app, not be_app_messenger. be_app is a global pointer to our application object, and be_app_messenger is a global BMessenger object that can send messages to be_app. If you'd like to learn more about BMessengers, please consult the documentation.
+
+We then return the result of the superclass' version of the method, which is true. Returning true from QuitRequested means that it's ok for this window to close.
+
+```cpp
+void MessageReceived(BMessage *msg)
+{
+    switch(msg->what) {
+        case HELLO_HAIKU:
+            printf("Hello, Haiku!\n");
+            break;
+        default:
+            BWindow::MessageReceived(msg);
+    }
+}
+```
+The MessageReceived method is called when a message is received (Note: some special messages, for example B_QUIT_REQUESTED, have their own hooks (like QuitRequested) and do not go through MessageReceived. Please consult the documentation for specifics). Here, we print "Hello, Haiku!" whenever we receive our custom message from the button, and we call the superclass' version in other cases.
+
+```cpp
+class HelloHaiku : public BApplication
+{
+    public:
+    HelloHaiku() : BApplication("application/hello-haiku")
+    {
+    }
+
+    void ReadyToRun()
+    {
+        BWindow *win = new HelloWindow(BRect(100, 100, 300, 200));
+        win->Show();
+    }
+};
+```
+Our BApplication subclass is pretty simple, so I'm going to go over in one section. In the constructor, we pass our application's signature to the superclass constructor. This allows other applications to communicate with us if they want to. The method ReadyToRun is called when the application server is prepared to run our application, so we set up our GUI and show it. If you wanted, you could also set up your GUI in the application class' constructor. Like before, you'll notice we don't clean up the window object; all of an application's windows are automatically destroyed when the application that created them quits.
+
+```cpp
+int main(void)
+{
+    HelloHaiku app;
+
+    app.Run();
+
+    return 0;
+}
+```
+This part you should recognize; it's the entry point for the program. All this does is create an instance of our application and runs it.
+
+! Farewell!
+
+Well, I hope you enjoyed reading this tutorial as much as I enjoyed writing it. For documentation on Haiku's API, please consult the [[Be Book|http://www.haiku-os.org/legacy-docs/bebook/]]. If you have any questions or comments on this post, feel free to [[Contact Me]].
+
+Happy Haiku Hacking!

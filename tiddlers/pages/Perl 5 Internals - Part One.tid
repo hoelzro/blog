@@ -1,0 +1,79 @@
+modified: 20160711180343000
+title: Perl 5 Internals - Part One
+created: 20130828183958000
+tags: perl favorites [[Blog Post]]
+
+! Perl 5 Internals - Part One
+
+Last week I completed a two-part training at [[work|http://booking.com]] on perl's internals,
+led by Yves Orton and Steffen Mueller. We covered some of data structures used by the interpreter,
+as well as some of the optimizations it uses and the consequences of how those optimizations are
+implemented. [[Someone|https://twitter.com/reneeb_perl]] on Twitter asked me if there were any slides
+available, and unfortunately, the talk was conducted in a very ad-hoc fashion (which actually probably contributed to
+its success, as the audience was able to propose new areas to cover). However,
+I //did// end up taking some notes, so I'm going to summarize those here along with what I
+remember. A lot was covered in the two sessions, so in the interest of actually getting
+this information out (I tend not to publish things that I can't write in one sitting),
+as well as keeping your attention, I'll be publishing them in a series of posts.
+
+! Required Background
+
+I try not to reinvent the wheel when programming, and that's an approach that applies to documentation as well.
+Therefore, I'll assume you have read [[perlguts|http://perldoc.perl.org/perlguts.html]]. If you prefer a
+more visual overview, Reini Urban's [[illguts|http://search.cpan.org/dist/illguts/]] is a quite popular alternative.
+
+If you aren't familiar with perlguts, go ahead and read it; I'll wait. ;)
+
+! Inspecting Perl's Guts
+
+A mature language like Perl has accrued quite a number of tools for analyzing itself at runtime; but I'll
+mention just two here. [[Devel::Peek|https://metacpan.org/module/Devel::Peek]] is useful for inspecting the internal structures that make
+up a Perl value at runtime; especially its reference count. [[B::Concise|https://metacpan.org/module/B::Concise]] is similarly useful for
+inspecting the optree (which is Perl's version of a sort-of AST). One of the most crucial things that
+I took away from this talk was a lot can be learned by simply playing with these two modules. Learning to use
+these modules effectively, both in debugging and playing around, is crucial to one's evolution as a Perl programmer.
+
+! A Word on Terminology
+
+I don't believe that this is mentioned in perlguts, but an SV has two parts: a head and a body. The head
+exists for all SVs; it contains bookkeeping information like the reference count and SV flags. The body
+exists for most SVs; certain SVs may omit it for optimization purposes. Which brings us to our first
+optimization of the evening...
+
+! SVs without bodies
+
+SV objects representing the `undef` value don't have bodies; they don't need them. A more interesting
+optimization is what Perl does for integer values; the body pointer points to a location in memory just
+before the SV head, so that the value portion of the fake body lines up with the location of the actual value
+in the SV itself. I'm sure I'm not doing the technique justice; suffice to say it's very cool! An important consequence
+of this is that the following two hashes:
+
+```perl
+my %undef_hash = map { $_ => undef } @elements;
+my %one_hash   = map { $_ => 1 } @elements;
+```
+should take up the same amount of memory.
+
+! Perl never downgrades
+
+An SV points to a body of a particular type: containing an integer, a number, a string, or a combination thereof.
+If we have a scalar value pointing to an integer, and interpolate it:
+
+```perl
+my $value = 10;
+# try Devel::Peek::Dump($value) here!
+say "value = $value";
+# try Dump($value) again!
+```
+The SV body (which was an IV) is transparently upgraded to a PVIV. Which means now it contains a reference to
+a character buffer representing the integer value. Perl keeps this around, and will //never// downgrade the SV
+to an IV again. It does this because if you use a value as a string once, you'll probably do it again, and
+Perl tends to favor greater memory usage over recalculation. This may not seem to be a big deal (after all,
+what's one scalar?), but imagine you have a large array of numbers and you print them to inspect them. The
+recommended technique in this case is to copy the list of scalars you intend to print and throw it away after
+you're done.
+
+! Intermission
+
+I hope you've enjoyed wading into the waters of the Perl interpreter and its optimizations; stay tuned for Part 2, where I'll be talking
+about some of the optimizations that Perl performs when manipulating strings, arrays, and hashes.

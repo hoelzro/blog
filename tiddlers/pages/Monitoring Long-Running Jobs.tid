@@ -1,0 +1,54 @@
+tags: perl strace [[Blog Post]]
+created: 20120312185151000
+title: Monitoring Long-Running Jobs
+modified: 20140619033719000
+
+! Monitoring Long-Running Jobs
+
+A while ago, I wrote a [[post|Monitoring MySQL Batch Jobs With SHOW PROCESSLIST]] on monitoring long-running jobs that submit multiple queries to a MySQL server.
+I have since written a couple of scripts that operate on more generic data, so I thought I'd apply the same principle to those scripts. So, the question is: what do
+you do if you've been running a script and you want to have an idea of its progress without having to restart with a verbose command line option?
+
+! Logging
+
+The first recourse for many programmers is logging to a file. If you want to observe how far a process has come along in mid-execution, just `tail -f` the log file.
+However, logging to a file comes with annoyances of its own. No matter what, you always have to clean up your log files after a while, and this can get annoying. (Although
+I suppose if you're just using logs to monitor progress, you can delete them after a successful run of your script) Wouldn't it be nice if you could log data to a sink that discards the data by default, but allows you to observe the messages if you so desire? It's for this reason that I wrote a [[Log::Dispatch|https://metacpan.org/pod/Log::Dispatch]] appender called [[Log::Dispatch::UDP|https://metacpan.org/pod/Log::Dispatch::UDP]], which logs messages as simple datagrams to a machine of your choosing. If you point this appender to `localhost`, the datagrams are discarded if nothing's listening to the port you've chosen, and you can listen in with netcat, like so:
+
+```
+nc -u -l -p $MY_PORT # this is using GNU netcat!
+```
+! ps/top output
+
+Another technique that I like for this is to change the way the process is displayed in `ps` and `top`. So instead of seeing something like this:
+
+```
+$ ps aux | grep test
+rob      15421 95.7  0.1  42616  5800 pts/1    R+   19:42   0:03 perl test2.pl
+```
+you see something like this:
+
+```
+$ ps aux | grep test
+rob      15612 92.0  0.1  42616  5808 pts/1    R+   19:43   0:00 test2 15308/1000000   
+```
+Doing this in Perl is easy; you can simply assign a string to `$0`. If you're working on Linux in C, you can write to `argv[0]` to accomplish the same thing. However, make sure you
+overwrite the string in `argv[0]` and do ''not'' assign a new pointer to `argv[0]`; this will not work.
+
+```c
+/* WRONG */
+argv[0] = "my string!";
+
+/* RIGHT */
+strcpy(argv[0], "my string!");
+```
+Other programming languages/operating systems usually have ways to do this as well; please consult their documentation for details.
+
+! Strace
+
+The drawback to the previous two techniques is that it requires you to insert extra logic into your script before running it. Depending on the task that your program is performing, you can also leverage the program `strace` on Linux to peform some basic monitoring. If you've written a script to crawl over a filesystem tree and perform some operation on the files contained within, you can ask strace what files your program is opening:
+
+```
+strace -e trace=open -p $PID
+```
+And strace will output all calls to `open()`. Other operating systems have an analog to `strace`; check them out to duplicate this technique on non-Linux systems.

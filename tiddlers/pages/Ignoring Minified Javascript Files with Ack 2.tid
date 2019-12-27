@@ -1,0 +1,22 @@
+created: 20120621170939000
+tags: ack [[Blog Post]]
+modified: 20130909143555000
+title: Ignoring Minified Javascript Files with Ack 2
+
+! Ignoring Minified Javascript Files with Ack 2
+
+The reason I got involved with the [[ack|http://betterthangrep.com]] project about a year ago was because I had an itch to scratch: I wanted ack to ignore files containing minified Javascript. My need for this has since lessened, but I still contribute to the ack project, and I still encounter this from time to time. Fortunately, with the release of the ack 2.0 alpha last week, support for this has been improved.
+
+First of all, ack 2 ignores files ending in .min.js by default, so if you're using that naming scheme, you should already be happy! However, not every project does this. Here's a little ackrc snippet you can stick in your `.ackrc` at your project root that should help:
+
+```
+--ignore-file=firstlinematch:/.{200}/
+```
+All this code does is tell ack to not search any files that have a first line longer than or as long as 200 characters, which is fairly typical of minified Javascript. However, this solution has two potential problems:
+
+* Some minified Javascript files include a "header", usually containing copyright information or something. This fix will ''not'' help you there, unless you remove the headers.
+* This change makes ack open ''every'' file in your project, which can slow things own a bit.
+
+It's only an alpha release, so I hope to make some progress on making a more complete solution for the final release of ack 2.0.
+
+-Rob

@@ -1,0 +1,177 @@
+modified: 20160411174708000
+title: Binding to C++ With NativeCall
+tags: perl6 nativecall [[Blog Post]]
+created: 20160329030321000
+
+! Binding to C++ With NativeCall
+
+A few months back, I was working on [[Xapian bindings for Perl 6|https://github.com/hoelzro/p6-xapian]].
+I got enough of the binding done for me to use it for what I wanted (using Xapian's stemmers and stoppers),
+but not enough for me to feel comfortable publishing it on modules.perl6.org. However, what I //am//
+comfortable publishing is what I learned about binding a C++ library to Perl 6 using NativeCall!
+
+!! NativeCall Support for C++
+
+NativeCall [[supports C++|http://doc.perl6.org/language/nativecall#C%2B%2B_Support]] to a degree.
+It handles [[name mangling|https://en.wikipedia.org/wiki/Name_mangling]] and some object-oriented stuff.
+What it //doesn't// (and can't without implementing a C++ compiler) handle are things like templates;
+it also doesn't handle exceptions.
+
+To get around these limitations, I ended up writing a
+[[Perl 6 script|https://github.com/hoelzro/p6-xapian/blob/master/generate-binding.p6]]
+that parses a subset of C++ – enough to parse the classes from the Xapian
+headers. After the parse, the script generates the appropriate C++ and Perl 6
+code to assist in the binding.
+
+!! Exception Handling
+
+Exception handling is...well, a little exceptional when it comes to Perl 6. When C++ throws an
+exception, it needs to have an exception handler above it on the call stack to handle it,
+otherwise `std::terminate` is called and aborts the program. Since MoarVM is
+written in C, it has no knowledge of how to support exceptions.
+
+The way I got around this was to pass a Perl 6 callback to each Xapian method call; the callback
+creates an exception object in Perl 6 which is thrown after the NativeCall sub returns. This is
+how this looks on the C++ side:
+
+```cpp
+void
+xapian_database_add_database(xapian_database self, xapian_database database, void (*handle_exception)(const Xapian::Error *)) throw ()
+{
+    try {
+        self->add_database(*database);
+    } catch(const Xapian::Error &error) {
+        handle_exception(&error);
+    }
+
+}
+```
+...and on the Perl 6 side:
+
+```perl6
+method add_database(Database $database) {
+    my $ex;
+    my $result = xapian_database_add_database(self, $database, -> NativeError $error { $ex = Error.new($error) });
+    $ex.throw if $ex;
+    $result
+}
+```
+The reason we need to do this with a callback is because C++ is only guaranteed to hold on to an
+exception's memory within the `catch` block. We //could// copy the exception, but C++ forbids
+us from doing so polymorphically, and it would lose a lot of information about the exception in
+Perl 6 land. Also, we can't throw the exception in the callback, because then native-side cleanup
+would not happen.
+
+In addition, we need to declare our wrapper routines with `throw ()` to tell the C++ runtime
+that exceptions must not pass through. This is so if by chance we miss an exception, we'll
+abort the program predictably, as well as avoid any wacky "C++ exception-throwing code called
+by a Perl 6 callback called by C++" situations.
+
+!! Destructors
+
+Each C++ object is managed by the garbage collector, but since C++ classes can have custom destruction logic, we
+need to make sure that we call the destructors when the garbage collector comes knocking. Perl 6 implements
+finalization via the `DESTROY` submethod, so `DESTROY` calls a native sub that uses the `delete` operator.
+
+However, it's not as simple as doing that for every class! If you have a hierarchy of classes, each `DESTROY`
+method ends up getting called, which means that `delete` will be called more than once for any subclass, which
+tends to make most C++ runtimes very unhappy! The solution for this is pretty simple; only have a `DESTROY`
+method calling the destructor at the top of each hierarchy. If multiple inheritance enters the picture, things
+will be more complicated, but fortunately I haven't had to deal with that yet!
+
+A tricky thing about having C++-side destruction logic called via `DESTROY` is that `DESTROY` is called
+at a non-deterministic time (due to the garbage collector) and may not be called at all if an object lives until
+the end of a process. Since a lot of C++ libraries rely on RIIA, I may end up offering some sort of analogous
+mechanism with the Xapian bindings.
+
+!! Operator Overloading
+
+Wiring up overloaded operators isn't terribly complicated, but like the other topics covered in this
+post, there are quirks that need to be dealt with. First, the names of subroutines used to overload
+operators differ in C++ and Perl 6; for example, `operator ()` becomes `CALL-ME`, `++` becomes
+`succ`, and `==` becomes `eqv`. This part is pretty simple once you get it figured out.
+
+The //really// quirky thing you need to make sure and do is export your overload subs to any
+code that uses your binding's objects, otherwise a more general variant will be called. For example:
+
+```perl6
+my $it  = $doc.termlist-begin;
+my $end = $doc.termlist-end;
+
+while $it !eqv $end {
+    my $term = $it.deref;
+    $it++;
+}
+```
+If you have the right multi subs in your namespace, this code works without a problem. If you //don't//,
+the `&infix:<eqv>:(Any, Any)` variant will get called, which will end up comparing the pointers (which
+will never end up being true) and eventually causing the program to segfault.
+
+''UPDATE'': It occurred to me after writing this post that it would probably be a good idea to
+use `is export(:MANDATORY)` for your overloaded operator subs; that way, code using your module
+`must` use them.
+
+!! Virtual Methods
+
+Xapian allows a developer to extend its behavior through subclassing and overriding virtual methods.
+In order to provide a fully-featured binding, a Perl 6 developer needs to be able to do the same.
+Here's an example of a custom stopper that accepts terms that only have Cyrillic letters:
+
+```perl6
+class CyrillicOnlyStopper is repr('CPointer') is Xapian::Stopper {
+    method CALL-ME(Str $term) returns Bool {
+        ($term ~~ /<-:Cyrillic>/).Bool
+    }
+}
+```
+The way this works is that C++ sets up a special subclass of the target superclass, which accepts
+a set of function pointers, one for each virtual method. `new` on the Perl 6 side detects when
+a subclass is being instantiated, and passes code objects for each overridden method into the C++
+constructor. The special C++ subclass calls these pointers upon a virtual method call; if a
+method is not overriden by Perl 6, the corresponding function pointer is set to NULL, which indicates
+to C++ just to call the superclass' method.
+
+!! Keeping References Alive
+
+Let's say you have the following code:
+
+```perl6
+my $term = Xapian::TermGenerator.new;
+$term.set_stemmer(Xapian::Stem.new: 'en');
+```
+This seems safe at first glance, but there's a problem lurking beneath the surface. `Xapian::Stem.new`
+creates a C++ object managed by the Perl 6 runtime, but calling `set_stemmer` only sets up a relationship
+on the C++ side of the things. The garbage collector doesn't have any knowledge of this relationship, so
+from its perspective, the stemmer is unreachable, and thus fair game for collection. I haven't implemented
+a fix for this yet, but I have a few ideas, like keeping references around on a private structure bound
+to the Xapian namespace, or making the Xapian objects on the Perl 6 side a little more complicated than
+just wrapped pointers and attaching the extra references there.
+
+!! Plumbing and Porcelain
+
+Another language I have experience writing bindings for is Lua, and there's a pattern I borrowed from Git
+that I like to follow when writing bindings there. Git has the concepts of //plumbing// and //porcelain//;
+plumbing is code and utilities used to implement functionality at a low level, and porcelain uses the plumbing
+layer to implement higher-level functionality. So when I write bindings for Lua, I try to write a plumbing
+layer using Lua's C API; the plumbing layer more or less directly mimics what the API being bound looks
+like, and the porcelain layer provides the same functionality wrapped in constructs that feel like
+idiomatic Lua.
+
+The current Xapian bindings are just the plumbing; I hope to write some porcelain so that instead of code
+like this:
+
+```perl6
+my $it  = $doc.termlist-begin;
+my $end = $doc.termlist-end;
+
+while $it !eqv $end {
+    my $term = $it.deref;
+    $it++;
+}
+```
+...users of the Xapian module could write this instead:
+
+```perl6
+for $doc.terms -> $term {
+}
+```

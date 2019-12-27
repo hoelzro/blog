@@ -1,0 +1,27 @@
+modified: 20160711180343000
+title: System Sleuthing - Using ptrace to Print Backtraces
+tags: ack perl strace favorites [[Blog Post]]
+created: 20140619033651000
+
+! System Sleuthing - Using ptrace to Print Backtraces
+
+`strace` is one of my all time favorite command line utilities; not a day goes
+by when I don't reach for it for ''something''. It's an extremely versatile tool;
+you can use it to inspect what a program's doing, how a program is doing something,
+or get an idea of the kinds of things a program is doing to explain why it's running as slowly as it
+is. I could go on and on about strace, but fortunately I don't have to; Julia Evans has written a
+number of [[lovely posts|http://jvns.ca/blog/categories/strace/]] about it if you'd like to learn more.
+
+Like I mentioned, sometimes I use strace to observe a running program to see why it's slow. For example,
+I recently used it to find out all of the files that [[ack|http://beyondgrep.com]] was opening. And lo and
+behold, I discovered through the magic of strace that ack was opening each candidate file twice! But
+where were these opens happening?
+
+I tried ack'ing the source code for calls to open, but after spending far too much time to figure it out,
+I discovered that the culprit was an invocation of `-T` (that's Perl shorthand for "is this a text file?" for
+the uninitiated). I never wanted to waste that much time again, so I wrote [[Devel::Trace::Syscall|https://metacpan.org/pod/Devel::Trace::Syscall]].
+
+What `Devel::Trace::Syscall` does is simple: you run your program using it as your debugger module (ie.
+`perl -d:Trace::Syscall=$ARGS $SCRIPT`), and it uses `ptrace` to figure out when
+a system call is made. When a system call that you care about occurs, it prints a stack trace, indicating
+where in the program that happened. Give it a try; hopefully you'll find it useful!

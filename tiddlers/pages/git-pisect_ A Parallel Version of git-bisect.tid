@@ -1,0 +1,172 @@
+created: 20161115053917000
+tags: git [[Blog Post]]
+title: git-pisect: A Parallel Version of git-bisect
+modified: 20170201193449000
+
+! git-pisect: A Parallel Version of git-bisect
+
+One of my favorite tools in the git tool suite is `git-bisect`. For those of
+you unfamiliar with it, `git-bisect` is a sort of magical program that you
+can use to quickly find which commit introduced a problem into a repository.
+It does this by checking out commits in your repository's history, and you tell
+it whether the state of the commits for whatever you're testing is good or bad.
+It minimizes the number of times you need to do this by using a binary search
+algorithm. Futhermore, if you have an automated test suite, you can tell
+`git-bisect` to run the tests on your behalf (using `git bisect run`) and
+drive the whole process by itself. It has proven very useful to me over the
+years, both in open source and commercial work.
+
+However, sometimes bisect just doesn't seem fast enough. After all, if you
+have a test suite that takes a while, bisect will take a while too.
+Using bisect on a multi-core machine can be a shame - bisect only uses up
+one of your cores while the others remain idle.
+
+So a while ago, I was talking with a co-worker and had the idea for a parallel
+version of `git-bisect`, which I implemented at the hack 'n' tell I
+[[recently|Milwaukee Hack 'n' Tell Retrospective]] attended. I call it:
+[[git-pisect|https://github.com/hoelzro/git-pisect]].
+
+!! What's With the Name?
+
+It's a really crappy portmanteau of "git parallel bisect", of course!
+
+!! What? How can you bisect in parallel?
+
+I know, I know - you need to finish one round of tests to be able to decide the
+next commit to test, right? This is why the name is crappy - it should really
+be something like "git-pnsect" (for parallel n-sect, for reasons which will
+become apparent shortly) or "git-parallel-regression-finder", but git-pisect is
+just so catchy.
+
+!! How Does It Work?
+
+In order to understand how pisect works, we first need to fully understand how
+regular ol' //bisect// works. If you feel comfortable with how `git-bisect`
+works, feel free to skip the next section.
+
+!!! How does git-bisect work?
+
+Well, let's look at your typical range of Git commits:
+
+```
+  ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬──────┐
+  │         │         │         │         │         │         │        │        │        │        │        │        │        │        │        │      │
+  │ HEAD~15 │ HEAD~14 │ HEAD~13 │ HEAD~12 │ HEAD~11 │ HEAD~10 │ HEAD~9 │ HEAD~8 │ HEAD~7 │ HEAD~6 │ HEAD~5 │ HEAD~4 │ HEAD~3 │ HEAD~2 │ HEAD~1 │ HEAD │
+  │         │         │         │         │         │         │        │        │        │        │        │        │        │        │        │      │
+  └─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴──────┘
+```
+Let's say that `HEAD~15` passes, but `HEAD` fails. So if you run `git bisect start HEAD HEAD~15`, git starts testing at the halfway point:
+
+```
+                                                                           ↓
+  ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬──────┐
+  │         │         │         │         │         │         │        │        │        │        │        │        │        │        │        │      │
+  │ HEAD~15 │ HEAD~14 │ HEAD~13 │ HEAD~12 │ HEAD~11 │ HEAD~10 │ HEAD~9 │ HEAD~8 │ HEAD~7 │ HEAD~6 │ HEAD~5 │ HEAD~4 │ HEAD~3 │ HEAD~2 │ HEAD~1 │ HEAD │
+  │         │         │         │         │         │         │        │        │        │        │        │        │        │        │        │      │
+  └─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴──────┘
+```
+If the regression isn't present at the current point (`HEAD~8` here), we know that it must have been introduced in a later commit, so we pick a new point
+halfway between the last known good commit and the first known bad commit, like so:
+
+```
+                                                                                                               ↓
+  ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬──────┐
+  │         │         │         │         │         │         │        │        │        │        │        │        │        │        │        │      │
+  │ HEAD~15 │ HEAD~14 │ HEAD~13 │ HEAD~12 │ HEAD~11 │ HEAD~10 │ HEAD~9 │ HEAD~8 │ HEAD~7 │ HEAD~6 │ HEAD~5 │ HEAD~4 │ HEAD~3 │ HEAD~2 │ HEAD~1 │ HEAD │
+  │         │         │         │         │         │         │        │        │        │        │        │        │        │        │        │      │
+  └─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴──────┘
+```
+Assuming that `HEAD~4` fails, we can narrow the range even further:
+
+```
+                                                                                             ↓
+  ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬──────┐
+  │         │         │         │         │         │         │        │        │        │        │        │        │        │        │        │      │
+  │ HEAD~15 │ HEAD~14 │ HEAD~13 │ HEAD~12 │ HEAD~11 │ HEAD~10 │ HEAD~9 │ HEAD~8 │ HEAD~7 │ HEAD~6 │ HEAD~5 │ HEAD~4 │ HEAD~3 │ HEAD~2 │ HEAD~1 │ HEAD │
+  │         │         │         │         │         │         │        │        │        │        │        │        │        │        │        │      │
+  └─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴──────┘
+```
+If the test fails at `HEAD~6`, we know that either it or `HEAD~7` is the culprit, so we do a final test with the files from `HEAD~7`. I'll spare
+you the additional diagram, so let's say that `HEAD~7` is indeed the culprit for this next part.
+
+!!! Ok, now what about parallel bisect?
+
+So let's say you're doing this on a repository that has a test suite that takes about a minute to run, is safely parallelizable, and doesn't implement any
+sort of parallelization itself. Since most of our machines these days have multiple cores, running these tests on just a single core seems like a waste
+of time. What if we are using a machine with four cores - can we use all of them? Yes! Let's look at that example from before, but with multiple
+parallel tests:
+
+```
+                                     ↓                            ↓                          ↓                          ↓
+  ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬──────┐
+  │         │         │         │         │         │         │        │        │        │        │        │        │        │        │        │      │
+  │ HEAD~15 │ HEAD~14 │ HEAD~13 │ HEAD~12 │ HEAD~11 │ HEAD~10 │ HEAD~9 │ HEAD~8 │ HEAD~7 │ HEAD~6 │ HEAD~5 │ HEAD~4 │ HEAD~3 │ HEAD~2 │ HEAD~1 │ HEAD │
+  │         │         │         │         │         │         │        │        │        │        │        │        │        │        │        │      │
+  └─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴──────┘
+```
+Running four tests in parallel, we can move on to a smaller range of commits under consideration much more quickly. After the step, I demonstrated above,
+here's the next one:
+
+```
+                                                                           ↓        ↓
+  ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬──────┐
+  │         │         │         │         │         │         │        │        │        │        │        │        │        │        │        │      │
+  │ HEAD~15 │ HEAD~14 │ HEAD~13 │ HEAD~12 │ HEAD~11 │ HEAD~10 │ HEAD~9 │ HEAD~8 │ HEAD~7 │ HEAD~6 │ HEAD~5 │ HEAD~4 │ HEAD~3 │ HEAD~2 │ HEAD~1 │ HEAD │
+  │         │         │         │         │         │         │        │        │        │        │        │        │        │        │        │      │
+  └─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴──────┘
+```
+So instead of taking four steps (ie. four minutes) as in the standard bisect, we only take two!
+
+!! Metrics
+
+To test `git-pisect`, I picked a random number between 1 and 1000 - let's
+call it `N`. I then created a Git repository with 1000 commits - commits
+before `N` passed, and commits after `N` failed, using the following code:
+
+```c
+#include <unistd.h>
+
+int
+main(void)
+{
+    sleep(10);
+    return EXIT_CODE; // 0 before N, 1 after
+}
+```
+I ran `git-bisect` and `git-pisect` on this repository - the latter with 1,
+2, 4, 8, and 16 jobs. Here are the results from that test on my four-core laptop:
+
+```
+  git-bisect:     1m42s
+  git-pisect(1):  1m24s
+  git-pisect(2):  1m5s
+  git-pisect(4):  45s
+  git-pisect(8):  38s
+  git-pisect(16): 44s
+```
+I have no idea why `git-pisect` with a single job is a little faster than `git-bisect`, but I'm not complaining!
+
+''UPDATE'': I spent some time looking at the reason behind this - it turns out that I was picking slightly different
+test commits than `git-bisect`. What I mean by this is that given 1000 commits to investigate, `git-pisect` may
+pick commit #499 and `git-bisect` may pick #500, or vice versa. This means that, depending on where in the commit
+range the defective commit is, sometimes `git-pisect` will end up performing one fewer test, and sometimes
+`git-bisect` will perform one fewer test. Also interesting is the fact that sixteen jobs takes longer than eight jobs;
+`log(1000) / log(16)` (2.49) and `log(1000) / log(8)` (3.32) are fairly close, and so sometimes you'll end up needing
+the same number of iterations to find the offending commit, but more jobs means more overhead for setup and task scheduling.
+
+What's interesting to me is that even though it takes less time, `git-pisect`
+//does// actually perform more work: with a single job (equivalent to
+`git-bisect`, it performs `O(log₂ n)` (about 10 here) tests. With eight
+jobs, it performs `O(8 * log₉ n)` (about 25) tests, so we are performing some
+redundant work. However, since that work is happening in parallel, we
+only observe time relative to `O(log₉ n)`!
+
+!! Try It Out!
+
+If this idea sounds interesting to you, I encourage you to head over to the
+[[repository|https://github.com/hoelzro/git-pisect]], clone it, and try it out!
+If people are interested, I'm happy to accept contributions, improve the code,
+and add more features (I've been thinking a distributed version -
+`git-disect`, if you will - could be interesting as well). I'm eager to hear
+if others find this useful or find issues with either the idea or the
+implementation!

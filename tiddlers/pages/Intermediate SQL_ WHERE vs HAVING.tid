@@ -1,0 +1,39 @@
+title: Intermediate SQL: WHERE vs HAVING
+modified: 20160711180343000
+tags: sql favorites [[Blog Post]]
+created: 20150501022625000
+
+! Intermediate SQL: WHERE vs HAVING
+
+Recently, at [[Work|https://www.threadless.com]] I gave an introductory SQL tutorial.
+Since the purpose of the tutorial was to teach SQL for the purpose of answering questions
+about groupings of data, the tutorial ultimately reached a discussion of `WHERE` versus `HAVING`.
+I thought I'd share the explanation I used in case others felt confused why SQL has
+two keywords that serve such a similar function.
+
+!! The Short Version
+
+If there's one thing you take away from this, it should be this rule of thumb:
+
+```
+  Use HAVING when using aggregate functions, like COUNT,
+  and use WHERE when you're not.
+```
+!! The Long Version
+
+I like to think of SQL engine as processing a query in phases: namely, an `ON` phase,
+a `WHERE` phase, and a `HAVING` phase. Understanding the first two phases is important
+when reasoning about `WHERE` and `ON`, which comes in handy when you're thinking about
+`LEFT JOIN`s. The third phase, which involves `HAVING`, happens during `GROUP BY`.
+Here, `WHERE` answers questions about which rows will have grouping applied to them; at this point,
+we have no groupings against which to apply aggregate functions, so they don't make sense here.
+After that, `GROUP BY` is used to create groupings. `HAVING` then determines which groupings
+make it into the final result set by answering a question about each //group// of rows, which
+is why it only makes sense to use an aggregate function like `COUNT` or `SUM` with it.
+
+Here's a diagram I clumsily scrawled on the whiteboard while preparing for the talk:
+
+<$image source="//hoelz.ro/images/sql-on-where-having.png" alt="ON vs WHERE vs HAVING" />
+
+I hope this clears up the difference between `WHERE` and `HAVING` for some SQL beginners
+out there!

@@ -1,0 +1,96 @@
+title: Language of the Month - Five Languages In
+modified: 20160809020744000
+created: 20160809020744000
+tags: lotm [[Blog Post]]
+
+! Language of the Month - Five Languages In
+
+Due to especially busy summer months, [[language of the month|Language of the Month]] is on hiatus. Over the last few months of conducting this
+experiment, I've had a chance to collect my thoughts on the experiment as a whole,
+and I thought now would be a good time to share them!
+
+!! One Month Isn't Enough
+
+One thing I realized a few languages in is that taking a few hours a week on my
+own for a month is not enough time to really //learn// a language. The first
+strong indication of this was [[Elixir Adventures|Elixir Adventures]];
+that post came extremely late in the following month because I spent so much
+time working on Elixir RPG, and trying to get it right! The second indication
+was when I played with Smalltalk. The interesting thing about Smalltalk is
+that I probably persued it with more fervor than any of the other languages - I
+actually finished my play project fairly early! However, after posting about
+my project and getting feedback from real Smalltalkers, I realized
+that the experience had been informative, but not transformative: I learned
+about the awesome tooling that Smalltalk offers, but I don't think it really
+changed how I think about programming...which was the whole point of doing
+language of the month! In retrospect, I also don't think I really attained Lisp
+enlightenment either when I covered Racket.
+
+!! Scale of Projects
+
+I followed the metric of writing a toy project in my language of interest, along
+with two blog posts about the language. The problem with a single toy project,
+however, is that you spend most of your time on time figuring how to do things
+in your target language, rather than figuring out how to do them //right//.
+Ideally, I would have undertaken two or more smaller projects, but again, one
+month wasn't even enough time for //one// toy project.
+
+!! Guilt-Free Play
+
+Another reason I got into playing with a new language each month is it's
+supposed to be fun; however, I ended up getting burned out trying to meet my
+self-imposed deadlines. It's been taking up a lot of my time, and I've been
+neglecting other things I want to work on. Language of the month had become
+something of a chore, and that's no fun! R and Elm were the easiest ones and
+felt the least chore-like, but that comes as no surprise - I had a great and
+small project idea for both, I knew Elm already, and I had been using R for my
+Coursera.
+
+Another aspect of my learning techinique that ties into play is how I
+approached learning the languages. For R and Racket, I did my best to read the
+entire language specification and take notes on it. I didn't finish for
+Racket, because it turns out that, for me, this is not a great way to learn a
+programming language! The minutiae of a language aren't important for an
+initial exposure to it; I found that the feeling I get while trying things out
+and making programs work, which is what I did with Elixir and Smalltalk, was a
+much more effective metric for whether I would feel like using the language in
+the future,
+
+!! Going it Alone
+
+I mentioned earlier that in order to internalize the style and idioms of a
+language, I would have needed to do several projects in that language. That's
+true, but there's a shortcut - finding a mentor: someone who would be willing
+to sit down with me and talk about the culture behind the language, deliver
+constructive criticism, and prevent me from reinventing patterns ingrained into
+my mind by languages more familiar to me. This was my experience when I
+started attending Mad Mongers meetings in Madison; it very quickly improved my
+skills as a Perl programmer, and as a programmer in general. I consider this
+one the turning points in my development as a programmer.
+
+It is because of this that I'm extremely excited about the
+[[polyglot meetup|https://www.meetup.com/Chicago-Polyglot-Programmers-Meetup/]]
+that recently started up in Chicago, and the
+[[PLIBMTTBHGATY|http://plibmttbhgaty.com/]] meeting happening in Indianapolis
+next month. You can just learn so much from a language's community and the
+people using it on the regular basis!
+
+!! Moving Forward
+
+My busy summer is wrapping up, so I'm hoping to be able to try a new language
+in September or October bearing these ideas in mind. However, if I start a new
+language on October 1st, I don't think I'll be wrapping it up on October 31st
+in the hopes of getting a blog post about that language out in early November;
+like I wrote above, my experiences made me feel that one month for a language
+was just not enough time! So, from now on, "language of the month" is going to
+become more of a "language of the whenever I'm done"! I'm going to try to seek
+out mentors who can introduce me to the way a "native speaker" of my target
+language thinks about things, and I'm going to try to write more, but smaller,
+projects, as time goes on. I'll only stop when I feel like the experience has
+really transformed the way I think about programming, or when I feel that I'm
+not going to get any more out of a language. However! In lieu a monthly
+summary on my target language, I'm going to try monthly updates on how the
+current language is going, sharing insights gained and
+accomplishments...accomplished. So even if fully digesting Idris or whatever
+takes me six months, you'll still see an update (roughly) once a month stating
+what cool things I learned.

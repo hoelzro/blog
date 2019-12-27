@@ -1,0 +1,164 @@
+title: R Mateys!
+modified: 20160208044347000
+created: 20160208035715000
+tags: lotm r [[Blog Post]]
+
+! R Mateys!
+
+For the first [[language of the month|Language of the Month]] article,
+the choice was clear: I wanted to learn more about statistics, so I enrolled
+myself into a course on Coursera to learn about it. It just so happens that
+the course is taught using R, so I get to kill two birds with one stone, as it
+were. I won't bore you with an exhaustive overview of the syntax, so let's
+just touch upon some of the features R provides.
+
+!! Vectors
+
+One of the core concepts in R is that everything is a vector. Even the literal
+`1` is a vector; it just happens to be a vector that's one element in length.
+Because everything is a vector, most operations are vectorized; that is, code like
+this:
+
+```r
+1:10 + 1
+```
+doesn't append 1 to the vector consisting of numbers between 1 and 10; rather, it
+adds 1 to each element. This can seem a bit odd when you're not used to it, but
+once you //get// used to it, it makes so much sense. I feel like how I felt when
+I figured out how to properly use `map` in Perl. In fact, because vectorized
+code is so concise and (in the case of R) so optimized, you hardly see for loops
+in R at all.
+
+<$image source="//hoelz.ro/images/your-for-loops.gif" alt="your-for-loops.gif" />
+
+Vectors may also be multi-dimensional. and R supports things like matrix
+multiplication out of the box. R's matrix multiplication operator `%*%`
+looks a little weird, especially since the only other language I've used with
+matrix multiplication as a built-in operator has been Octave, but as someone
+who appreciates Perl and Lua, I also appreciate it when a language makes me
+indicate what I mean by my choice of operator.
+
+!! Lazy Evaluation
+
+One thing that I discovered that really interested me is the fact that in R, function
+arguments are lazily evaluated. <<footnote """I assume that this is because R copies data a lot, so
+it's a way of speeding things up.
+""">> That is, if I call a function with an expression as an
+argument, like so:
+
+```r
+my_function(print("hi"))
+```
+that `print` expression is not run unless `my_function` refers to it, and
+then it is run only once. I made use of this when playing around with R to
+make a little function that just times how long an expression takes to run:
+
+```r
+time_it <- function(expr) {
+  start <- Sys.time()
+  expr
+  end <- Sys.time()
+  print(paste(start, end)) # paste concatenates two values
+}
+
+time_it(Sys.sleep(5))
+# [1] "2016-02-07 09:50:53 2016-02-07 09:50:58"
+```
+!! Metaprogramming
+
+Like some languages, R has support for metaprogramming, but it, like Lisp and
+other languages, treats code as data. That is, you can assemble, manipulate,
+and evaluate code objects at runtime. I don't know if I'd go so far as to call
+R homoiconic, but from my limited experience with the concept, it sure seems like
+it. <<footnote """What gives me pause is that expressions like `2 + 2` aren't stored as
+such once parsed; however, that's just sugar for ``+`(2, 2)`, so it's a little
+murky.
+""">>
+
+Let's say that we're not always big fans of R's lazy evaluation when it comes
+to function arguments. So let's make a function that we'll call `eager` to
+force a function to eagerly evaluate its arguments before running its body.
+Here's one way of implementing it:
+
+```r
+eager <- function(f) {
+    names <- names(formals(f)) # formals returns a pairlist of the arguments to
+                               # a function
+                               # names extracts the keys from a pairlist
+
+    body_list <- as.list(body(f)) # body returns the code for a function
+    prefix <- body_list[1] # multi-statement functions start with the '{'
+                           # operator; extending this function to work with
+                           # single-statement function is left as an exercise
+                           # for the reader =)
+    remainder <- body_list[2:length(body_list)]
+
+
+    eager_names <- lapply(names, as.name) # lapply is like map in other
+                                          # languages, it applies a function
+                                          # to each element of a list,
+                                          # returning the results as a new list
+
+    body(f) <- as.call(c(prefix, eager_names, remainder)) # c concatenates lists
+    return(f)
+}
+```
+Now, if apply `eager` to `time_it`, we'll find that `time_it`'s functionality
+of timing a lazily evaluated expression has disappeared:
+
+```r
+time_it <- eager(time_it)
+time_it(Sys.sleep())
+# [1] "2016-02-07 11:16:50 2016-02-07 11:16:50"
+```
+!! CRAN
+
+Since I'm just starting out with statistics and numerical analysis, I often feel like
+this when working on a problem:
+
+<$image source="//hoelz.ro/images/i-have-no-idea-what-im-doing.jpg" alt="i-have-no-idea-what-im-doing.jpg" />
+
+You'll see more details about this in a future post, but for my R project, I
+wanted to try using some advanced numerical analysis algorithms; I just had no
+clue how to implement them properly. Fortunately, R has
+[[CRAN|https://cran.r-project.org/]], which is a place for people much smarter
+than I to put their implementations of these advanced algorithms for others to
+use.
+
+!! R puts the R in REPL
+
+I found R's REPL to be easy to use; it supports what most REPLs out there do,
+in addition to tab completion of existing functions and variables. One nice
+feature of R is that of images/workspaces; R allows you to save your current
+working environment to disk. One trick I used when working on my project was
+I would snapshot the environment every so often; if a failure occurred, I
+could simply load the image in the REPL and run the code that had given me an
+error so I could fix it. Since some parts of my program took fifteen or more
+minutes to run, you can imagine what a timesaver that was!
+
+!! No destructuring bind =(
+
+This is a feature I miss in any language that doesn't have it. Even if you're not
+familiar with the term, you may be familiar with the concept; in Perl, I can do
+this:
+
+```perl
+  my ( $x, $y ) = function_that_returns_two_values();
+```
+and the returned list is automatically destructured into `$x` and `$y`. A lot
+of languages support this, including Python, Ruby, and Octave. R doesn't, unfortunately,
+and I really wish it did, since it has a number of functions that return more than one
+value.
+
+!! Other Statistical Environments
+
+R provides a nice introduction to statistical concepts; if you want to apply
+them in other languages, there are things like [[PDL|https://metacpan.org/pod/PDL]] for Perl and
+[[numpy|http://www.numpy.org/]] for Python. There are also other statisitical
+languages like Octave, Matlab, and Julia, if those are more your thing.
+
+I said in my introductory Language of the Month post that I would talk about
+implementing a program using the language I was trying out, and I've been referring
+to a mysterious program that I wrote in R. For this post, I wanted to give the
+language the attention it deserves without overwhelming you, dear reader; next time
+I'll write about the program I wrote!

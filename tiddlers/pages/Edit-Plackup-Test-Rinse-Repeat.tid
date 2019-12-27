@@ -1,0 +1,43 @@
+created: 20111017134806000
+tags: perl catalyst plack psgi [[Blog Post]]
+modified: 20130909143555000
+title: Edit-Plackup-Test-Rinse-Repeat
+
+! Edit-Plackup-Test-Rinse-Repeat
+
+At INOC, my place of work, I work on a lot of web applications with the backend written in Perl using [[Catalyst|http://www.catalystframework.org]], and the frontend written in Javascript using [[ExtJS|http://www.sencha.com]]. With a UI written completely in Javascript, I often encounter bugs of the following form:
+
+# Fire up Catalyst.
+# Login.
+# Click through half a dozen controls in the UI.
+# Enter some data.
+# Click "submit".
+# Watch the web application give you an angry error.
+
+As you can imagine, the time for a single iteration of this cycle is fairly long, and the process is quite tedious. Obviously, if the error lies within the Javascript side, there's not much I can do about it, short of writing a Greasemonkey script to do some of the automation for me. However, half of the time, the server is returning some strange output given a certain set of inputs for a particular RPC call. Wouldn't it be nice if you could go through the application and have it record the requests you make to be submitted over and over again at a later time?
+
+That's why I wrote [[Plack-Middleware-Recorder|https://metacpan.org/release/Plack-Middleware-Recorder]].
+
+Plack-Middleware-Recorder is a distribution that comes with several modules:
+
+* Plack::Middleware::Recorder - A PSGI middleware that knows how to serialize requests to a stream.
+* Plack::Middleware::Debug::Recorder - A debugging panel that allows you to manipulate the recorder middleware from a browser.
+* Plack::VCR - A utility module that allows you to read a recorded request stream.
+
+These modules allow you to build PSGI applications and scripts that record and replay requests to a web application. However, Plack-Middleware-Recorder also contains two scripts, `plack-record` and `plack-replay`, that do exactly what they sound like. So my workflow for handling a server-side bug goes from this:
+
+# Steps 1 - 6 above
+# Add some debugging log output
+# Repeat, and observe the new output
+
+to this:
+
+# plack-record > requests.out
+# Steps 1 - 6
+# Add some debugging log output
+# plack-replay requests.out app.psgi
+# GOTO 3
+
+Plack-Middleware-Recorder is still very young; I plan on adding better session support, dumping request streams to test files, and other features in the future. In the week since I've written it, I've already gotten a lot of mileage out of it; I hope other people find it just as useful!
+
+-Rob

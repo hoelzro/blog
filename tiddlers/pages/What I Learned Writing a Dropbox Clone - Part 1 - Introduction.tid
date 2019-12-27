@@ -1,0 +1,84 @@
+created: 20150124223359000
+tags: [[Blog Post]]
+title: What I Learned Writing a Dropbox Clone - Part 1 - Introduction
+modified: 20150202030124000
+
+! What I Learned Writing a Dropbox Clone - Part 1 - Introduction
+
+```
+  commit 03764fc
+  Author: Rob Hoelz <***@*****.**>
+  Date:   Fri Mar 25 11:14:52 2011 -0500
+      
+      First commit
+      
+      I should really commit earlier on my projects...
+```
+Nearly four years ago, I made the above commit on a new project I'd just
+started. I had been using Dropbox for a little bit, and I liked the idea, but
+I favor free software solutions for services, particularly when my personal
+data (like files) are concerned. I looked around to see if anyone had written
+an FOSS Dropbox clone, and the offerings in that space were very meager (just
+SparkleShare, and I think maybe a nascent version of OwnCloud ). I had some
+misgivings about some of SparkleShare's design, and OwnCloud didn't offer the
+same features I needed, so I decided to go ahead and write my own. Because the
+project was an effort to distance myself from cloud products, I decided to call
+it [[Sahara Sync|https://github.com/hoelzro/sahara-sync]] (the Sahara desert
+having few clouds). <<footnote """I actually bought the domain names for both
+saharasync.net and saharasuite.net; the latter was intended for other personal
+cloud tools I thought about writing that would compliment Sahara Sync. I had
+the idea of turning it into a company as well.
+""">>
+
+After nearly a year of development, I had something that mostly worked; it had
+a lot of automated tests, and I could drop a text file in to the sync directory
+(called the Sandbox, get it?), but wouldn't properly handle things like Vim
+saving a file and transporting it to other machines, for some odd reason. The
+test suite would occasionally reveal odd timing bugs or race conditions that
+were troublesome to find and fix.
+
+!! Design
+
+This is the first of a multi-part series about what I learned while writing
+Sahara Sync (go figure). Before I get into the technical things I learned,
+I would like to discuss the overall design I had in mind for Sahara Sync.
+
+The two main players were called //hostd// (host daemon) and //clientd//
+(client daemon). I avoided the term "server", because the client daemon was
+also a sort of server, and I wanted to clarify that the host daemon was hosting
+your data. The host daemon offered up a RESTy API so that clients could upload
+changes and those changes would be broadcast to other clients. The host daemon
+was meant to be kept very simple; any additional features (eg. encryption of
+files before they are saved to the data store, history, etc) would be provided
+through plugins. The client daemon is responsible for detecting changes in the
+sync directory, responding to changes from other clients via the host daemon,
+and keeping those in sync. Here's a little graphic illustrating the flow of
+information:
+
+<$image source="//hoelz.ro/images/sahara-sync-flow.png" alt="Sahara Sync Information Flow" />
+
+The host was written with decentralization in mind, so that you could more
+easily break away from a single instance of hostd. The reasoning behind this
+was you could run a hostd on a different machine if you wanted to use Sahara
+Sync to share files, but your normal hostd instance was not available. I had
+plans for clientd to be able to act like hostd to service this use case. I
+also had plans for hostd to behave as a client to other hostds, so you and your
+friends could share files between your own Sahara Sync instances, forming a
+federated network.
+
+Another design decision that I made was to simplify clientd and decouple it
+from what I saw as optional functionality. There would be a notion of clientd
+plugins, for features like encryption, but orthogonal to that were what I
+called //components// (named after components in XMPP). Components existed in
+external processes, and would augment client's functionality. For example, a
+component could offer file manager integration, or a systray icon, or Growl
+notifications. Since they would be communicating with the clientd process via
+some form of IPC, they could also be written in any language.
+
+The [[Sahara Sync Wiki|https://github.com/hoelzro/sahara-sync/wiki]] contains a
+lot more of the ideas I had, if you're interested in reading about them.
+
+In the
+[[next post|What I Learned Writing a Dropbox Clone - Part 2 - Filesystem Operations]], I'll cover what I learned about filesystem operations that POSIX-style
+operating systems provide, and what guarantees you can depend on when using
+them.

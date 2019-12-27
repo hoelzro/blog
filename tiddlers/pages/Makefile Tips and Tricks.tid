@@ -1,0 +1,72 @@
+created: 20150421153421000
+tags: make
+title: Makefile Tips and Tricks
+modified: 20150421153421000
+
+! Makefile Tips and Tricks
+
+!! Makefile Variables
+
+I always have trouble remembering these.
+
+```
+$@ - Your target
+$^ - All of your dependencies
+$< - Your first dependency
+$? - All dependencies newer than the target
+$* - The stem of an implicit rule match (a.c -> a)
+```
+Source: [[http://www.gnu.org/software/make/manual/make.html#Automatic-Variables]]
+
+!! Variable Assignment
+
+```
+var  = value - Recursive substitution ($(var) expands to value, like a macro); this is the only portable assignment.
+var := value - Simple assignment ($(var) acts like a conventional variable)
+var ?= value - Conditional assignment (value is assigned to var only if var is not defined)
+var += value - Append (value is appended to var's current value)
+```
+Source: [[http://www.gnu.org/software/make/manual/make.html#Using-Variables]]
+
+!! Prefix Rules
+
+```make
+  %.pdf : %.dvi
+        dvipdf $^ $@
+
+  %.dvi : %.tex
+        latex $^
+```
+!! Escaping '$'
+
+Use `$$`:
+
+```
+  echo $$bash_variable
+```
+!! Using Long Shell-isms
+
+Make evaluates each line in a different shell, so this won't work:
+
+```shell
+bundle:
+        tmpdir=`mktemp -d -t bundle` # using `` instead of $() to avoid more escaping
+        make install INSTALL_DIR="$$tmpdir"
+        ...
+```
+You have to tell Makefile to treat them as a single line with a backslash, and tell the shell each is a separate statement with a semicolon:
+
+```make
+bundle:
+        tmpdir=`mktemp -d -t bundle` ; \
+        make install INSTALL_DIR="$$tmpdir" ; \
+        ...
+```
+The same principle applies for using other multi-line shell expressions, like an `if` statement:
+
+```make
+rule:
+        if [[ -e /usr/share/git-core/templates ]]; then \
+          rsync -ar /usr/share/git-core/templates/ $(INSTALL_DIR)/.git/templates/ ; \
+        fi
+```

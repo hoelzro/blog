@@ -1,0 +1,40 @@
+modified: 20160414020749000
+title: Game of Life
+created: 20160414020749000
+tags: lotm racket [[Blog Post]]
+
+! Game of Life
+
+In my [[previous post|What's That Racket?]], I covered my adventures with a Lisp formerly
+known as DrScheme (Racket). Since Lisp has so much cred in the hacker
+community, I figured I would pick an equally credentialed problem for
+my Lisp program: Conway's [[Game of Life|https://en.wikipedia.org/wiki/Conway's_Game_of_Life]]!
+
+In my [[previous|Using latent semantic analysis to find synonyms in my Getting Things Done inbox]] [[two|A Strongly Typed Typing Tutor]] follow-ups, I ended up talking about
+how I accomplished the task I set out to do, and "real-world"
+experiences I had when using the language. For better or for worse,
+all of the "real world" experiences I had using Racket have already
+been documented in the previous post! However, I did want to make
+sure and right //some// kind of follow-up, if only to post a link
+to the finished program:
+
+[[https://github.com/hoelzro/language-of-the-month/tree/master/March-2016]]
+
+There were two things I would like to mention that pertain to my program. The
+first was Racket's [[pict|http://docs.racket-lang.org/pict/index.html]]
+library, which I mentioned in passing in my previous post. The pict library
+provides a picture datatype and functions to manipulate picts which display
+directly in the REPL. This made implementing the game of life pretty easy to
+inspect, since all I had to do to view the grid was `(grid->pict grid)`.
+
+The second thing was the manner in which Racket encouraged me to implement
+the game of life. If you look at the code, you may find there's no rendering
+happening, or clock to determine how fast the game proceeds. That's because
+the only function for advancing the state of the game lives in a `step` function,
+which simply applies the rules and returns a new grid. This way, I could
+easily step through the various generations of the grid by repeatedly calling
+`step` on grid objects. I found this to be a very natural way to write the
+program, and it aided me in debugging a few times!
+
+Playing around with Racket was a blast, and I have a feeling I'll revisit it in the future.
+That's all for this language of the month!

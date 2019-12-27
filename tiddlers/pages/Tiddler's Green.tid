@@ -1,0 +1,124 @@
+created: 20161111134155000
+tags: gtd [[Blog Post]]
+title: Tiddler's Green
+modified: 20161111134155000
+
+! Tiddler's Green
+
+As I've mentioned [[before|Idea Fight!]], I have a lot of ideas
+flying around at once. Over the years, I have tried many various systems
+for keeping my thoughts organized in a single place - I've tried various wikis,
+vimwiki, a simple Git repository full of text files, you name it. However,
+lately I have been using something new, and since it blows my mind on a constant
+basis, I thought I'd share it with you: it's called [[TiddlyWiki|http://tiddlywiki.com]].
+
+I used TiddlyWiki a few years ago to help myself stay organized, but for whatever reason,
+I strayed away. Only after listening to a [[recent(ish) episode|https://changelog.com/196/]] of
+[[Changelog|https://changelog.com]] did it occur to me to check out TiddlyWiki again.
+In the episode, the hosts interview TiddlyWiki's creator, and he has some very fascinating
+insights into programming in general. In addition to that, they discuss the relatively
+recent rewrite of TiddlyWiki 5. After hearing some programming wisdom and the praises of
+the new TiddlyWiki, I decided to check it out.
+
+For the last few months, I have been entering all new ideas and things into my
+TiddlyWiki; it also has a journaling feature for my
+[[dev journal|Keeping a Dev Journal]] entries. I've even been
+transferring my thoughts from my old system (a Git repository full of simple
+text files) - that's how much I like it!
+
+!! Why Do I Like It?
+
+!!! Complete Wiki in a Single File
+
+Amazingly enough, TiddlyWiki is a wiki contained entirely in a single HTML file. This has some
+enormous benefits - it's easy to transport around and you don't need to install any server component
+or application for it to work. You just load it up into any browser and away you go <<footnote """You do need a browser
+extension if you want to be able to save easily, however.
+""">>! This makes it very appealing for non-technical folk
+as well.
+
+!!! Concept of a "Tiddler"
+
+One of the central ideas behind TiddlyWiki is that of the tiddler - it's somewhat analogous to a page in other wikis,
+but it's more like an atomic unit of information. You can store nearly anything in a tiddler - a chunk of wikitext
+for an article, and image, a JSON document, a table of data, you name it. Keeping the focus on small chunks of information
+allows you to stay organized and do some pretty fancy stuff, which I'll talk about shortly.
+
+!!! Sophisicated Markup Language
+
+TiddlyWiki has its own markup language, which bears a passing resemblance to Markdown, but removes some of Markdown's
+more annoying features (I personally can //never// remember how to make a link in Markdown - is it `[description](url)`
+or `(description)[url]`?), and adds some additional power. I like to think of it as a mix between Markdown and
+[[DokuWiki|https://www.dokuwiki.org/dokuwiki]], a favorite markup language of mine.
+
+But that's not all! You know those data tiddlers I just mentioned? They're not just for show - the TiddlyWiki markup language allows
+us to make queries against JSON documents and tables and present that data in other tiddlers. And it doesn't stop there - you
+can manipulate other tiddlers containing markup, allowing you to embed the contents of other tiddlers or create lists of tiddlers
+based on queries. One use for this would be having a tiddler per table in a database schema, and then embedding a tiddler describing
+a table into an article that describes some code referring to that table. Another use is tracking your TODOs - you can have a tiddler
+per item, tag each with "TODO", and then write some simple markup to list all tiddlers tagged with "TODO" but not with "Done".
+
+This is where my previous system suffered - if I wanted to have a custom view of the data within my system, I would basically
+need to write a script to parse text out and display it. With TiddlyWiki, you can create such custom views in seconds.
+
+!!! Extremely Customizable
+
+TiddlyWiki is very customizable beyond its markup language. You see, the code
+for TiddlyWiki is all in JavaScript, broken up into various modules. And do
+you know where those modules are stored? That's right - as tiddlers! This
+aspect of TiddlyWiki reminds me a lot of Smalltalk - you can extend the markup
+language simply by creating tiddlers with some JavaScript in them, and the
+design of TiddlyWiki allows you to augment and replace parts of the UI as you
+see fit. I've added customizations such as allowing multiple workspaces of
+tiddlers, automatically generating links to ticketing systems, and displaying
+which tiddlers link to the current tiddler for easier navigation.
+
+!! Drawbacks and Growing Pains
+
+Not everything is perfect - there were definitely some things I had to get used to while learning to incorporate TiddlyWiki
+into my workflow.
+
+!!! Backups
+
+One of the cardinal rules of TiddlyWiki that you'll read a lot about is to have a good backup system - TiddlyWiki itself doesn't
+back up tiddlers that you delete. My solution to this (which also helps me keep my wiki synchronized across machines) is to
+simply manage my wiki file in a Git repository.
+
+!!! Editing
+
+The default editor for tiddlers is nice, but I will occasionally really miss using Vim for input, especially when entering
+or editing a lot of text. I wish I could use [[It's All Text!|https://addons.mozilla.org/en-US/firefox/addon/its-all-text/]],
+but I run Firefox under a sandbox that forbids me from calling out to Vim, and I'm too lazy/paranoid to get it to work right. =)
+Perhaps I'll find a Vim-like editor that I can embed into TiddlyWiki itself!
+
+!!! Merging
+
+This has been the hardest part of the transition. Sometimes, I'll forget to pull the newest version of my wiki onto a machine,
+or I'll forget to refresh the page after pushing. I'll make some changes, and then I'll end up with two wildly different wiki files
+that I now need to merge. Since it's all contained in a single HTML file, traditional merging tools aren't very effective
+here.
+
+I've employed two strategies to handle this: one is if I know when the divergence happened, I'll look at the most recently changed
+tiddlers view, export them, checkout the older version of the wiki, and then import the new tiddlers.
+
+The other strategy is a little more heavy-handed, but works better when it's not just a handful of tiddlers. You can install a
+tiddlywiki command line tool which allows you to export a set of tiddlers from a wiki file into a directory, using one file
+per tiddler. So I'll checkout one version of the wiki, and do something like this:
+
+```
+  $ tiddlywiki wiki --load wiki.html --savetiddlers '[all[]]' before
+```
+...then checkout the other, and do something similar <<footnote """`[all&#91;&#93;]` is a filter expression that returns all tiddlers in the Wiki
+""">>:
+
+```
+  $ tiddlywiki wiki --load wiki.html --savetiddlers '[all[]]' after
+```
+Then I manually diff the files in the `before` and `after` directories.
+
+!! Try It Out!
+
+I highly recommend using TiddlyWiki as a personal knowledge base or journal; it's really a joy to use! The only problem is
+sometimes you get a little too carried away customizing it to perfectly fit your needs. =) If you're interested,
+the [[TiddlyWiki website|http://tiddlywiki.com/]] itself is a TiddlyWiki instance, and you don't need permissions to alter
+tiddlers on there, since it's all within the browser. Head on over and give it a try!

@@ -1,0 +1,68 @@
+modified: 20160626215452000
+title: Implementing Minesweeper in Pharo
+tags: smalltalk lotm [[Blog Post]]
+created: 20160626215452000
+
+! Implementing Minesweeper in Pharo
+
+My first "real" computer ran Windows 95, and like many developers, my interests
+in programming were rooted in gaming. Along with Hover and Mindmaze, one of
+the games I loved to play growing up - a game I still love to play - was
+Minesweeper. I've never implemented Minesweeper, but it's a pretty simple
+game, and since Pharo comes with an easy-to-use UI library called Morphic,
+it seemed like a perfect fit for my Smalltalk project!
+
+If you want to try out my minesweeper program, you need to install
+[[Pharo|http://pharo.org/]], and download the changes and image files from
+[[here|https://github.com/hoelzro/language-of-the-month/tree/master/May-2016]].
+After that, simply launch the `Robsweeper.image` file in Pharo and have fun!
+The source code is present in that image in the `Rob-Minesweeper` package;
+there's also a [[package on SmalltalkHub|http://smalltalkhub.com/#!/~hoelzro/Rob-Minesweeper]]. If you can't get Pharo up and running, here's what the final
+product looks like:
+
+[img[robsweeper.png]]
+
+!! Things I Learned
+
+Whenever I program, whichever language I'm using, I try to write small, focused methods
+that operate on a single level of abstraction. Working with Smalltalk, with its
+"you don't need to know how everything works" message, really cemented that idea within
+my mind. I think that "you don't need to know how everything works" is a mantra that
+I, and many other programmers, can probably benefit from keeping in the backs of our
+minds.
+
+!! Things I Would Change
+
+Since this is just a one-off project to play with Smalltalk/Pharo, not much
+attention was paid to code quality or organization. In fact, I think that some
+the cons I encountered with the language were due to unidiomatic code. Some of
+this was feeling my way around in an unfamiliar language and environment; some
+this was due to wanting to be done with the project. However, some of this was
+not having tests to verify that I didn't break something during a refactor.
+Which brings me to my next point...
+
+If I were to write the application all over again, I would embrace the
+venerable Smalltalk tradition of testing and write the application using TDD
+principles. One of the reasons I //didn't// do this, even though the material
+I was reading talked about the cultural significance of testing in Smalltalk,
+is because it wasn't too clear to me how to test Morphic applications. Perhaps
+I should have had the Morphic components be thin wrappers over game logic
+classes and tested the latter; however, from my limited experience with
+Smalltalk, it appeared to be pretty common to incorporate the application logic
+directly within the Morphic classes.
+
+!! Going Further with Smalltalk
+
+As mentioned in my previous post along with its comments, I don't know if I really fully
+grasped the OO enlightenment that many say comes with Smalltalk; I'm guessing it comes
+from more than writing a single application and playing with the language for a few hours!
+I have some more thoughts on this, but they'll have to wait for another blog post.
+
+I don't think this will be my only foray into the land of Smalltalk; here are some things
+I would like to try the next time I visit:
+
+* Per [[SuShee's suggestion on Twitter|https://twitter.com/sheeshee/status/744916219753537536]], I would like to read Object Thinking; I think that would be pretty helpful in internalizing the lessons of Smalltalk-style OO.
+* I want to look into the OSWindow API, which allows one to build native-looking GUI applications in Smalltalk.
+* I want to become more familiar with the standard library than I am, and with Pharo in general. Deep into Pharo seems like it would help here!
+* Amber Smalltalk, a Smalltalk on top of JS, is an interesting idea - I may consider trying it on a frontend project, but at the moment I'm enamored of Elm. =)
+* I want to check out a commercial Smalltalk, if only to see what they have to offer in terms of tools.

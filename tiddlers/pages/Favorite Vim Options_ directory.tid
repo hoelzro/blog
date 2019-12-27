@@ -1,0 +1,20 @@
+title: Favorite Vim Options: directory
+modified: 20140604042153000
+created: 20140604042153000
+tags: vim [[Blog Post]]
+
+! Favorite Vim Options: directory
+
+I was thinking about Vim configuration recently, and I wanted to point out one of my favorite Vim options. Have you ever
+been working in a Git repository and run a `git status`, only to encounter a series of swap files in the output? How about having
+an automated deploy refuse to run because it found an unstaged file in the working directory (you guessed it; a Vim swap file)?
+In a response to this annoyance, I've had colleagues recommend disabling Vim's swap file feature entirely! I'd like to propose an
+alternative: my friend, the `directory` option.
+
+`directory` simply tells Vim where to put your swap files. So instead of littering your filesystem with a bunch of swap files,
+they stay in a single tidy location. Popular settings for this option include a directory under `/var/tmp` or under `~/.vim/`.
+I like keeping swap files around, because crashes ''do'' happen, and it's nice to be able to
+recover one's work. I also do a lot of note taking in buffers unassociated with any file; having swap files can make recovering
+these possible. As an added bonus, having `directory` set allows `vim -r` (which lists swap files) to do its job more
+thoroughly, allowing you to find which swap files have been left behind after a crash without having to guess which directories
+they might be in.

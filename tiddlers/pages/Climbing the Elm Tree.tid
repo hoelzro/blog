@@ -1,0 +1,100 @@
+title: Climbing the Elm Tree
+modified: 20191211163158000
+tags: lotm elm [[Blog Post]]
+created: 20160306183053000
+
+! Climbing the Elm Tree
+
+The selection of the second [[language of the month|Language of the Month]] was mired in confusion; there was one language I had had in mind, and I
+spent the week after the previous blog post learning more about it. However, I
+then learned a new release was in the pipeline for April, so it seemed natural
+to delay my adventures with that language for two months.
+
+I then picked another language to work on, but it occurred to me that it was
+already February 22nd. That's what four birthdays in the family, a late start,
+and preparing for a talk will do to you! I didn't want to shortchange this new
+language by giving it a paltry one week of my time, so I decided to defer my
+time with //that// language until March.
+
+The language I ended up writing about for February is one I actually played
+with a bit in 2015 (sorry for cheating!), but it still represents a paradigm
+shift in how one writes code, and I've never blogged about it before, which is
+an injustice itself! It's gotten a lot of press lately, so you may have heard
+of it - it's the [[Elm|http://elm-lang.org/]] programming language!
+
+!! An exciting alternative to JavaScript
+
+I typically see myself as a backend developer; I don't really care for
+JavaScript, and I find UI programming to be tedious and hard to test. So,
+coming from me, this testimony should bear extra weight: Elm, as a functional programming
+language for writing frontend applications, actually makes me
+//excited// about doing frontend development. Elm is a wonderful alternative
+to JavaScript for frontend development, especially for FP nerds like me. It smoothes
+out most of the problems that I find come with UI programming, which is very attractive.
+
+!! A gateway to functional programming
+
+I don't know what Evan's <<footnote """Evan Czaplicki is the creator of Elm
+""">> goals were in
+creating Elm; maybe it was just to have a functional language so FP
+practitioners could write web applications. However, like Go targeting C++
+developers but attracting Python and Ruby developers, the availability of Elm has
+had an interesting side effect: serving as a gateway to FP for JavaScript and
+frontend developers. This is evident from the Slack channel for the Elm
+language. From what I've heard, this has resulted in a fruitful exchange of ideas
+between the Elm and JavaScript worlds, and I have no doubt this will continue into
+the future.
+
+!! Functional Reactive Programming
+
+The big takeaway from Elm is how it treats functional reactive programming
+(FRP) as its core concept. Like other functional languages, such as Haskell,
+functions in Elm are //pure// - that is, they have no side effects <<footnote """Although
+Elm provides things like `Debug.log` to make the developer's life easier
+""">>.
+If you want to express side effects, you typically use //signals//, which
+represent a stream of events in your program, such as inputs. If you want to
+render HTML or draw on a canvas, your `main` function needs to return an
+`Html` or `Element` object, or a `Signal` of them. This may seem pretty
+strict, but it inspires a natural architecture in your application that is easy
+to read and reason about. Code in Elm is so //clean//; it's the most excited
+about a language I've been in a long time. Here's a simple example code
+snippet that displays the timestamp once per second:
+
+```elm
+main : Signal Element
+main = Signal.map show <| Time.every Time.second
+```
+Signals offer many list-like functions, such as `map`, which applies a function every time
+a new value comes in from a signal, and treats the results of the function as a new signal.
+`show` simply renders a value for debugging purposes, and `Time.every n` creates a signal
+that yields the current timestamp every `n` units of time. For a deeper look into how signals
+make an Elm program work, check out the official
+[[architecture tutorial|https://github.com/evancz/elm-architecture-tutorial/]].
+
+Working with Elm has inspired me to think about ways of applying FRP concepts in other languages,
+especially Perl 6!
+
+!! Time Traveling Debugger
+
+Not only does the strictness of Elm yield cleaner programs, but it also allows
+for advanced tooling. The Elm platform ships with a tool called elm-reactor,
+which is a little web server that will allow you to edit your programs and have
+your changes loaded on the fly in the browser. Where it really shines is the
+debugger, though; elm-reactor provides a //time traveling// debugger. This
+means if you find a bug, you can back up the program state to what it was just
+before the bug happened. After you've done this, you can set up watches,
+logging statements, or fixes in the code, and replay the execution. You can
+find a demo of the time traveling debugger
+[[here|http://debug.elm-lang.org/edit/Mario.elm]].
+
+!! Bad Error Messages as Bugs
+
+One of the things that put Elm on the map for many people is that in the 0.16 release, the error messages
+were considerably improved. The Elm team seems to have the mentality that an error message that confuses
+or misleads a user is a bug, and that [[the compiler is your assistant|http://elm-lang.org/blog/compiler-errors-for-humans]].
+The Rust community has also seemed to embrace this idea, and I'm hoping that other language communities do as
+well. It's definitely something I keep in mind now when I'm working on Perl 6!
+
+Tune in next time for an overview of the program I wrote in Elm, which makes use of the data I gathered in my
+[[previous blog post|Finding the most common n-grams in Russian using Perl 6 and HabraHabr]]!

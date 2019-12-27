@@ -1,0 +1,61 @@
+title: What Makes a Project "Successful"?
+modified: 20180111022727000
+tags: projects [[Blog Post]]
+created: 20180111022602000
+
+! What Makes a Project "Successful"?
+
+Last night, I was musing about personal projects I undertook in 2017, and I realized
+that of the two big ones that I made, I didn't know if I could judge either as a
+success.
+
+The first one, [[TiddlyWiki Full Text Search|https://hoelz.ro/files/fts.html]], took
+me a little while to make and it has a little adoption, but I wrote it primarily
+for myself and I use it pretty sparingly.
+
+The second, [[Twitter Reply Tracker|https://twitter-replies.hoelz.ro/sehurlburt/899482493925023744/]],
+got a //really// good response - it appears that people find it useful - but I don't use it myself that much.
+It's nice to make something for others, but maintaining it can quickly become a chore.
+
+One project that I definitely judge as a failure is something I wrote back in 2014 - I called it
+`Devel::Trace::Syscall`. It took me a //month// to write, and while I learned a few
+interesting things, I //never// use it. If my objective had been to learn something,
+I think I could've finished learning well before a month.
+
+This is in contrast to a small project I made this year: one time on my way
+back home from a visit to Chicago, I was listening to some music and decided
+that I wanted to have a full history of songs I'd listened to on Spotify.
+Spotify provides a recent history API, but it's only the last fifty songs you
+listened to. So when I got home, I whipped up a little AWS Lambda function to
+get the most recently played songs via the Spotify API and insert them into a
+DyanamoDB table. It took maybe 15 minutes, but I query that table pretty
+regularly to jog my memory about a song I'd listened to.
+
+Another project that stands in contrast is something I wrote in 2016 but have
+yet to publish - I call it Twitter Archivist. Basically, it's a scrappy Perl
+script that grabs what you see on your Twitter timeline and stuffs it all into
+a SQLite database. That way, if I see something on Twitter and think of it a
+week later, I can look it up. I run the script once a week, and I find myself
+querying the database all the time! The only reason I haven't published it is
+that I'm not terribly proud of the code.
+
+One interesting thread that ties these two together is that they have
+practically zero user interface - I use the AWS CLI with jq to query the played
+songs table, and I just use the sqlite3 command line client for my Twitter
+archive, with one or two custom SQLite extensions to make some of the queries
+easier. They both took a small amount of time to write - I had each of them
+finished within an evening - and they both use a very small amount of code.
+
+As life goes on, time becomes more and more a premium resource, so the skill
+I'm working on cultivating this year is knowing which projects to pursue and
+which to not. So, going forward, I'm going to try and employ some discipline
+when taking on a new project, in the form of a checklist:
+
+* Am I trying to make something or learn something?
+* Is this something I will really, actually use?
+* Is there something else that does what I need, or most of what I need?
+* What is the least amount of work I need to do to get this done?
+
+It gives me hope in a weird way - I sometimes feel lke I'm drowning in ideas
+for projects, but now I feel like I can write off 90% of them! Here's to a year
+of successful projects!

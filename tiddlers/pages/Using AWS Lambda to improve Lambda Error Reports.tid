@@ -1,0 +1,94 @@
+modified: 20180520210424000
+title: Using AWS Lambda to improve Lambda Error Reports
+tags: aws lambda [[Blog Post]]
+created: 20180520204737000
+
+! Using AWS Lambda to improve Lambda Error Reports
+
+I use AWS Lambda for multiple small things, like my [[own music scrobbler|https://github.com/hoelzro/track-spotify-plays/]] and [[tracking replies to Twitter threads|https://twitter-replies.hoelz.ro/]].
+One use that I really like Lambda for is just making sure everything looks A-OK on my server. I mean, why pay a service
+like Pingdom to do something that I can do in a 20-line Python script?
+
+One thing I //don't// like about Lambda is the error messages I get via SNS when things fail:
+
+```json
+{
+  "version": "0",
+  "id": "3a26baa3-e818-8bc4-62cf-cb7ab71757c9",
+  "detail-type": "Scheduled Event",
+  "source": "aws.events",
+  "account": "123456789",
+  "time": "2018-05-02T12:12:11Z",
+  "region": "us-east-2",
+  "resources": [
+    "arn:aws:events:us-east-2:123456789:rule/every15minutes"
+  ],
+  "detail": {}
+}
+```
+Not exactly straightforward, is it? And that was //pretty-printed//! Not only do I not know what exactly went wrong (my check function checks multiple things like whether the server is up, if TLS is set up properly,
+if search is returning results, etc), but I also have multiple functions using the same SNS topic to inform me, so I don't even know //which// function failed!
+For the former, I can always log in to the AWS console to view the logs, and I can cross reference Cloudwatch error alarms for different functions for the latter, but that's a lot of work
+if the fix is something simple like "log on to your server and restart a service". I figured there had to be a better way!
+
+Well, as you would expect from the title, there is! And the best part is that I can fix Lambda's poor error reporting using another Lambda function.
+In this post, we'll cover how Lambda handles errors with dead letter queues, go over Cloudwatch logs, and discover some pitfalls that you can run into while doing development for Lambda.
+
+!! Dead Letter Queues
+
+The first thing you need to know, if you don't already, is how Lambda functions report errors. Lambda functions invoked via an asynchronous event (such as a Cloudwatch Event - think of it like a cronjob
+timer) are retried three times - if none of those tries succeed, the event is forwarded to what's called a //dead letter queue// (aka DLQ). A dead letter queue in AWS can be a SNS topic or an SQS queue - I chose the former
+since it's really easy to wire up to my e-mail. And that's where that "bad error message" blob of JSON above came from - it's the event that Cloudwatch events to kick off my Lambda function.
+
+Lambda functions can get invoked from sources other than Cloudwatch Events; another potential source is - you guessed it - an SNS topic! So all I needed to do was write another Lambda function to intercept the
+dead letter queue message, format a pretty e-mail, and send it my way.
+
+!! Intercepting Failures
+
+The first thing I did was set up a new SNS topic named `lambda-failures` - I didn't want to contaminate the old topic I use for SNS notifications with these new messages, especially while I was
+working. The next step was to point the my ping function's DLQ to this new topic, and then create a new Lambda function to accept messages on this topic. Then I introduced a deliberate failure
+in my ping function in the `$LATEST` version <<footnote """Lambda allows you to version your functions and assign aliases to versions - similar to Git tags and branches. Read [[AWS Lambda Function Versioning and Aliases|https://docs.aws.amazon.com/lambda/latest/dg/versioning-aliases.html]] for more!
+""">>. Now that everything is wired up, all we need to do is hit the "Test" button on the ping function to cause an error, right?
+
+So, I hit the test button - the function //did// indeed fail, but I didn't get a message sent to my new Lambda function. What gives?
+
+This took me a while to figure out, but I'll spare you that, dear reader. You may remember from my description of dead letter queues above that DLQs are involved for Lambda invocations triggered
+by //asynchronous// events - but they are //not// involved with synchronous invocations! Clicking the test button creates a synchronous invocation, which doesn't send failures to the DLQ (the idea being that the caller is
+responsible for handling errors).
+
+So, to convince my function to use its DLQ, I created a "once per minute" CloudWatch event and hooked it up to my new Lambda function <<footnote """In retrospect, it would have been simpler
+to use the `aws lambda invoke --invocation-type Event` to manually invoke the function
+""">>. Now I have asynchronous invocations happening! To speed up my developing and testing,
+I dumped out the event being sent to the new function and saved it as a test event - that way I can just click "Test" to test my function!
+
+!! Extracting Log Messages
+
+AWS Lambda automatically sends logging output from a function into Cloudwatch Logs - the next trick here was to extract the logs generated by a particular invocation and
+using them to create a formatted error message. I know from experience at my job that if you send Cloudwatch Logs a message that parses as JSON, you can write JSONPath
+queries to search a log stream for matching entries. So I did a little work to make my ping function log everything as JSON, using a `message` key for the actual message
+and the `id` for the event ID that Cloudwatch Events gave me.
+
+After this, I wrote some code to extract the event ID from the event forwarded to my function via the DLQ, and to look up that event ID in the Cloudwatch logs. I hadn't granted
+my function Cloudwatch logs read permissions, so I still needed to grant them to the function's role in IAM. Once you do this, you need to wait a few moments for the new permissions
+to take effect in Lambda.
+
+I needed to figure out which log group to check - Lambda uses a single log group per function. I didn't find an easy way to determine the function based on the Cloudwatch event,
+so for now I have it hardcoded to always look at the logs for my ping function. You can customize the payload that Cloudwatch events uses when it invokes a Lambda function,
+but I figured I would add that when I needed it.
+
+!! Messages in Triplicate
+
+After I finished, I noticed something odd - I was getting the log messages in triplicate! This confused me for a bit, but then I remembered that a function will get tried three times before Lambda
+puts the event into the DLQ!
+
+!! Lessons Learned & Moving Forward
+
+So we learned a few lessons about AWS Lambda:
+
+* You can use SNS for both DLQs and as a trigger for Lambda invocations
+* DLQs are only involved during asynchronous invocations, like with Cloudwatch Events, and only after three failing tries
+* You can use fairly sophisticated queries on Cloudwatch logs if you log as JSON
+
+There are definitely some improvements I could make on this - for one, I would like to dynamically discover which function failed and use that to determine
+the correct log group to query. Another thing I would like to do for future Lambda development is to check out something like [[Zappa|https://www.zappa.io]] - I've
+looked at [[Serverless|https://serverless.com]], but I hesitated because you need to give it an IAM user with very broad permissions.

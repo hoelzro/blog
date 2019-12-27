@@ -1,0 +1,83 @@
+modified: 20191211163225000
+title: Fixing Up a Git Repository With Broken Alternates
+tags: git [[Blog Post]]
+created: 20160103225137000
+
+! Fixing Up a Git Repository With Broken Alternates
+
+When I'm working, I'll occasionally make use of Git's alternates feature. If
+you're not familiar with it, the alternates facility allows you to save time
+and space when you want a pristine copy of a repository. What it does is it
+sets up a link to a reference repository, and that repository is consulted for
+objects. If an object doesn't exist in the reference repository, only then is
+it brought into the fresh repository from upstream. So let's say you have a
+checkout of some repository (I'll use
+[[Rakudo|https://github.com/rakudo/rakudo]] as an example), and you want to
+create a new clone from GitHub, but you want to save bandwidth. We can
+activate the alternates facility using clone's `--reference` option
+<<footnote """Another way to save bandwidth is to clone from the local repository on disk; the two repositories
+will even share disk space via hard links if they're on the same filesystem. When cloning from
+a file-based repository, however, your origin will point to that file-based repository and will be
+behind the remote copy if the file-based one is, which I didn't want. In addition, the sharing stops
+after the clone, unlike with alternates.
+""">>:
+
+```
+  $ cd /tmp
+  $ git clone github:rakudo/rakudo # let's make a copy I feel ok blowing away
+  $ git clone --reference /tmp/rakudo/.git github:rakudo/rakudo rakudo-jvm
+```
+So now we have a fresh clone of rakudo and its Git objects are stored in `~/projects/rakudo`.
+An example of when I would do this is if I'm running MoarVM tests on rakudo and I want to
+build the JVM version to test some stuff on that, or if I'm running a server program from a branch
+at work that someone may be playing with and I don't want to kick them off in order to fix a bug
+on master.
+
+The problem is that sometimes I leave these extra repositories lying around, rename or move them,
+and eventually accidentally delete the original. If that happens, you get a bunch of angry output
+from Git when you try to do...well, anything:
+
+```
+  $ rm -rf /tmp/rakudo/
+  $ cd /tmp/rakudo-jvm
+  $ git status
+  error: object directory /tmp/rakudo/.git/objects does not exist; check .git/objects/info/alternates.
+  On branch nom
+  Your branch is up-to-date with 'origin/nom'.
+  nothing to commit, working directory clean
+  error: object directory /tmp/rakudo/.git/objects does not exist; check .git/objects/info/alternates.
+```
+A simple fix would be to just clone the original repository again, but I saw this as a challenge: how
+could I actually fix my hopelessly broken repository? <<footnote """git actually tells you how in the documentation,
+for `git clone --shared` but I'd already done the work when I discovered that =/
+""">>
+
+So the first thing I did was think about how the feature works; the alternates feature uses a file
+called `.git/objects/info/alternates` to find its alternate sources. I looked for references
+to alternates in Git's documentation, and came across clone's `--dissociate` option. What it
+does is after the clone is complete is copy the alternate files into the new repository, so that
+it doesn't need the original anymore. This is exactly what I wanted, just for an existing repository!
+I didn't see `--dissociate` for other Git commands, so I dug into clone's implementation, and discovered
+this:
+
+```c
+static void dissociate_from_references(void)
+{
+    static const char* argv[] = { "repack", "-a", "-d", NULL };
+    char *alternates = git_pathdup("objects/info/alternates");
+
+    if (!access(alternates, F_OK)) {
+        if (run_command_v_opt(argv, RUN_GIT_CMD|RUN_COMMAND_NO_STDIN))
+            die(_("cannot repack to clean up"));
+        if (unlink(alternates) && errno != ENOENT)
+            die_errno(_("cannot unlink temporary alternates file"));
+    }
+    free(alternates);
+}
+```
+So all git-clone does is call `git repack -a -d`! After this, I simply created a fresh clone from the
+upstream repository, placed `$new_repo/.git/objects` into the broken repository's `.git/objects/info/alternates`
+files, ran `git repack -a -d`, and removed `.git/objects/info/alternates`.
+
+Another way of saving space and time is to use Git's (relatively) new [[worktree|https://git-scm.com/docs/git-worktree]] feature.
+Once I get used to using that, I'll probably transition to it instead.

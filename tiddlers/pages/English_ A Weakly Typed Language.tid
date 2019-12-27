@@ -1,0 +1,86 @@
+created: 20150110180845000
+tags: russian language favorites [[Blog Post]]
+modified: 20180715201530000
+title: English: A Weakly Typed Language
+
+! English: A Weakly Typed Language
+
+Two of my hobbies are programming and languages, and I often think about how
+much the two of them have in common. A short while ago, I was asking my friend
+Maxim some questions about the distinction between
+perfective/imperfective aspect in the Russian language. This distinction is
+unlike how we distinguish tense/aspect in English, so it's often a pain point
+for native English speakers learning the Russian language. For example, in
+English, we make the following distinctions when talking about a past event:
+
+```
+I was eating. (past progressive)
+```
+```
+I have eaten. (present perfect)
+```
+```
+I ate. (simple past)
+```
+In Russian, a different set of distinctions is made. Imperfective expresses an
+ongoing process, an unfinished process, or a repeated, habitual action:
+
+```
+Я кушал. (imperfective, I was eating, I didn't finish eating, I used to eat)
+```
+...whereas perfective indicates a single, completed action:
+
+```
+Я покушал. (perfective, I ate, I have eaten)
+```
+This seems relatively straightforward after thinking about it for a bit, but then
+you get present tense, future tense, expressions of desire, commands, and shades
+of past tense meaning built into the Russian grammar, but requires extra words to
+express the idea in English:
+
+```
+Что ты делал сегодня? "What have you been up to today?"
+```
+```
+Что ты сделал сегодня? "What have you gotten done today?"
+```
+```
+Смотри! "Look!" (with the notion that I don't care when/if you stop looking)
+```
+```
+Посмотри! "Look!" (and let me know what you think)
+```
+```
+Мне надо кушать. "I need to eat" (on a regular basis, as in to stay alive,
+to get big and strong, etc)
+```
+```
+Мне надо покушать. "I need to eat" (I need to eat something right now, I'm hungry)
+```
+(This reminds me of how sometimes a higher-level construct like `map` in some
+programming languages can be achieved with lengthier, more verbose constructions
+like `for` loops in others.)
+
+As you can see, when translating a sentence like "I need to eat" or "I don't
+want to go", which form to use requires an intuition you build up over time.
+I've been studying Russian for two years and I feel like I'm starting to get it.
+=)
+
+Anyway, so my line of questioning eventually lead to translating the sentence
+"He hit me after I kissed his girlfriend", which I translated as follows:
+
+```
+он ударил меня после я поцеловал его девушку. (word for word translation)
+```
+Maxim offered up a better translation in Russian:
+
+```
+он ударил меня после того, как я поцеловал его девушку. (lit. "He hit me after
+that, for I kissed his girlfriend")
+```
+This interested me, because it made me think of weakly typed vs strongly typed
+languages in programming. In Russian, the word после (after) must always be
+followed by a noun in the genitive case (in this case, того "that", standing in
+for the latter phrase). So my translation was invalid; it didn't "type check".
+In English, however, the types are weaker; I can follow "after" with pretty much
+whatever I want. I'm always delighted when my hobbies intersect!
