@@ -15,6 +15,13 @@ build:
   - "$:/template"
 
   index:
+  # render non-blog posts
+  - "--render"
+  - "[!is[system]!is[image]!tag[Blog Post]]"
+  - "[is[tiddler]sitelink[]addsuffix[.html]]"
+  - "text/plain"
+  - "$:/template"
+
   # render tag index files
   - "--render"
   - "[!is[system]tags[]] -[[Blog Post]]"
