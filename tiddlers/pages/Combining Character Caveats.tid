@@ -78,8 +78,8 @@ forms are a way of canonicalizing a Unicode string to make comparison and
 collation easier. To see how this works in practice, let's look at two
 strings: "á" and "á". Although they look the same, if you paste them into an
 application that can inspect Unicode (I like to just `echo "á" | xxd`),
-you'll see that they're actually two different strings. The first is ''LATIN
-SMALL LETTER A WITH ACUTE''; the latter is `LATIN SMALL LETTER A` +
+you'll see that they're actually two different strings. The first is `LATIN
+SMALL LETTER A WITH ACUTE`; the latter is `LATIN SMALL LETTER A` +
 `COMBINING ACUTE ACCENT`. In many programming languages, if you compare
 these two strings, they'll show up as unequal, because they //are// unequal
 when you think about them on a codepoint-by-codepoint basis. The solution to
@@ -87,8 +87,8 @@ this is
 [[Unicode normalization|https://en.wikipedia.org/wiki/Unicode_equivalence#Normalization]], which allows us to translate a Unicode string to some
 canonical form which will compare equally. Under NFC normalization, for
 example, combining characters are condensed into precomposed forms if
-available, so both strings end up being just ''LATIN SMALL LETTER A WITH
-ACUTE''. Most programming languages require you to normalize your Unicode
+available, so both strings end up being just `LATIN SMALL LETTER A WITH
+ACUTE`. Most programming languages require you to normalize your Unicode
 strings before doing any sort of comparison operation on them; Perl 6 is one of
 the few languages <<footnote """Elixir is the only other language I know of where this is the case as well.
 """>>
