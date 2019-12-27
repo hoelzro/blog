@@ -11,6 +11,10 @@ module-type: macro
     exports.run = function(to) {
         let tiddler = $tw.wiki.getTiddler(to);
 
+        if(tiddler && tiddler.getFieldString('relative_url') != '') {
+            return tiddler.getFieldString('relative_url');
+        }
+
         let prefix = '';
         // XXX remove this `tiddler &&` check
         if(tiddler && tiddler.hasTag('Blog Post')) {
