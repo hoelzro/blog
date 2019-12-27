@@ -1,0 +1,7 @@
+title: $:/templates/regular
+
+`
+<div class="level1">
+  `<$view format='htmlwikified'/>`
+</div>
+`

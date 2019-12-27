@@ -21,6 +21,8 @@ build:
   - "[is[tiddler]sitelink[]addsuffix[.html]]"
   - "text/plain"
   - "$:/template"
+  - "subtemplate"
+  - "$:/templates/regular"
 
   # render tag index files
   - "--render"
