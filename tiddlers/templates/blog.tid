@@ -13,6 +13,7 @@ title: $:/templates/blog
 </$list>
 
 `
+<div class='clear-it'></div>
 <div class="level1">
   `<$view format='htmlwikified'/>`
 
