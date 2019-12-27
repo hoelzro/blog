@@ -2,7 +2,7 @@ title: $:/templates/blog
 
 <$list variable="previous" filter="[!is[system]tag[Blog Post]nsort[created]] +[before<currentTiddler>]">
 <$set name="prev-link" filter="[<previous>sitelink[]]" select="0">
-`<a class='history-prev' rel='prev' href='/`<<prev-link>>`'>`<<previous>>`</a>`
+`<a class='history-previous' rel='prev' href='/`<<prev-link>>`'>`<<previous>>`</a>`
 </$set>
 </$list>
 
