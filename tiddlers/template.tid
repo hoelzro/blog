@@ -162,9 +162,6 @@ email
 
   <div class='clear-it'></div>
 
-  <!-- XXX why is this part of the template? -->
-  <i class='publish-date'>Published on `<$view tiddler=<<currentTiddler>> field="created" format="date" template="YYYY-0MM-0DD" mode="inline" />`</i>
-
   <div id="disqus_thread"></div>
   <script type="text/javascript" src="/javascripts/disqus.js"></script>
   <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>

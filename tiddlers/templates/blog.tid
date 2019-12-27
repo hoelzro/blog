@@ -23,4 +23,6 @@ title: $:/templates/blog
 </$list>
 `
 </span></div>
+
+<i class='publish-date'>Published on `<$view tiddler=<<currentTiddler>> field="created" format="date" template="YYYY-0MM-0DD" mode="inline" />`</i>
 `
