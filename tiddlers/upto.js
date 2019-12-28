@@ -14,7 +14,7 @@ module-type: filteroperator
         });
 
         let result = [];
-        for(let i = 1; i <= end; i++) {
+        for(let i = 0; i <= end; i++) {
             result.push(i.toString());
         }
         return result;
