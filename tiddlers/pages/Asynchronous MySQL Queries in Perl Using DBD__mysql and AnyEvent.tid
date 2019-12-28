@@ -2,6 +2,7 @@ title: Asynchronous MySQL Queries in Perl Using DBD::mysql and AnyEvent
 modified: 20160711170637000
 created: 20111019161801000
 tags: mysql perl anyevent [[Blog Post]]
+relative_url: blog/asynchronous-mysql-queries-in-perl-using-dbdmysql-and-anyevent
 
 ! Asynchronous MySQL Queries in Perl Using DBD::mysql and AnyEvent
 

@@ -2,6 +2,7 @@ created: 20161115053917000
 tags: git [[Blog Post]]
 title: git-pisect: A Parallel Version of git-bisect
 modified: 20170201193449000
+relative_url: blog/git-pisect
 
 ! git-pisect: A Parallel Version of git-bisect
 

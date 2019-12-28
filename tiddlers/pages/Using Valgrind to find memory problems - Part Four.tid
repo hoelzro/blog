@@ -2,6 +2,7 @@ created: 20151228003607000
 tags: moarvm c valgrind [[Blog Post]]
 title: Using Valgrind to find memory problems - Part Four
 modified: 20151228003607000
+relative_url: blog/using-valgrind-to-find-memory-problems
 
 ! Using Valgrind to find memory problems - Part Four
 

@@ -2,6 +2,7 @@ modified: 20160711180343000
 title: System Sleuthing - Using ptrace to Print Backtraces
 tags: ack perl strace favorites [[Blog Post]]
 created: 20140619033651000
+relative_url: blog/system-sleuthing-using-ptrace-to-find-syscall-sites
 
 ! System Sleuthing - Using ptrace to Print Backtraces
 

@@ -2,6 +2,7 @@ modified: 20160411174708000
 title: Binding to C++ With NativeCall
 tags: perl6 nativecall [[Blog Post]]
 created: 20160329030321000
+relative_url: blog/binding-to-cpp-with-nativecall
 
 ! Binding to C++ With NativeCall
 

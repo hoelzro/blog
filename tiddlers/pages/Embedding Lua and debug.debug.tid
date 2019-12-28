@@ -2,6 +2,7 @@ title: Embedding Lua and debug.debug
 modified: 20130909143555000
 created: 20110909182110000
 tags: lua vim [[Blog Post]]
+relative_url: blog/embedding-lua-and-debug.debug
 
 ! Embedding Lua and debug.debug
 
