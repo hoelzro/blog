@@ -17,7 +17,7 @@ build:
   index:
   # render non-blog posts
   - "--render"
-  - "[!is[system]!is[image]!tag[Blog Post]]"
+  - "[!is[system]!is[image]!is[audio]!tag[Blog Post]]"
   - "[is[tiddler]sitelink[]addsuffix[.html]]"
   - "text/plain"
   - "$:/template"
@@ -35,7 +35,7 @@ build:
 
   # render blog entries
   - "--render"
-  - "[!is[system]!is[image]tag[Blog Post]]"
+  - "[!is[system]!is[image]!is[audio]tag[Blog Post]]"
   - "[is[tiddler]sitelink[]addsuffix[.html]]"
   - "text/plain"
   - "$:/template"
