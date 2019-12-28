@@ -20,6 +20,9 @@ module-type: macro
         if(tiddler && tiddler.hasTag('Blog Post')) {
             prefix = 'blog/';
         }
+        if(tiddler && tiddler.hasTag('Reference')) {
+            prefix = 'ref/';
+        }
 
         return prefix + to.toLowerCase().replace(/'/g, '').replace(/\W+/g, '-').replace(/-+$/, '').replace(/^-+/, '');
     };

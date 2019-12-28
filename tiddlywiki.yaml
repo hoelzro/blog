@@ -26,7 +26,7 @@ build:
 
   # render tag index files
   - "--render"
-  - "[!is[system]tags[]] -[[Blog Post]]"
+  - "[!is[system]tags[]] -[[Blog Post]] -Reference"
   - "[addsuffix[.html]addprefix[tag/]]"
   - "text/plain"
   - "$:/template"

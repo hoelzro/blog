@@ -24,7 +24,7 @@ type: text/vnd.tiddlywiki
 <link>https://hoelz.ro/`<<link>>`</link>
 <description>`<<firstParagraph>>`<a href='https://hoelz.ro/`<<link>>`'>Read More...</a></description>
 `
-<$list variable="tag" filter="[is[current]tags[]] -[[Blog Post]] +[lowercase[]]">
+<$list variable="tag" filter="[is[current]tags[]] -[[Blog Post]] -Reference +[lowercase[]]">
 `<category>`<<tag>>`</category>`
 </$list>
 `
