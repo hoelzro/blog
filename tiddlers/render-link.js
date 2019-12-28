@@ -21,6 +21,6 @@ module-type: macro
             prefix = 'blog/';
         }
 
-        return prefix + to.toLowerCase().replace(/\W+/g, '-').replace(/-+$/, '');
+        return prefix + to.toLowerCase().replace(/'/g, '').replace(/\W+/g, '-').replace(/-+$/, '').replace(/^-+/, '');
     };
 })();
