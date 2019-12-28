@@ -1,7 +1,8 @@
-title: Pronouncing My Surname
-modified: 20180316015654000
 created: 20100725214423000
+modified: 20191228062104376
 relative_url: pronunciation
+title: Pronouncing My Surname
+type: text/vnd.tiddlywiki
 
 ! Pronouncing My Surname
 
@@ -9,10 +10,10 @@ Most people I encounter in day-to-day life have a lot of trouble pronouncing my 
 
 This is how my family has been pronouncing our surname for as long as I can remember:
 
-[hɛlt͡s] - <$image source="//hoelz.ro/images/hoelz-en.ogg" alt="[hɛlts]" />
+[hɛlt͡s] - {{pronunciation-en.ogg}}
 
 However, according to German pronunciation rules, my surname should be pronounced like this:
 
-[hølt͡s] - <$image source="//hoelz.ro/images/hoelz-de.ogg" alt="[hølts]" />
+[hølt͡s] - {{pronunciation-de.ogg}}
 
 For a guide to the IPA, please consult [[Wikipedia|https://en.wikipedia.org/wiki/IPA]].
