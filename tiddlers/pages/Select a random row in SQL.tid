@@ -1,7 +1,9 @@
-tags: perl sql mysql postgresql
 created: 20150421153421000
+modified: 20191228142224212
+tags: Reference perl sql mysql postgresql
 title: Select a random row in SQL
-modified: 20150421153421000
+type: text/vnd.tiddlywiki
+relative_url: ref/select-random-row-in-sql
 
 ! Select a random row in SQL
 

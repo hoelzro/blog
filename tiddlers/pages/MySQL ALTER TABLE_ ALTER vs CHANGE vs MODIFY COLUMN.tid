@@ -1,7 +1,9 @@
-modified: 20150421153421000
-title: MySQL ALTER TABLE: ALTER vs CHANGE vs MODIFY COLUMN
-tags: mysql
 created: 20150421153421000
+modified: 20191228142212131
+tags: Reference mysql
+title: MySQL ALTER TABLE: ALTER vs CHANGE vs MODIFY COLUMN
+type: text/vnd.tiddlywiki
+relative_url: ref/mysql-alter-table-alter-change-modify-column
 
 ! MySQL ALTER TABLE: ALTER vs CHANGE vs MODIFY COLUMN
 
