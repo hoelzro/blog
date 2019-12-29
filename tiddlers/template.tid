@@ -162,12 +162,6 @@ email
 
   <div class='clear-it'></div>
 
-  <div id="disqus_thread"></div>
-  <script type="text/javascript" src="/javascripts/disqus.js"></script>
-  <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-</div>
-
-
   <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"
           type="text/javascript"
           integrity="sha384-8gBf6Y4YYq7Jx97PIqmTwLPin4hxIzQw5aDmUg/DDhul9fFpbbLcLh3nTIIDJKhx"
