@@ -1,7 +1,7 @@
 title: $:/templates/tag-index
 
 `
-<h1>Tag Index</h1>
+<h1>Pages tagged with &quot;`<<currentTiddler>>`&quot;</h1>
 <ul id='page-list'>
 `
 <$list variable="tagee" filter="[!is[system]tag<currentTiddler>]">
