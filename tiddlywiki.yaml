@@ -13,6 +13,8 @@ build:
   - "[is[tiddler]sitelink[]addsuffix[.html]]"
   - "text/plain"
   - "$:/template"
+  - "template-config"
+  - "$:/template-config/blog"
 
   index:
   # render non-blog posts
