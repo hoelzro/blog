@@ -11,7 +11,7 @@ module-type: filteroperator
     exports.sitelink = function(source, operand, options) {
         let result = [];
         source(function(tiddler, title) {
-            result.push(renderLink(title));
+            result.push(renderLink(title, true));
         });
         return result;
     };
