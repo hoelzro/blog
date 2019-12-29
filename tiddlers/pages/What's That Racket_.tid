@@ -9,7 +9,9 @@ For my third [[language of the month|Language of the Month]], I figured I would
 cover a language of venerable heritage: Lisp. Part of Lisp's fame centers around the
 supposed enlightenment one achieves when one finally "gets" Lisp.
 
-[[<$image source="//hoelz.ro/images/lisp.jpg" alt="Credit: XKCD" />|https://xkcd.com/224/]]
+<a href="https://xkcd.com/224/">
+<$image source="//hoelz.ro/_media/lisp.jpg" alt="Credit: XKCD" />
+</a>
 
 Now, the trick with learning Lisp is first you need to //pick// one. There is
 more than one flavor of Lisp around, and even among the various flavors, there
@@ -109,7 +111,7 @@ own syntax via macros:
 It might not be immediately obvious, but macros are just Lisp functions; they're code that generates
 new code. It's all very meta.
 
-<$image source="//hoelz.ro/images/yo-dawg-lisp.jpg" alt="yo-dawg-lisp.jpg" />
+<$image source="//hoelz.ro/_media/yo-dawg-lisp.jpg" alt="yo-dawg-lisp.jpg" />
 
 This "function takes a coordinate" shorthand is useful for my program, but I can imagine many other
 uses for custom syntax. For example, let's say you want something like a low-level SQL interface,

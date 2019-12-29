@@ -104,7 +104,7 @@ will reply with `'Foo' asLowercase`:
 I wanted to find a method to clamp a number to a particular range; here's an
 example of how I used the method finder to do that for me:
 
-<$image source="//hoelz.ro/images/method-finder.webm" alt="method-finder.webm" />
+<$image source="//hoelz.ro/_media/method-finder.webm" alt="method-finder.webm" />
 
 This makes me think of Haskell's [[Hoogle|https://www.haskell.org/hoogle/]],
 only in a dynamically typed language, and driven by examples rather than types.
@@ -127,7 +127,7 @@ After you create and implement the method, you can tell the debugger to
 proceed, which will invoke the method you //just// wrote and your application
 will carry on its merry way. Here's a trivalized example of that in action:
 
-<$image source="//hoelz.ro/images/coding-in-the-debugger.webm" alt="coding-in-the-debugger.webm" />
+<$image source="//hoelz.ro/_media/coding-in-the-debugger.webm" alt="coding-in-the-debugger.webm" />
 
 !!! Ch-ch-changes
 

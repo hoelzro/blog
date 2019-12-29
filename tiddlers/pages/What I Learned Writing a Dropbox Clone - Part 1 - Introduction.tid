@@ -56,7 +56,7 @@ sync directory, responding to changes from other clients via the host daemon,
 and keeping those in sync. Here's a little graphic illustrating the flow of
 information:
 
-<$image source="//hoelz.ro/images/sahara-sync-flow.png" alt="Sahara Sync Information Flow" />
+<$image source="//hoelz.ro/_media/sahara-sync-flow.png" alt="Sahara Sync Information Flow" />
 
 The host was written with decentralization in mind, so that you could more
 easily break away from a single instance of hostd. The reasoning behind this

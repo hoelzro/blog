@@ -18,7 +18,7 @@ If you're like me, you've been following the Haiku project for a little while, a
 
 Ok, now that you know what Haiku and BeOS are, you may be interested in contributing to the Haiku project if you are a developer. A lot of people have come onto the Haiku channel on Freenode lately (#haiku) asking for a simple starter application, so this post will give you the code for a simple "Hello, World" application that prints "Hello, Haiku!" to the console whenever you click a button. Here's a screenshot of the finished product:
 
-<$image source="//hoelz.ro/images/hello-haiku.png" alt="Hello Haiku" />
+<$image source="//hoelz.ro/_media/hello-haiku.png" alt="Hello Haiku" />
 
 ! The Full Application Code
 

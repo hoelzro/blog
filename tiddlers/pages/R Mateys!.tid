@@ -29,7 +29,7 @@ I figured out how to properly use `map` in Perl. In fact, because vectorized
 code is so concise and (in the case of R) so optimized, you hardly see for loops
 in R at all.
 
-<$image source="//hoelz.ro/images/your-for-loops.gif" alt="your-for-loops.gif" />
+<$image source="//hoelz.ro/_media/your-for-loops.gif" alt="your-for-loops.gif" />
 
 Vectors may also be multi-dimensional. and R supports things like matrix
 multiplication out of the box. R's matrix multiplication operator `%*%`
@@ -116,7 +116,7 @@ time_it(Sys.sleep())
 Since I'm just starting out with statistics and numerical analysis, I often feel like
 this when working on a problem:
 
-<$image source="//hoelz.ro/images/i-have-no-idea-what-im-doing.jpg" alt="i-have-no-idea-what-im-doing.jpg" />
+<$image source="//hoelz.ro/_media/i-have-no-idea-what-im-doing.jpg" alt="i-have-no-idea-what-im-doing.jpg" />
 
 You'll see more details about this in a future post, but for my R project, I
 wanted to try using some advanced numerical analysis algorithms; I just had no

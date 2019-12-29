@@ -109,7 +109,7 @@ main(void)
     return 0;
 }
 ```
-<$image source="//hoelz.ro/images/fork-slowdown-plot.png" alt="fork-slowdown-plot.png" width="600" height="450" />
+<$image source="//hoelz.ro/_media/fork-slowdown-plot.png" alt="fork-slowdown-plot.png" width="600" height="450" />
 
 I haven't dug into the kernel source code yet to figure out exactly why this is happening, but that
 would make an interesting future blog post! So now, in order to fix the slowdown, I would first
