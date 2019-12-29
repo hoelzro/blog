@@ -15,25 +15,25 @@ title: $:/template
 <meta name='description' content="Rob's thoughts on programming and a place for his projects" />
 <meta name='keywords' content='perl,lua,programming,coding,learning' />
 <meta name='twitter:dnt' content='on' />
-<title>`<<currentTiddler>>`</title>
+<title>`<$view tiddler=<<template-config>> field="title_template" format="htmlwikified" mode="inline" />`</title>
 <link rel="stylesheet" href="/css/style.css" />
 <link rel='alternate' type='application/rss+xml' title='hoelz.ro - All Updates' href='/feed.rss' />
 
-<meta itemprop="name" content="`<<currentTiddler>>`" />
+<meta itemprop="name" content="`<$view tiddler=<<template-config>> field="title_template" format="htmlwikified" mode="inline" />`" />
 <meta itemprop="description" content="Rob's thoughts on programming and a place for his projects" />
 <meta itemprop="image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" />
 
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:site" content="@hoelzro" />
-<meta name="twitter:title" content="`<<currentTiddler>>`" />
+<meta name="twitter:title" content="`<$view tiddler=<<template-config>> field="title_template" format="htmlwikified" mode="inline" />`" />
 <meta name="twitter:description" content="Rob's thoughts on programming and a place for his projects" />
 <meta name="twitter:creator" content="@hoelzro" />
 <meta name="twitter:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" />
 <meta name="twitter:image:alt" content="Rob's thoughts on programming and a place for his projects" />
 
-<meta property="og:title" content="`<<currentTiddler>>`" />
+<meta property="og:title" content="`<$view tiddler=<<template-config>> field="title_template" format="htmlwikified" mode="inline" />`" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="`https://hoelz.ro/{{{ [is[current]sitelink[]] }}}`" />
+<meta property="og:url" content="`https://hoelz.ro/{{{ [is[current]sitelink[]] }}}`" /> <!-- XXX FIXME -->
 <meta property="og:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" />
 <meta property="og:description" content="Rob's thoughts on programming and a place for his projects" />
 <meta property="og:site_name" content="hoelz.ro" />
@@ -156,7 +156,7 @@ email
   </div>
 
   <div id='content'>
-  `<$transclude tiddler=<<subtemplate>> mode="block" />`
+  `<$set name="subtemplate" tiddler=<<template-config>> field="subtemplate"><$transclude tiddler=<<subtemplate>> mode="block" /></$set>`
 
 </div>
 
