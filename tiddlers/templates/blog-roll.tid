@@ -17,4 +17,16 @@ title: $:/templates/blog-roll
     <hr />`
     </$list>
   </$list>
+
+  <$list variable="_" filter="[!is[system]tag[Blog Post]!nsort[created]first<offset>first[1]]">
+    <$set name="currentMin1" filter="[<currentTiddler>subtract[1]]" select="0">
+    `<a class='history-previous' rel='next' href='/blog/`<<currentMin1>>`'>Older Entries</a>`
+    </$set>
+  </$list>
+
+  <$list variable="_" filter="[!is[system]tag[Blog Post]!nsort[created]butfirst<offset>butfirst[5]first[1]]">
+    <$set name="currentPlus1" filter="[<currentTiddler>add[1]]" select="0">
+    `<a class='history-next' rel='prev' href='/blog/`<<currentPlus1>>`'>Newer Entries</a>`
+    </$set>
+  </$list>
 </$set>
