@@ -1,0 +1,5 @@
+created: 20191229153022000
+modified: 20191229153022000
+title: $:/templates/search-results
+
+<$view format='htmlwikified'/>
