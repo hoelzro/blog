@@ -23,8 +23,8 @@ build:
   - "[is[tiddler]sitelink[]addsuffix[.html]]"
   - "text/plain"
   - "$:/template"
-  - "subtemplate"
-  - "$:/templates/regular"
+  - "template-config"
+  - "$:/template-config/regular"
 
   # render tag index files
   - "--render"
@@ -32,8 +32,8 @@ build:
   - "[addsuffix[.html]addprefix[tag/]]"
   - "text/plain"
   - "$:/template"
-  - "subtemplate"
-  - "$:/templates/tag-index"
+  - "template-config"
+  - "$:/template-config/tag-index"
 
   # render blog entries
   - "--render"
@@ -41,8 +41,8 @@ build:
   - "[is[tiddler]sitelink[]addsuffix[.html]]"
   - "text/plain"
   - "$:/template"
-  - "subtemplate"
-  - "$:/templates/blog"
+  - "template-config"
+  - "$:/template-config/blog"
 
   # render blog rolls
   - "--render"
@@ -50,16 +50,16 @@ build:
   - "[addprefix[blog/]addsuffix[.html]]"
   - "text/plain"
   - "$:/template"
-  - "subtemplate"
-  - "$:/templates/blog-roll"
+  - "template-config"
+  - "$:/template-config/blog-roll"
 
   - "--render"
   - "0"
   - "blog.html"
   - "text/plain"
   - "$:/template"
-  - "subtemplate"
-  - "$:/templates/blog-roll"
+  - "template-config"
+  - "$:/template-config/blog-roll"
 
   # render site index as copy of blog
   - "--render"
@@ -67,8 +67,8 @@ build:
   - "home.html"
   - "text/plain"
   - "$:/template"
-  - "subtemplate"
-  - "$:/templates/blog-roll"
+  - "template-config"
+  - "$:/template-config/blog-roll"
 
   # render blog archive
   - "--render"
@@ -76,8 +76,8 @@ build:
   - "archive.html"
   - "text/plain"
   - "$:/template"
-  - "subtemplate"
-  - "$:/templates/archive"
+  - "template-config"
+  - "$:/template-config/archive"
 
   # render search template used by the search daemon
   - "--render"
@@ -85,6 +85,8 @@ build:
   - "templates/search.html"
   - "text/plain"
   - "$:/template"
+  - "template-config"
+  - "$:/template-config/search-results"
 
   # render the stylesheet
   - "--render"

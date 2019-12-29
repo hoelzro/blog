@@ -1,0 +1,5 @@
+created: 20191229153022000
+modified: 20191229153022000
+title: $:/template-config/tag-index
+subtemplate: $:/templates/tag-index
+title_template: Pages tagged with "<<currentTiddler>>"

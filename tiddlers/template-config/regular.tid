@@ -1,0 +1,5 @@
+created: 20191229153022000
+modified: 20191229153022000
+title: $:/template-config/regular
+subtemplate: $:/templates/regular
+title_template: <<currentTiddler>>
