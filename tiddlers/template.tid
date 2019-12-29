@@ -113,7 +113,7 @@ email
     <form action='/search' method='get' id='search-form'>
       <input name='q' id='q' type='text' aria-label='Search Query'/>
       <button id='search'>Search</button>
-      <abbr id='search-help' title='You can use AND or OR to combine terms (OR is implied by spacing).  You can also prefix a term with tag:, title:, or date: to refine your search (ex. tag:perl)'>Search Help</abbr>
+      <abbr id='search-help' title='You can use AND or OR to combine terms (OR is implied by spacing)'>Search Help</abbr>
     </form>
 
     <div class='clear-it'>
