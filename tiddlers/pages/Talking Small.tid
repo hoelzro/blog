@@ -92,8 +92,8 @@ string to lowercase?", you might wonder. You can use the browser to scan
 through the various string methods, or you can try the spotter to search for
 methods containing words like 'lower' or 'down'.
 
-You know what you want to do; you want to transform the string '' 'Foo' '' into
-'' 'foo' ''. Wouldn't it be cool if you could just ask Smalltalk which method(s)
+You know what you want to do; you want to transform the string `'Foo'` into
+`'foo'`. Wouldn't it be cool if you could just ask Smalltalk which method(s)
 you can use to do that? Well, you can! If you open the Method Finder and click
 the box to search by example, you can enter the following, and the method finder
 will reply with `'Foo' asLowercase`:
@@ -104,7 +104,7 @@ will reply with `'Foo' asLowercase`:
 I wanted to find a method to clamp a number to a particular range; here's an
 example of how I used the method finder to do that for me:
 
-<$image source="//hoelz.ro/_media/method-finder.webm" alt="method-finder.webm" />
+{{method-finder.webm}}
 
 This makes me think of Haskell's [[Hoogle|https://www.haskell.org/hoogle/]],
 only in a dynamically typed language, and driven by examples rather than types.
@@ -127,7 +127,7 @@ After you create and implement the method, you can tell the debugger to
 proceed, which will invoke the method you //just// wrote and your application
 will carry on its merry way. Here's a trivalized example of that in action:
 
-<$image source="//hoelz.ro/_media/coding-in-the-debugger.webm" alt="coding-in-the-debugger.webm" />
+{{coding-in-the-debugger.webm}}
 
 !!! Ch-ch-changes
 
@@ -155,10 +155,8 @@ invocations, forever.
 While working with Smalltalk is fun and a learning experience, there were a few things I //didn't// like
 so much.
 
-Long if/else chains are unwieldy. You end up with something like ''condition
-ifTrue: [ ... ] ifFalse: [ condition2 ifTrue: [ ... ] ifFalse: [ ... ]]'', and
-it doesn't feel great. There's probably an idiomatic way of doing this that
-I'm missing, though.
+Long if/else chains are unwieldy. You end up with something like `condition ifTrue: [ ... ] ifFalse: [ condition2 ifTrue: [ ... ] ifFalse: [ ... ]]`,
+and it doesn't feel great. There's probably an idiomatic way of doing this that I'm missing, though.
 
 Classes are organized into packages to enhance searchability, but that's more
 like a convention - the namespace is flat. I wonder how often name collisions
