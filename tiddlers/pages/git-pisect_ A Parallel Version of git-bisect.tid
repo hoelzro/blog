@@ -50,6 +50,7 @@ works, feel free to skip the next section.
 Well, let's look at your typical range of Git commits:
 
 ```
+
   ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬──────┐
   │         │         │         │         │         │         │        │        │        │        │        │        │        │        │        │      │
   │ HEAD~15 │ HEAD~14 │ HEAD~13 │ HEAD~12 │ HEAD~11 │ HEAD~10 │ HEAD~9 │ HEAD~8 │ HEAD~7 │ HEAD~6 │ HEAD~5 │ HEAD~4 │ HEAD~3 │ HEAD~2 │ HEAD~1 │ HEAD │
@@ -138,6 +139,7 @@ I ran `git-bisect` and `git-pisect` on this repository - the latter with 1,
 2, 4, 8, and 16 jobs. Here are the results from that test on my four-core laptop:
 
 ```
+
   git-bisect:     1m42s
   git-pisect(1):  1m24s
   git-pisect(2):  1m5s
