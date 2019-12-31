@@ -10,10 +10,9 @@ app.jinja_options.update(
 )
 # XXX reload templates
 
-@app.route('/')
+@app.route('/search')
 def search():
-    # XXX filename
-    conn = sqlite3.connect('/tmp/site/search-index.db')
+    conn = sqlite3.connect('/var/www/http/hoelz.ro/search-index.db')
 
     # XXX handle no query
     query = request.args.get('q', '')
