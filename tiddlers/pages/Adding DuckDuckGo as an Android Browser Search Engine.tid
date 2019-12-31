@@ -119,6 +119,6 @@ $ adb reboot
 ```
 And here's the end product running on my phone!
 
-<$image source="//hoelz.ro/_media/settings.png" alt="Browser Settings" width="240" height="427" />
-<$image source="//hoelz.ro/_media/search.png" alt="Browser Search" width="240" height="427" />
-<$image source="//hoelz.ro/_media/results.png" alt="Search Resuls from DDG!" width="240" height="427" />
+<$image source="/_media/blog/settings.png" alt="Browser Settings" width="240" height="427" />
+<$image source="/_media/blog/search.png" alt="Browser Search" width="240" height="427" />
+<$image source="/_media/blog/results.png" alt="Search Resuls from DDG!" width="240" height="427" />

@@ -15,11 +15,11 @@ on how many islands you've mapped and how accurate your mappings are. So
 imagine my dismay when I had him evaluate my map for the first time and saw
 this:
 
-<$image source="//hoelz.ro/_media/salt-inaccurate-map.png" alt="salt-inaccurate-map.png" width="800" height="450" />
+<$image source="/_media/blog/salt-inaccurate-map.png" alt="salt-inaccurate-map.png" width="800" height="450" />
 
-<$image source="//hoelz.ro/_media/salt-inaccurate-map-2.png" alt="salt-inaccurate-map-2.png" />
+<$image source="/_media/blog/salt-inaccurate-map-2.png" alt="salt-inaccurate-map-2.png" class="mediacenter" />
 
-<$image source="//hoelz.ro/_media/salt-inaccurate-map-3.png" alt="salt-inaccurate-map-3.png" />
+<$image source="/_media/blog/salt-inaccurate-map-3.png" alt="salt-inaccurate-map-3.png" class="mediacenter" />
 
 //94%?!//
 
@@ -81,9 +81,8 @@ It turns out we can do an even better job than 62 tests. If we were just
 looking for one, this would be simple; just take half of the entries and try
 those. If there's a bad entry, recurse on that half; otherwise, recurse on the
 other half. Since we're dividing the problem space in half at each test, this
-algorithm is `O(log n)`, which means this would take about ''log₂(109) =
-6.768184 ≅ 7'' tests. Unfortunately, we have seven bad entries here, but maybe
-this can serve as some inspiration!
+algorithm is `O(log n)`, which means this would take about `log₂(109) = 6.768184 ≅ 7`
+tests. Unfortunately, we have seven bad entries here, but maybe this can serve as some inspiration!
 
 Even though we have more than one bad item, we can still apply the divide
 and conquer idea. If we find 0 bad items in a half, we can discard it;
@@ -94,9 +93,8 @@ item, and then apply the algorithm I mentioned in the previous paragraph
 to find it.
 
 I'm not even going to try to analyse the time complexity in terms of big-O notation
-<<footnote """Who am I kidding? ;) Yes I am going to try - I would guess something like ''O(b
-* log(n/b
-""">>'', where b is the number of bad entries.)), but it turns out we can
+<<footnote """Who am I kidding? ;) Yes I am going to try - I would guess something like `O(b
+* log(n/b))`, where b is the number of bad entries.""">>, but it turns out we can
 get a pretty reasonable guess for how many tests this should take. Let's
 consider the possibilities!
 

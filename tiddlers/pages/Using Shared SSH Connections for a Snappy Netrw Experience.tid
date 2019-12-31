@@ -13,7 +13,7 @@ you can just do something like this:
 ```
 vim scp://mymachine/groceries.txt
 ```
-(I have an entry aliasing ''mymachine'' in `~/.ssh/config`, so I don't have to type `%%scp://rob@mymachine.mydomain.com:myport/groceries.txt%%` :-) )
+(I have an entry aliasing ''mymachine'' in `~/.ssh/config`, so I don't have to type `scp://rob@mymachine.mydomain.com:myport/groceries.txt` :-) )
 
 This plugin is a godsend for people who do a lot of work on remote files. However, if you're a compulsive saver like me, hitting '':w'' every other line
 typed, or if you're using the file browser mode of netrw to explore a remote filesystem, it can feel a little slow; also, if you don't have password-less SSH

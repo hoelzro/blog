@@ -125,9 +125,8 @@ def service do
   loop.(loop, 0)
 end
 ```
-I ended up resolving these issues by liberally sprinkling ''msg -> raise
-"Unexpected " <> inspect(msg)'' into my `receive` blocks, causing fantastic
-stack traces when I sent/received something I shouldn't, and by adding some
+I ended up resolving these issues by liberally sprinkling `msg -> raise "Unexpected " <> inspect(msg)`
+into my `receive` blocks, causing fantastic stack traces when I sent/received something I shouldn't, and by adding some
 `after 1_000 -> raise "timeout"` expressions after my `receive`s; this
 helped me fix issues #1 and #2. To fix issue #3, I just made sure each service had
 a `raise "I'm not supposed to exit"` after their `receive` blocks. I'm

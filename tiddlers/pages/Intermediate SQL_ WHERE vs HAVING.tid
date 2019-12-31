@@ -33,7 +33,7 @@ is why it only makes sense to use an aggregate function like `COUNT` or `SUM` wi
 
 Here's a diagram I clumsily scrawled on the whiteboard while preparing for the talk:
 
-<$image source="//hoelz.ro/_media/sql-on-where-having.png" alt="ON vs WHERE vs HAVING" />
+<$image source="/_media/blog/sql-on-where-having.png" alt="ON vs WHERE vs HAVING" />
 
 I hope this clears up the difference between `WHERE` and `HAVING` for some SQL beginners
 out there!

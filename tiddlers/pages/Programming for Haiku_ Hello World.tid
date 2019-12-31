@@ -18,7 +18,7 @@ If you're like me, you've been following the Haiku project for a little while, a
 
 Ok, now that you know what Haiku and BeOS are, you may be interested in contributing to the Haiku project if you are a developer. A lot of people have come onto the Haiku channel on Freenode lately (#haiku) asking for a simple starter application, so this post will give you the code for a simple "Hello, World" application that prints "Hello, Haiku!" to the console whenever you click a button. Here's a screenshot of the finished product:
 
-<$image source="//hoelz.ro/_media/hello-haiku.png" alt="Hello Haiku" />
+<$image source="/_media/blog/hello-haiku.png" alt="Hello Haiku" />
 
 ! The Full Application Code
 
@@ -89,8 +89,10 @@ int main(void)
 To build this code, you of course need to be running Haiku. Download an image and run it with QEMU or VirtualBox (it's really easy to set up!) or grab a LiveCD from their site [[here|http://www.haiku-os.org]], run it, open a Terminal, and use this to compile the code:
 
 ```bash
-g++ -o hello-haiku hello-haiku.cpp -lbe```
-If you're unfamiliar with GCC's compiler options, ''-o'' specifies the output file, and ''-lbe'' tells GCC to link to the be library, which contains all of the object code for this example.
+g++ -o hello-haiku hello-haiku.cpp -lbe
+```
+
+If you're unfamiliar with GCC's compiler options, `-o` specifies the output file, and `-lbe` tells GCC to link to the be library, which contains all of the object code for this example.
 
 ! Code Overview
 
@@ -143,11 +145,15 @@ bool QuitRequested()
 This method overrides BWindow::QuitRequested, which is called when the close button (the button on the left side of the window's title tab) is clicked. This code:
 
 ```cpp
-be_app_messenger.SendMessage(B_QUIT_REQUESTED);```
+be_app_messenger.SendMessage(B_QUIT_REQUESTED);
+```
+
 sends a B_QUIT_REQUESTED message to the application, requesting that it quit. You'll notice I also presented an alternative:
 
 ```cpp
-be_app->PostMessage(B_QUIT_REQUESTED);```
+be_app->PostMessage(B_QUIT_REQUESTED);
+```
+
 This code does a similar thing to the code above, except PostMessage doesn't wait for a reply message. Also, you'll notice that PostMessage uses be_app, not be_app_messenger. be_app is a global pointer to our application object, and be_app_messenger is a global BMessenger object that can send messages to be_app. If you'd like to learn more about BMessengers, please consult the documentation.
 
 We then return the result of the superclass' version of the method, which is true. Returning true from QuitRequested means that it's ok for this window to close.

@@ -32,7 +32,7 @@ input stream, it assumes that the missing input will provided by the user in a
 future line and enters into a multi-line input mode. So now, if you try to
 enter a for loop, instead of seeing the above, you'll see this:
 
-<$image source="//hoelz.ro/_media/rakudo-multi-line.gif" alt="rakudo-multi-line.gif" />
+<$image source="/_media/blog/rakudo-multi-line.gif" alt="rakudo-multi-line.gif" />
 
 (You can disable this behavior by setting the environment variable `RAKUDO_DISABLE_MULTILINE` to
 a non-zero value)

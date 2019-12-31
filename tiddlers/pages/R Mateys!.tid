@@ -29,7 +29,7 @@ I figured out how to properly use `map` in Perl. In fact, because vectorized
 code is so concise and (in the case of R) so optimized, you hardly see for loops
 in R at all.
 
-<$image source="//hoelz.ro/_media/your-for-loops.gif" alt="your-for-loops.gif" />
+<$image source="/_media/blog/your-for-loops.gif" alt="your-for-loops.gif" />
 
 Vectors may also be multi-dimensional. and R supports things like matrix
 multiplication out of the box. R's matrix multiplication operator `%*%`
@@ -71,9 +71,8 @@ other languages, treats code as data. That is, you can assemble, manipulate,
 and evaluate code objects at runtime. I don't know if I'd go so far as to call
 R homoiconic, but from my limited experience with the concept, it sure seems like
 it. <<footnote """What gives me pause is that expressions like `2 + 2` aren't stored as
-such once parsed; however, that's just sugar for ``+`(2, 2)`, so it's a little
-murky.
-""">>
+such once parsed; however, that's just sugar for `&#x60;+&#x60;(2, 2)`, so it's a little
+murky.""">>
 
 Let's say that we're not always big fans of R's lazy evaluation when it comes
 to function arguments. So let's make a function that we'll call `eager` to
@@ -116,7 +115,7 @@ time_it(Sys.sleep())
 Since I'm just starting out with statistics and numerical analysis, I often feel like
 this when working on a problem:
 
-<$image source="//hoelz.ro/_media/i-have-no-idea-what-im-doing.jpg" alt="i-have-no-idea-what-im-doing.jpg" />
+<$image source="/_media/blog/i-have-no-idea-what-im-doing.jpg" alt="i-have-no-idea-what-im-doing.jpg" />
 
 You'll see more details about this in a future post, but for my R project, I
 wanted to try using some advanced numerical analysis algorithms; I just had no

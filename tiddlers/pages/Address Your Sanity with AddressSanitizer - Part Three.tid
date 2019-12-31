@@ -60,8 +60,8 @@ void MVM_args_proc_cleanup_for_cache(MVMThreadContext *tc, MVMArgProcContext *ct
 It turns out that `ctx->callsite` is invalid at this point (because we're
 cleaning up `ctx`), so getting the value of `ctx->callsite->has_flattening`
 results in an invalid memory access. I happened to know that `arg_flags` is
-only non-NULL if `has_flattening` is truthy anyway, which makes the ''if
-(ctx->callsite && ctx->callsite->has_flattening)'' check redundant. So I
+only non-NULL if `has_flattening` is truthy anyway, which makes the `if
+(ctx->callsite && ctx->callsite->has_flattening)` check redundant. So I
 removed that, which fixed the use-after-free!
 
 This plugged the memory leak I discovered in the previous post, and that got

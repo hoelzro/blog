@@ -29,7 +29,7 @@ After delving into the `git-config` manpage a bit, I discovered another gem simi
 [url "https://github.com/hoelzro/"]
   insteadOf = hoelzro:
 ```
-''EDIT'': I changed this to `<nowiki>https://</nowiki>`, because `<nowiki>git://</nowiki>` is vulnerable to man-in-the-middle attacks.
+''EDIT'': I changed this to `https://`, because `git://` is vulnerable to man-in-the-middle attacks.
 
 Now when I run `git fetch` or `git pull` on my repostories, I never get prompted to enter my SSH key's password, since reading from my repository
 is done via the HTTPS protocol.
