@@ -18,7 +18,7 @@ sub index_document($sth, $name, $path, $rel_url) {
     my @tags = map { $_->text } @$tag_elements;
 
     my $body = $dom->find('#content')->first;
-    $body->find('.history-prev')->map('remove');
+    $body->find('.history-previous')->map('remove');
     $body->find('.history-next')->map('remove');
     $body->find('div.tags')->map('remove');
     $body->find('.publish-date')->map('remove');
