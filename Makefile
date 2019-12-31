@@ -1,9 +1,9 @@
 build:
-	rm -rf /tmp/site
-	./tiddlywiki --output /tmp/site --build index
-	mkdir /tmp/site/images
-	cp tiddlers/*.png /tmp/site/images
-	perl build-index.pl /tmp/site
+	rm -rf site
+	./tiddlywiki --output site --build index
+	mkdir site/images
+	cp tiddlers/*.png site/images
+	perl build-index.pl site
 
 clean:
-	rm -rf /tmp/site
+	rm -rf site
