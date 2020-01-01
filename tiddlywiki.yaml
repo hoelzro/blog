@@ -29,7 +29,7 @@ build:
   # render tag index files
   - "--render"
   - "[!is[system]tags[]] -[[Blog Post]] -Reference"
-  - "[addsuffix[.html]addprefix[tag/]]"
+  - "[lowercase[]addsuffix[.html]addprefix[tag/]]"
   - "text/plain"
   - "$:/template"
   - "template-config"
