@@ -15,11 +15,12 @@ def create_app(*args):
     def search():
         conn = sqlite3.connect('/var/www/http/hoelz.ro/search-index.db')
 
-        # XXX handle no query
         query = request.args.get('q', '')
-        with contextlib.closing(conn.cursor()) as c:
-            c.execute('select url, title from pages where pages match ? order by rank', (query,))
-            matches = c.fetchall()
+        matches = []
+        if query != '':
+            with contextlib.closing(conn.cursor()) as c:
+                c.execute('select url, title from pages where pages match ? order by rank', (query,))
+                matches = c.fetchall()
 
         return render_template('search.html', matches=matches)
 
