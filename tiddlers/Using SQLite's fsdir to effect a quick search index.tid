@@ -1,0 +1,21 @@
+created: 20200224142952145
+modified: 20200224142952145
+tags: [[Blog Post]] SQLite
+title: Using SQLite's fsdir to effect a quick search index
+type: text/vnd.tiddlywiki
+
+! Using SQLite's fsdir to effect a quick search index
+
+At [[work|https://www.ziprecruiter.com/hiring/technology]], we have a wiki we use for knowledge sharing.  It's implemented on top of [[gitit|https://github.com/jgm/gitit]], which works pretty well for our purposes, but sometimes I find the search functionality lacking.  What I'd like is something that has more advanced full text search-like features - things like stemming (so that searching for "databases" finds documents that mention "database") and ranking by query relevance (so that documents that mention "database" many times are ranked higher than those that just mention "database" once).
+
+Well, SQLite happens to have two pieces of functionality that can help in this regard: the [[FTS extension|https://www.sqlite.org/fts5.html]], which implements those features I just mentioned, and the [[fsdir table-valued function|https://sqlite.org/src/file/ext/misc/fileio.c]], which we can use to treat the filesystem like a table.  Since gitit stores its pages in a Git repository, all we need to do is clone the repository and run a few SQL snippets to build our search index:
+
+```shell
+$ git clone work:wiki
+$ sqlite3 wiki-search.db "create virtual table page_search using fts5 (path, page, tokenize='porter unicode61')"
+$ sqlite3 wiki-search.db "insert into page_search select name, data from fsdir('wiki')"
+```
+
+Now we can search the wiki and benefit from those features: `select path, snippet(page_search, 1, '', '', '...', 30) from page_search where page_search match 'my query' order by rank`
+
+Granted, it would be nice to do things like extract the front matter for each page, along with things like edit dates, but this works well enough.
