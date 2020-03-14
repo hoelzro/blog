@@ -33,7 +33,11 @@ module-type: filteroperator
             let container = $tw.fakeDocument.createElement('div');
             widgetNode.render(container, null);
 
-            results.push(container.innerHTML);
+            if(operand.suffix == 'text') {
+                results.push(container.textContent);
+            } else {
+                results.push(container.innerHTML);
+            }
         });
 
         return results;
