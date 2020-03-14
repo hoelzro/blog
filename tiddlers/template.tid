@@ -29,7 +29,7 @@ title: $:/template
 <meta name="twitter:description" content="Rob's thoughts on programming and a place for his projects" />
 <meta name="twitter:creator" content="@hoelzro" />
 <meta name="twitter:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" />
-<meta name="twitter:image:alt" content="Rob's thoughts on programming and a place for his projects" />
+<meta name="twitter:image:alt" content="A picture of Rob" />
 
 <meta property="og:title" content="`<$view tiddler=<<template-config>> field="title_template" format="htmlwikified" mode="inline" />`" />
 <meta property="og:type" content="article" />
