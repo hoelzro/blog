@@ -9,10 +9,11 @@ title: $:/template
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" itemscope itemtype="http://schema.org/Webpage" lang='en'>
 <head>
+`<$set name="firstParagraph" filter="[<currentTiddler>firstparagraph:text[]]" select="0" emptyValue="Rob's thoughts on programming and a place for his projects">`
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <meta name='author' content='Rob Hoelz' />
 <meta name='date' content='`<$view field="created" template="YYYY-0MM-0DD" format="date" />`' />
-<meta name='description' content="Rob's thoughts on programming and a place for his projects" />
+<meta name='description' content="`<$codeblock code={{{ firstParagraph +[getvariable[]encodehtml[]] }}} />`" />
 <meta name='keywords' content='perl,lua,programming,coding,learning' />
 <meta name='twitter:dnt' content='on' />
 <title>`<$view tiddler=<<template-config>> field="title_template" format="htmlwikified" mode="inline" />`</title>
@@ -20,13 +21,13 @@ title: $:/template
 <link rel='alternate' type='application/rss+xml' title='hoelz.ro - All Updates' href='/feed.rss' />
 
 <meta itemprop="name" content="`<$view tiddler=<<template-config>> field="title_template" format="htmlwikified" mode="inline" />`" />
-<meta itemprop="description" content="Rob's thoughts on programming and a place for his projects" />
+<meta itemprop="description" content="`<$codeblock code={{{ firstParagraph +[getvariable[]encodehtml[]] }}} />`" />
 <meta itemprop="image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" />
 
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:site" content="@hoelzro" />
 <meta name="twitter:title" content="`<$view tiddler=<<template-config>> field="title_template" format="htmlwikified" mode="inline" />`" />
-<meta name="twitter:description" content="Rob's thoughts on programming and a place for his projects" />
+<meta name="twitter:description" content="`<$codeblock code={{{ firstParagraph +[getvariable[]encodehtml[]] }}} />`" />
 <meta name="twitter:creator" content="@hoelzro" />
 <meta name="twitter:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" />
 <meta name="twitter:image:alt" content="A picture of Rob" />
@@ -35,8 +36,9 @@ title: $:/template
 <meta property="og:type" content="article" />
 <meta property="og:url" content="`https://hoelz.ro/{{{ [is[current]sitelink[]] }}}`" /> <!-- XXX FIXME -->
 <meta property="og:image" content="https://secure.gravatar.com/avatar/ad7d7401580e0e568aceef1348075e13?s=180" />
-<meta property="og:description" content="Rob's thoughts on programming and a place for his projects" />
+<meta property="og:description" content="`<$codeblock code={{{ firstParagraph +[getvariable[]encodehtml[]] }}} />`" />
 <meta property="og:site_name" content="hoelz.ro" />
+`</$set>`
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
