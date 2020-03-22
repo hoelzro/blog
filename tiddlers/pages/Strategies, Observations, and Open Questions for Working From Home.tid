@@ -1,0 +1,53 @@
+created: 20200322140807734
+modified: 20200322152423658
+tags: [[Blog Post]] remote
+title: Strategies, Observations, and Open Questions for Working From Home
+type: text/vnd.tiddlywiki
+
+! Strategies, Observations, and Open Questions for Working From Home
+
+With the COVID-19 crisis forcing more people to sequester themselves at home and work remotely, there has been no shortage of articles describing how to maintain your productivity and sanity when working from home.  I've been working from home for 3½ years, and I've learned a lot in the meantime, so I thought I'd share my own insights on the matter! There are a lot of commonalities among the various articles - things like "get dressed", "use a walk around the block as a commute" - I won't rehash these.  Rather, I'd like to introduce you to some tips and tricks I haven't really seen discussed elsewhere - on top of these, there are some open questions I've been mulling over in my head for some time.  If you read this post and have some thoughts on potential solutions to these questions, please chime in!
+
+! Observation: Multitasking is more alluring
+
+This is something I just noticed, since I recently visited the home office in Santa Monica - I find that it's way more tempting to try to multitask, which in my opinion is a killer of both productivity and quality of work.  Let me provide a more concrete example - let's say your teammate has a question for you about how something works.  If you're in an office, they might drop by your desk, or they might catch you on your way to the kitchen, or they might Slack you and ask if you could drop by their desk.  Whether it's at your desk, their desk, or chatting in the kitchen, they typically have your undivided attention - even if you see notifications coming in, social conventions keep your focus on the person you're helping.
+
+In contrast, if I see a request for help in Slack, I can be chatting with that person, but I can also flip to another window to make a change to some code so that can run in the background for a bit and I can answer another question in another channel and I can check out the latest post in the gaming channel and oh I'll just run upstairs and start another pot of coffee brewing and...
+
+You see where I'm going with this?  It's //way// too easy to multitask here!
+
+What do we do about this?  I'm a compulsive "I need to acknowledge unread badges" kind of person, so I wish Slack had a "narrowing" feature (akin to Emacs' [[narrowing|https://www.emacswiki.org/emacs/Narrowing]] feature) so that I could more easily focus on one conversation.  Alternatively, I'd like to get into more of a habit of starting up a video chat when helping someone - I think the nature of video chat would facilitate faster communication and enforce some of those social conventions I mentioned above.
+
+! Strategy: Show up five minutes early for video meetings
+
+If you're going to a meeting in an office, sometimes you'll wrap up what you're doing five minutes before the meeting to grab a cup of coffee or something, and maybe you'll walk with a coworker with the same agenda and you'll chat along the way.  And naturally some casual conversation will happen among the first few arrivals at the room while they wait for everyone else to show up.  I've been thinking about employing a strategy of explicitly showing up on the video call a few minutes early to encourage this kind of informal chat and just do a little catching up with my teammates.
+
+! Strategy: Change your Slack profile picture every day
+
+A few months ago, [[Mark Dominus|https://blog.plover.com/]] started to change his Slack picture every day and mentioned it at our company's fall Tech Week.  I thought this was a cool idea, so I started doing it myself, and I eventually automated most of it (the script is a abominable pile of Python that's currently //not// broken, but I'd be happy to clean it up and share it if enough people are interested!).  This has served as a conversation starter among people at work, and humanizes people who are sometimes just a screen name in Slack.  My coworker Jeremy even started a dedicated channel at work - `#ilooklikethistoday` - for more of a "river of profile changes" feel, which has been a real hit!
+
+! Strategy: Treat yourself if the home office is getting treated
+
+Now, this tip doesn't really apply during the COVID-19 crisis, but I think it's good to keep in mind.  Occasionally, the home office will have an all hands meeting, and we remotes tune in via Zoom.  The locals often get something like donuts provided, and sadly those don't hold up over Ethernet.  So, rather than feel jealous, I've taken to picking up donuts for my family and enjoying them during the all hands meeting.  I also post a picture on Slack - it's another conversation starter!
+
+! Strategy: Adjust your start/end time
+
+Now, this one only applies if your home office is in a different time zone, the time difference is small enough that such an adjustment makes sense, and if your employer is comfortable with more flexible hours (although chances are they'd //prefer// this!), but I personally found it harder to work my typical 9-5 in Central Time with Californa being two hours behind.  I adjusted my schedule to something more like 10-6, which helped a ton!  Well, until recently - my kiddo has been more demanding and more adventurous lately, so my wife often needs my help earlier than 6, so I'm working on adjusting my schedule to help my family more.
+
+! Strategy: During video meetings, sometimes you need to be a little rude
+
+I hate being rude - I'm not saying I never am, but I try not to be and when I realize I //may// have been rude in retrospect, I agonize over it.  That being said, it's often hard to get a word in edgewise when you're in a video meeting with some participants in a meeting room at an office, and some participants on camera.  For one, you don't have your body language to help you - but the amount of time we allocate for pauses in conversation is surprisingly short, as is mentioned in an [[episode|https://lingthusiasm.com/post/177316898321/transcript-lingthusiasm-episode-23-when-nothing]] of one of my favorite podcasts, Lingthusiasm:
+
+> There’s actually so little pausing in some interactional – in many interactional contexts – that it is too short for the brain to actually, really have prepared for it without doing some clever anticipation about how that person’s speech goes, and how interaction goes. So, the average time between me saying something and someone replying is, like, 200 milliseconds, which is, like, the speed of a blink. 
+
+200 milliseconds is //so// short, and with the extra latency introduced by talking over the Internet, you're at an even further disadvantage.  I was talking with my boss about this, and he said "sometimes you have to be a little rude", which I've tried to take to heart.  So now I try to butt in a little bit, even if the first word out of my mouth during the interjection is just "Sorry!".
+
+! Question: Keeping work at work (time)
+
+I have a bad habit - sometimes I'll work my regular hours, and then at the end of my day I'll leave my work laptop on so I can "check a few things" or "finish one more thing" or "make a small tweak to my program" after dinner and chores.  ZipRecruiter certainly doesn't expect this of me, and the company is very clear on the importance of work/life balance.  This is something I struggle with personally, and I would appreciate any tips about how to combat this!  It might be as simple as "close your laptop at the end of your day - no exceptions"!
+
+! Question: Maintaining social connections and absorbing insights while remote
+
+This one is hard - I don't know if there's going to be an answer for this.  I really like going out to Santa Monica to visit - every time I get a chance to catch up with coworkers, and chat about cool random things.  And missing out on that sucks - when Brian Fitzpatrick left Google, it came up again a few days later on Slack, and I wondered aloud what ever happened with his Perkeep project.  Someone replied "yeah, we were talking about that on Friday", and it bummed me out to not have been part of that conversation.  Obviously I don't expect my coworkers to hold every in-person conversation on Slack, nor do I expect them to invite me to a Hangout so I can dial in to informal office chat, but I'd really like to see if there's some sort of middle ground I can access as a remote.
+
+Well, I hope you found that helpful - and if you have any feedback on my thoughts on the matter, or if you have ideas on how to resolve some of the questions I'm pondering, feel free to reach out!
