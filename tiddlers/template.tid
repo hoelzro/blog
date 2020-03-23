@@ -19,6 +19,7 @@ title: $:/template
 <title>`<$view tiddler=<<template-config>> field="title_template" format="htmlwikified" mode="inline" />`</title>
 <link rel="stylesheet" href="/css/style.css" />
 <link rel='alternate' type='application/rss+xml' title='hoelz.ro - All Updates' href='/feed.rss' />
+<link rel='alternate' type='application/rss+xml' title='hoelz.ro - Full Pages' href='/full.rss' />
 
 <meta itemprop="name" content="`<$view tiddler=<<template-config>> field="title_template" format="htmlwikified" mode="inline" />`" />
 <meta itemprop="description" content="`<$codeblock code={{{ firstParagraph +[getvariable[]encodehtml[]] }}} />`" />

@@ -1,0 +1,45 @@
+title: $:/full-feed
+type: text/vnd.tiddlywiki
+
+`<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>hoelz.ro</title>
+<link>https://hoelz.ro/</link>
+<description>RSS feed for hoelz.ro</description>
+<language>en-us</language>
+<lastBuildDate>`<<now "[UTC]ddd, DD mmm YYYY 0hh:0mm:0ss +0000">>`</lastBuildDate>
+<atom:link href="https://hoelz.ro/full.rss" rel="self" type="application/rss+xml" />
+
+<image>
+<title>hoelz.ro</title>
+<url>https://hoelz.ro/favicon.png</url>
+<link>https://hoelz.ro/</link>
+</image>
+`
+<$list  filter="[!is[system]tag[Blog Post]!nsort[created]first[15]]">
+<$list variable="link" filter="[<currentTiddler>sitelink[]]">
+<$set name="body" filter="[<currentTiddler>get[text]]" select="0">
+<$wikify name="renderedBody" text=<<body>> output="html">
+`
+<item>
+<title>`{{!!title}}`</title>
+<link>https://hoelz.ro/`<<link>>`</link>
+<description>`<$codeblock code={{{ renderedBody +[getvariable[]encodehtml[]] }}} />`</description>
+`
+<$list variable="tag" filter="[is[current]tags[]] -[[Blog Post]] -Reference +[lowercase[]]">
+`<category>`<<tag>>`</category>`
+</$list>
+`
+<pubDate>`<$view format="date" field="created" template="[UTC]ddd, DD mmm YYYY 0hh:0mm:0ss +0000" />`</pubDate>
+<guid isPermaLink="true">https://hoelz.ro/`<<link>>`</guid>
+</item>
+`
+</$wikify>
+</$set>
+</$list>
+</$list>
+`
+</channel>
+</rss>
+`

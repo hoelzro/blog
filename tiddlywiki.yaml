@@ -105,3 +105,8 @@ build:
   - "$:/feed"
   - "feed.rss"
   - "text/plain"
+
+  - "--render"
+  - "$:/full-feed"
+  - "full.rss"
+  - "text/plain"
