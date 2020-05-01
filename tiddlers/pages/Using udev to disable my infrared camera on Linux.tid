@@ -1,0 +1,46 @@
+created: 20200501013049584
+modified: 20200501042941341
+tags: [[Blog Post]] udev linux
+title: Using udev to disable my infrared camera on Linux
+type: text/vnd.tiddlywiki
+
+! Using udev to disable my infrared camera on Linux
+
+My work laptop has two cameras - one of the cameras is a regular, run-of-the-mill camera, and since I'm remote (well, due to COVID-19, I guess almost //everyone// is these days!), I use it for video meetings a lot.  The other camera is an infrared camera, and to be honest, I'm not sure what it's for.  All I know is that because it's `/dev/video0`, most applications treat the infrared camera as the default.
+
+Normally Firefox remembers which camera I used last (I typically use a //third//, external USB camera), but lately I've been moving throughout the house throughout the work day, trying to change my surroundings, so Firefox is constantly confused as to which cameras are attached to my laptop.  I'm sick of needing to manually select //away// from the IR camera all the time, so I decided to disable the IR camera for once and for all.
+
+Looking around on the Internet for "disable Linux camera" provides no shortage of solutions - the most popular of which is "cover it up", which I've done with a piece of duct tape, but doesn't solve the camera selection problem.  The next most popular solution is to the blacklist the `uvcvideo` kernel module, which //will// disable my IR camera, but along with all of my //other// cameras, so that's a no-go.  Fortunately, in my travels, I stumbled upon `bConfigurationValue`, which if set to 0 will disable a camera.  So now all I needed to do was find the camera's USB bus:
+
+```shell
+$ sudo lshw
+<snip>
+    description: Generic USB 
+    bus info: usb@1:5
+```
+
+...and then navigate to its location in sysfs, and write a 0 to `bConfigurationValue` to disable the camera:
+
+```shell
+$ echo 0 | sudo tee /sys/bus/usb/devices/1-5/bConfigurationValue
+```
+
+And it works!  Or doesn't, in this case! 🎉
+
+Now, this disables the camera, but it's not permanent - it'll be reenabled the next time I reboot.  I //could// write a systemd unit that runs on every boot to just write 0 to that sysfs file, but I wanted to do things //properly// and use udev, since that's what it's there for.
+
+I took way too much time figuring out how to do this with udev; the short version is that I used `udevadm --monitor` to watch for changes, and then I did `rmmod uvcvideo && modprobe uvcvideo` to force the kernel to run the udev rules.  I also used a bogus `RUN{program}+="..."` statement in my udev rules to spit out debugging information to a file in `/tmp/` for situations in which I found `udevadm --monitor` lacking (although in retrospect I probably could've used `udevadm test`).  I learned some interesting things from this exploration - I learned that there's an important difference between `ATTR` and `ATTRS`  (the latter is what I wanted), and I learned that you need to match an attribute in your dev in order to interpolate `$attrs{attribute}` into a `RUN` statement.  However, no matter what I did, I couldn't seem to get `bConfigurationValue` to get updated!  I decided to walk away and pick this up again the next morning.
+
+Well, I'm glad I did that, because something dawned on me - looking at my `RUN{program}` output, I noticed that `devpath` was always something underneath `/sys/bus/usb/devices/1-5` - so that directory must represent some sort of controller higher up in the device hierarchy, rather than the camera itself.  Looking at the output for `udevadm info --attribute-walk --path=/sys/bus/usb/devices/1-5`, I noticed that it's governed by the `usb` module, rather than `uvcvideo`, so that makes sense why my udev rules weren't getting triggered, since I was only reloading the video module.  I was loathe to remove and load the `usb` module to try this out, but running `udevadm test` seemed to apply the rule just fine!
+
+This ended up being the magic rule I needed to add to make my change permanent:
+
+```
+ACTION!="add|change", GOTO="camera_end"
+
+ATTRS{idVendor}=="5986",ATTRS{idProduct}=="1141",ATTR{bConfigurationValue}="0"
+
+LABEL="camera_end"
+```
+
+So that removes a major annoyance of mine with my cameras - the next step is to try to figure out if I can change the enumeration order so that if the external web camera is plugged in, it comes up first and is preferred.  A [[cursory look at the Firefox code|https://searchfox.org/mozilla-central/rev/7fd1c1c34923ece7ad8c822bee062dd0491d64dc/media/webrtc/trunk/webrtc/modules/video_capture/linux/device_info_linux.cc#226-244]] seems to indicate that it always starts from `/dev/video0`, and as far as I understand udev, I can't really shuffle the order of those entries around.  Some alternatives that have come to mind are 1) disabling the internal camera if the external camera is plugged in (more udev, yay!), or figuring out where Firefox stores its preferred camera information and messing with that.  I rather like the first approach, especially since I have a script that I use to take my picture for Slack and it would benefit from this as well.
