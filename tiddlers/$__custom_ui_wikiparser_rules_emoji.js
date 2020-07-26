@@ -33,7 +33,7 @@
 
   exports.parse = function() {
     this.parser.pos = this.matchRegExp.lastIndex;
-    let emojiName = this.match[1].replaceAll(/([a-z])_([a-z])/g, '$1-$2');
+    let emojiName = this.match[1].replace(/([a-z])_([a-z])/g, '$1-$2');
 
     if(EMOJI_LOOKUP.hasOwnProperty(emojiName)) {
       let emojiValue = EMOJI_LOOKUP[emojiName];
