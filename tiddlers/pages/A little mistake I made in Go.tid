@@ -4,6 +4,8 @@ tags: go [[Blog Post]]
 title: A little mistake I made in Go
 type: text/vnd.tiddlywiki
 
+! A little mistake I made in Go
+
 I was working on a little Go project ~~last night~~ ~~a few nights ago~~ last weekend (boy it takes me way longer to finish blog posts these days!), and I wrote something like the following code, which has a bug in it:
 
 ```go
