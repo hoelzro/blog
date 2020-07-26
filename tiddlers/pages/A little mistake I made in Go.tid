@@ -1,0 +1,86 @@
+created: 20200726145228857
+modified: 20200726145228857
+tags: go [[Blog Post]]
+title: A little mistake I made in Go
+type: text/vnd.tiddlywiki
+
+I was working on a little Go project ~~last night~~ ~~a few nights ago~~ last weekend (boy it takes me way longer to finish blog posts these days!), and I wrote something like the following code, which has a bug in it:
+
+```go
+/*
+  type payload struct {
+    filename string // the name of the file to search
+    resultsChan chan []byte // the channel along which to return results
+  }
+*/
+
+incomingWorkChan := make(chan payload)
+
+go func() {
+  for workUnit := range incomingWorkChan {
+    defer close(workUnit.resultsChan) // make sure we always close the channel we're sending results back on
+    err := doWork(workUnit.filename, workUnit.resultsChan)
+    // error handling elided for brevity
+  }
+}()
+```
+
+I'm sure most seasoned Gophers can spot the problem here immediately, but this tripped me up for a bit, so I thought I'd share this so that others can benefit from my mistake.  The problem here is that `defer` is //function//-scoped, not block-scoped, so Go basically builds up a long list of channels to close via a long list of deferred functions to run when the goroutine eventually exits.  Not only is this is a waste of memory, but since I'm trying to close a channel here, and there's another goroutine elsewhere in the program that depends on that channel getting closed to proceed, my program deadlocks, which is never a good thing!
+
+There are three solutions I can think of off the top of my head:
+
+!! Just avoid `defer` entirely
+
+```go
+go func() {
+  for workUnit := range incomingWorkChan {
+      err := doWork(workUnit.filename, workUnit.resultsChan)
+      close(workUnit.resultsChan)
+      // error handling elided for brevity
+  }
+}()
+```
+
+I'm not a huge fan of this, since if you add code to that loop in the future you need to be extra careful that you `close(workUnit.resultsChan)` in every possible case.  It //is//, however, what I ended up doing, since I don't forsee that loop's body growing much - hopefully it doesn't bite me! :crossed_fingers:
+
+!! Call an anonymous function in the for loop and have the `defer close(...)` happen there:
+
+```go
+go func() {
+  for workUnit := range incomingWorkChan {
+    func() {
+      defer close(workUnit.resultsChan)
+      err := doWork(workUnit.filename, workUnit.resultsChan)
+      // error handling elided for brevity
+    }()
+  }
+}()
+```
+
+Although this solution doesn't have the same future-proofing problems as the previous, I'm not a huge fan - I don't really like the "inline anonymous function call" in Go, except for `go func() { ... }()` and `defer func() { ... }()`.  I'm not really sure why I'm ok with those two forms and not the other - maybe it's because I prefer block-based scoping and the the `func() { ... }()` feels like a hack to introduce something akin to block-based scoping here?  Or maybe because the others are more established Go idioms in my mind?
+
+Minor segue - one thing I find interesting about Go is the number of idioms present in the use of the language.  Establishment of idioms is not specific to Go by any means - I think that's just a result of the language being //used// - but one of the selling points of Go is its simplicity, and that makes me think of Esperanto in a way.  In particular, [[this quote|http://archive.is/4xyuE]] I read when I was getting into constructed languages oh so long ago:
+
+> As for Esperanto, I don't know if Esperantists speak the language at home for their children to hear so that they learn it as a (second) native tongue. If they do, the kids will probably be producing changes very slowly over the years (if they do the same with their own children, and so on). This perhaps would horrify doctor Zamenhof and his followers, but it would be a sure sign that the language is indeed used for communication and is alive, a natural(ized) language among peers. 
+
+!! Call a named function with the channel, and have the `defer close(...)` happen within that function:
+
+```go
+func someFunc(filename string, resultsChan chan []byte) error {
+  defer close(resultsChan)
+  return doWork(filename, resultsChan)
+}
+
+go func() {
+  for workUnit := range incomingWorkChan {
+    err := someFunc(workUnit.filename, workUnit.filename)
+    // error handling elided for brevity
+  }
+}()
+```
+
+This could easily happen in `doWork` itself, but I kind of like decoupling the closing of the channel from the generation of the results - if other functions are needed to generate results, I don't need to modify `someFunc` later on, or wonder why my program is trying to write to a closed channel.  This is probably the solution I like the most, since you're protected from forgetting a `close(workUnit.resultsChan)` but you don't have to deal with the anonymous function weirdness.
+
+!! (Your idea here!)
+
+What about you? Have you encountered this problem in the past, and if so, how did you solve it?  Let me know!
