@@ -1,0 +1,31 @@
+created: 20200811174751561
+modified: 20200813144253976
+tags: slack [[Blog Post]]
+title: Making Slack go slack-jawed: reducing the mental load around Slack notifications
+type: text/vnd.tiddlywiki
+
+As I mentioned in a [[previous post|Strategies, Observations, and Open Questions for Working From Home]], I use Slack at work, and I find it to be a constant source of distraction.  I have taken to shutting it off for much of the day, which has the obvious disadvantage that if people //need// to reach me, they can't!  In that post, I admit my weakness of needing to acknowledge unread badges and proposed a sort of "narrowing" features for Slack.  I wanted to follow up on that and discuss some of the solutions I thought of, as well as the one I'm currently using.
+
+Last month, I wrote a program I called "slack-jawed" - it took a list of Slack teams and set you to "do not disturb" for each of those teams, plus it muted a select set of channels for a period of time.  That way, I could say `slack-jawed 2h` and go heads-down for two hours, but I would still get notifications for direct messages or for messages on channels that I should be paying attention to.  Unfortunately, Slack's [[removal of personal access tokens|https://api.slack.com/changelog/2020-02-legacy-test-token-creation-to-retire]] and migration to only using app-based access tokens has sunk any hopes I had of using that - I can't install my slack-jawed app on every Slack team I'm on!
+
+Another thing I tried is making use of Slack's sidebar sections for channels - basically, all of the non-essential work channels go into a "Fun" section.  This works pretty well, but the systray icon still has an unread badge on it, and like I said, needing to acknowledge that is a weakness of mine..  Fortunately, I managed to find a solution that is Good Enough™ and took me next to no time to develop!
+
+The recurring theme of my problem with Slack and distraction is that damn systray icon - I see it in the corner of my screen and feel compelled to acknowledge it.  While working on focus and discipline is a worthwhile goal, and one that I'm striving towards, I figure why burn willpower if I don't have to - I use a [[powerful window manager that lets me do pretty much whatever I want|http://https://awesomewm.org]]!  So I dug into Awesome's systray widget a bit, seeing if there's a way I could filter out the Slack systray icon using a little bit of Lua code!
+
+Unfortunately, the freedesktop systray protocol is anything but simple - it actually uses XEmbed to embed application windows in the systray window! - and the logic for Awesome is written in C.  If it were in Lua, I could at worst just copy the widget, make some modifications, and just run that - but since it's in C, I would have to fork the Awesome codebase and maintain my own package, and I don't know if that's worth the time.  However, skimming over the systray protocol got me thinking - if systray icons are just regular windows, can't I just hide them?
+
+To continue down this road, we need a few more tools in our toolbelt:
+
+  * `xwininfo` - dumps out attributes (such as size, position, and child windows) about a window or a set of windows
+  * `xprop` - dumps out X properties attached to a window
+  * `xdotool` - conducts various X operations (such as moving, minimizing, and hiding) on windows without needing to write a program using Xlib or XCB
+
+I did a little experiment - first I did `xwininfo -root -tree` to dump the entire window hierarchy on my desktop and used that to find the Slack systray icon's window ID, which I'll call `$slack_icon_id`.  Then I used `xdotool windowunmap $slack_icon_id` and voila - it hid the icon!  With a little more sleuthing by way of `xprop`, I was able to find a good set of criteria for identifying the Slack icon (it uses "slack" as its window class and it has the `_XEMBED_INFO` property), and with that, I have a little script that I run in a `while` loop that keep that pesky icon hidden:
+
+```bash
+$ for id in $(xdotool search --class slack); do
+xprop -id $id | grep -q _XEMBED_INFO && xdotool windowunmap $id
+done
+```
+
+This works, but honestly I'd rather have a little more diversity in the Slack client application space - especially an open source alternative.  I've tried Scudcloud and Rambox in the past, but they both have their shortcomings.  If anyone has any recommendations for a third-party Slack client that would help me manage distractions better, please let me know!
