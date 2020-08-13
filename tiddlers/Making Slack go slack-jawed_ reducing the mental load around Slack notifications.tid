@@ -1,5 +1,5 @@
 created: 20200811174751561
-modified: 20200813145819088
+modified: 20200813150048599
 tags: slack [[Blog Post]]
 title: Making Slack go slack-jawed: reducing the mental load around Slack notifications
 type: text/vnd.tiddlywiki
@@ -12,7 +12,7 @@ Last month, I wrote a program I called "slack-jawed" - it took a list of Slack t
 
 Another thing I tried is making use of Slack's sidebar sections for channels - basically, all of the non-essential work channels go into a "Fun" section.  This works pretty well, but the systray icon still has an unread badge on it, and like I said, needing to acknowledge that is a weakness of mine..  Fortunately, I managed to find a solution that is Good Enough™ and took me next to no time to develop!
 
-The recurring theme of my problem with Slack and distraction is that damn systray icon - I see it in the corner of my screen and feel compelled to acknowledge it.  While working on focus and discipline is a worthwhile goal, and one that I'm striving towards, I figure why burn willpower if I don't have to - I use a [[powerful window manager that lets me do pretty much whatever I want|http://https://awesomewm.org]]!  So I dug into Awesome's systray widget a bit, seeing if there's a way I could filter out the Slack systray icon using a little bit of Lua code!
+The recurring theme of my problem with Slack and distraction is that damn systray icon - I see it in the corner of my screen and feel compelled to acknowledge it.  While working on focus and discipline is a worthwhile goal, and one that I'm striving towards, I figure why burn willpower if I don't have to - I use a [[powerful window manager that lets me do pretty much whatever I want|https://awesomewm.org]]!  So I dug into Awesome's systray widget a bit, seeing if there's a way I could filter out the Slack systray icon using a little bit of Lua code!
 
 Unfortunately, the freedesktop systray protocol is anything but simple - it actually uses XEmbed to embed application windows in the systray window! - and the logic for Awesome is written in C.  If it were in Lua, I could at worst just copy the widget, make some modifications, and just run that - but since it's in C, I would have to fork the Awesome codebase and maintain my own package, and I don't know if that's worth the time.  However, skimming over the systray protocol got me thinking - if systray icons are just regular windows, can't I just hide them?
 
