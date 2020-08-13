@@ -1,8 +1,10 @@
 created: 20200811174751561
-modified: 20200813144253976
+modified: 20200813145819088
 tags: slack [[Blog Post]]
 title: Making Slack go slack-jawed: reducing the mental load around Slack notifications
 type: text/vnd.tiddlywiki
+
+! Making Slack go slack-jawed: reducing the mental load around Slack notifications
 
 As I mentioned in a [[previous post|Strategies, Observations, and Open Questions for Working From Home]], I use Slack at work, and I find it to be a constant source of distraction.  I have taken to shutting it off for much of the day, which has the obvious disadvantage that if people //need// to reach me, they can't!  In that post, I admit my weakness of needing to acknowledge unread badges and proposed a sort of "narrowing" features for Slack.  I wanted to follow up on that and discuss some of the solutions I thought of, as well as the one I'm currently using.
 
