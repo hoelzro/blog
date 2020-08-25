@@ -1,0 +1,53 @@
+created: 20200825210154929
+modified: 20200825210244690
+tags: Linguistics [[code dive]] [[Blog Post]]
+title: Surprising Logic in the Firefox Codebase
+type: text/vnd.tiddlywiki
+
+! Surprising Logic in the Firefox Codebase
+
+Recently, I was curious about how Firefox's reader view implements its estimated reading time, so I spent a little time looking through the Firefox codebase.  It turns out that it uses the [[readability package|https://github.com/mozilla/readability]] to extract the content of a page.  Once it has that, it gets the length of that content and divides it by an estimated reading speed - and it was this part that surprised me:
+
+https://searchfox.org/mozilla-central/rev/fa7f47027917a186fb2052dee104cd06c21dd76f/toolkit/components/reader/ReaderMode.jsm#598-629
+
+```javascript
+ /**
+   * Returns the reading speed of a selection of languages with likely variance.
+   *
+   * Reading speed estimated from a study done on reading speeds in various languages.
+   * study can be found here: http://iovs.arvojournals.org/article.aspx?articleid=2166061
+   *
+   * @return object with characters per minute and variance. Defaults to English
+   *         if no suitable language is found in the collection.
+   */
+  _getReadingSpeedForLanguage(lang) {
+    const readingSpeed = new Map([
+      ["en", { cpm: 987, variance: 118 }],
+      ["ar", { cpm: 612, variance: 88 }],
+      ["de", { cpm: 920, variance: 86 }],
+      ["es", { cpm: 1025, variance: 127 }],
+      ["fi", { cpm: 1078, variance: 121 }],
+      ["fr", { cpm: 998, variance: 126 }],
+      ["he", { cpm: 833, variance: 130 }],
+      ["it", { cpm: 950, variance: 140 }],
+      ["jw", { cpm: 357, variance: 56 }],
+      ["nl", { cpm: 978, variance: 143 }],
+      ["pl", { cpm: 916, variance: 126 }],
+      ["pt", { cpm: 913, variance: 145 }],
+      ["ru", { cpm: 986, variance: 175 }],
+      ["sk", { cpm: 885, variance: 145 }],
+      ["sv", { cpm: 917, variance: 156 }],
+      ["tr", { cpm: 1054, variance: 156 }],
+      ["zh", { cpm: 255, variance: 29 }],
+    ]);
+
+
+    return readingSpeed.get(lang) || readingSpeed.get("en");
+},
+```
+
+The fact that the reading speed is calculated in //characters// per minute - rather than words per minute - is what piques my interest, at least for English.  I've seen many anecdotes about how English readers read in terms of whole words, rather than individual characters. There are many examples, such as [[this one|https://www.dictionary.com/e/typoglycemia/]], circulating the Internet of paragraphs with scrambled letters, but the only real research I was able to track down was //Dyslexia: Cultural Diversity and Biological Unity// (which I have yet to read :sweat-smile:), which talks about how English and Italian dyslexics process words differently.
+
+I find this property of English intriguing!  It makes me wonder if we could develop a sort of "perceptual hash" for English misspellings, akin to image perceptual hashes, so that things like "careful" and "craeful" would hash to the same value, or even "definitely" and "definately" - although that latter example would probably be handled by a soundex function or something.  I also wonder about a sort of "language aware distance function" that would be aware of common spelling mistakes such as "definately". Additionally, my notes from //ElasticSearch: The Definitive Guide// mention that "Damerau observed that 80% of human misspellings have an edit distance of 1", so maybe that could factor in?  One thing that might throw a wrench into this is how much context factors how we read words.
+
+If you know of research or existing algorithms/projects in this space, or if you have related ideas, please feel free to chime in - I'd love to hear about them!
