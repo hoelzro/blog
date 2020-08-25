@@ -22,6 +22,9 @@
     'tired': '😫',
     'tired-face': '😫',
     'worried': '😟',
+    'tada': '🎉',
+    'thinking-face': '🤔',
+    'sweat-smile': '😅',
 
     null: null // for trailing comma
   };
