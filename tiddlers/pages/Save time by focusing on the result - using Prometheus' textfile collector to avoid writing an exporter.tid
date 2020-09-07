@@ -1,5 +1,5 @@
 created: 20200907194359895
-modified: 20200907195304796
+modified: 20200907195500818
 tags: [[Blog Post]] Productivity Prometheus
 title: Save time by focusing on the result - using Prometheus' textfile collector to avoid writing an exporter
 type: text/vnd.tiddlywiki
@@ -10,7 +10,7 @@ My friend [[Frew|https://blog.afoolishmanifesto.com]], as well as others, have s
 
 A few months ago, I had a problem with my server - dhcpcd would get into a weird state roughly every 2 weeks and lose its IPv4 address, which is not great for a server that is hosting your personal site!  I turned on debug logging for dhcpcd (of which there is a //lot// - I ended up putting the logs in their own journald namespace to enforce a separate disk quota!), and I noticed that dhcpcd started spitting out some strange errors roughly 24 hours before the address got lost.
 
-I have [[monitoring in place|Using AWS Lambda to improve Lambda Error Reports]] to detect when my server is down, but it's no fun being under the gun investigating what's going on with dhcpcd while your site is down.  I also use [[Prometheus|http://https://prometheus.io]] to monitor various things, so to give myself some breathing room and time to investigate, I figured I could write a Prometheus exporter (Prometheus' term for a program that collects metrics for a Prometheus instance) for journald to export metrics about entry counts for `(namespace, unit, priority)` tuples, and then preemptively alert when `(dhcpcd, dhcpd@eth0, ERROR)`'s rate goes bananas.
+I have [[monitoring in place|Using AWS Lambda to improve Lambda Error Reports]] to detect when my server is down, but it's no fun being under the gun investigating what's going on with dhcpcd while your site is down.  I also use [[Prometheus|https://prometheus.io]] to monitor various things, so to give myself some breathing room and time to investigate, I figured I could write a Prometheus exporter (Prometheus' term for a program that collects metrics for a Prometheus instance) for journald to export metrics about entry counts for `(namespace, unit, priority)` tuples, and then preemptively alert when `(dhcpcd, dhcpd@eth0, ERROR)`'s rate goes bananas.
 
 Now, writing a Prometheus exporter isn't super hard, but it //is// work - and while a journald exporter might not be a bad tool to have in the future, I wasn't 100% confident I would need something so comprehensive.  Was there a way I could get these logging metrics into my Prometheus without having to do the work of writing an exporter?  Yes - through a very useful feature in Prometheus' node exporter: the textfile collector!
 
