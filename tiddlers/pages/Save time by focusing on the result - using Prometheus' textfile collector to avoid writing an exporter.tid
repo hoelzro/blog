@@ -1,8 +1,10 @@
 created: 20200907194359895
-modified: 20200907195123874
+modified: 20200907195233021
 tags: [[Blog Post]] Productivity Prometheus
 title: Save time by focusing on the result - using Prometheus' textfile collector to avoid writing an exporter
 type: text/vnd.tiddlywiki
+
+! Save time by focusing on the result - using Prometheus' textfile collector to avoid writing an exporter
 
 My friend [[Frew|http://https://blog.afoolishmanifesto.com]], as well as others, have said that our job as developers is not to write code, but rather to solve problems.  I had a win in this regard relatively recently where I saved myself a good chunk of time by leveraging a Prometheus component for a purpose it may not have been designed for, but is remarkably well suited to.
 
