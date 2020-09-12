@@ -1,0 +1,61 @@
+created: 20200912020153222
+modified: 20200912020217867
+tags: [[Blog Post]] Productivity
+title: What do you do with five minute chunks of time?
+type: text/vnd.tiddlywiki
+
+! What do you do with five minute chunks of time?
+
+During my [[morning planning]] today, I was thinking about the highest priority work task I had on my plate.  Without getting too into the details, I introduced a new component into our system, and it's been failing in... //interesting// ways.  I can issue a command to invoke that failure, but it takes about five minutes to run its course.  I figured that I might be alternating several times between provoking this failure and analyzing the new findings - so, I thought to myself: what's the best way to spend that time?  Here are some thoughts I had on that:
+
+! Check Slack
+
+This is what I used to do, since helping others out at work //is// part of my job, but it would often send my attention into a downward spiral.  This is probably a bad idea - fortunately, I still get notifications for messages to me or my team's group if people need help, and [[I have a system in place|Making Slack go slack-jawed: reducing the mental load around Slack notifications]] to help me cut down on the other distractions Slack offers.
+
+! Work on another task for five minutes
+
+This seems like the right answer, but I think this one is also a trap!  Five minutes is a fair amount of time, but in my opinion, it's too short to justify the heavy cost of a context switch.  Out of all likelihood, you're just going to end up doing the other task (or worse, both tasks) poorly.  After all, [[your brain isn't a computer]] - if you think context switching is bad for your OS, it's worse for your mind!
+
+! Automate it into a longer cycle
+
+In this case, I mean write some code to do the following:
+
+  * Trigger the failure
+  * Wait for it to pass
+  * Record data
+  * Maybe wait a minute or two
+  * Repeat, say, for an hour
+
+After that's started running, spend that hour working on the //second-most// important thing for the day, and then spend a deliberate chunk of time analyzing the results once those are in.
+
+This has the advantage that you can reduce those expensive context switches while still collecting a lot of information for later analysis.  Unfortunately, it //does// take time to write that code, and what if the first iteration yielded enough information for you to figure things out?  As always, use your best judgement here!
+
+! Make that five minute chunk into a fifteen minute one
+
+If you don't need to babysit the situation in question, trigger the issue and switch contexts to something else, but know (and be content with!) the fact that the thing will be finished for a while before you get back to it.  The point here - surprise surprise - is to avoid the context switch!
+
+! Reduce the wait time
+
+This doesn't apply to my problem today, but let's say you have a test suite that takes five minutes to run.  It //might// be worth the effort to cut its run time in half if you can manage it!
+
+! Just sit with it
+
+This is hard, because it can feel like a waste of time.  But it keeps the current task loaded in your mind, and gives your mind a chance to let some of the facts settle and consider the bigger picture.  You might think of an aspect of what you're working on that you hadn't considered, or you might be able to plan the kinds of analyses you'll run on the data you collect to get to your next cycle (or perhaps even the end of the task!) more quickly.
+
+! So, what'd I end up doing?
+
+I went with the last one: I just sat with it.  Or rather, I walked with it - I paced around my office and thought about the problem from different angles, and I wrote down some of my thoughts and hypotheses on my whiteboard.  I feel like that allowed me to reach the solution more quickly, consider what error messages I'd been seeing that were red herrings, and take into account other things in play.
+
+Like most things in software development - or even in life in general - that doesn't mean this is always the right solution.  On a day where other developers are having more problems, I might be checking Slack more to chime in and help any way I can, or on a different type of task, I might invest some time in that automation.
+
+! Others?
+
+Do you have strategies you employ in this situation that I didn't think of?   If so, please let me know!
+
+! More on this from other people
+
+If the idea of sitting with a problem and letting your mind do its thing resonates with you, you might enjoy the [[talk|https://www.youtube.com/watch?v=f84n5oFoZBc]] "Hammock Driven Development" by Rich Hickey.  I've never used Clojure in anger, but I always like hearing what Rich has to say, which //really// makes me want to give it a shot!
+
+I took a [[course|https://peterakkies.net/products/big-picture-productivity]] on productivity this summer, and the creator Peter wrote a [[blog post|https://peterakkies.net/blog/being-productive-brushing-teeth]] on "toothbrush productivity", which this situation reminded me of.  Having read books and taken other courses on productivity in the past, I found Peter's ideas refreshing - much like brushing your teeth - so I recommended checking it out!
+
+This idea also got me thinking: what's the smallest time slice you should consider dividing your time into?  I chose a fairly arbitrary number of fifteen minutes here, but I'm wondering if that's too small.  The [[Pomodoro Technique|https://en.wikipedia.org/wiki/Pomodoro_Technique]] hints that 25 minutes is better, and my fellow Milwaukeean developer Joe Clermont wrote a [[blog post today|https://joelclermont.com/post/2020-09/benefits-of-keeping-a-work-journal/]] about keeping a work journal and thinking in 30-60 minute chunks.
