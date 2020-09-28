@@ -1,5 +1,5 @@
 created: 20200926220417208
-modified: 20200926220908480
+modified: 20200928012853485
 tags: Prometheus [[Blog Post]]
 title: Discovering your Prometheus via PromQL
 type: text/vnd.tiddlywiki
@@ -86,4 +86,4 @@ This allows you to see all label permutations for each metric.  Be warned though
 
 I hope you found this helpful, and that you now feel empowered to explore what kinds of metrics are available on Prometheus instances you use every day!  Do you have any neat PromQL tricks you've discovered?  If so, let me know!
 
-Many thanks to [[Frew Schmidt|https://blog.afoolishmanifesto.com/]], [[John Anderson|https://genehack.org/]], [[David Golden|https://xdg.me/]], [[Jonathan Yeong|https://www.jonathanyeong.com/]], and [[Liz Lam|https://lizlam.github.io/]] for reviewing this post!
+Many thanks to [[Frew Schmidt|https://blog.afoolishmanifesto.com/]], [[John Anderson|https://genehack.org/]], and [[David Golden|https://xdg.me/]] for reviewing this post!
