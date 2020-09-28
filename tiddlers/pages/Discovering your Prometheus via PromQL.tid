@@ -1,0 +1,89 @@
+created: 20200926220417208
+modified: 20200926220908480
+tags: Prometheus [[Blog Post]]
+title: Discovering your Prometheus via PromQL
+type: text/vnd.tiddlywiki
+
+! Discovering your Prometheus via PromQL
+
+Knowing about all the metrics available on a Prometheus instance can sometimes feel impossible, so I'd like to share a trick I devised to making exploring those metrics easier!
+
+One of Prometheus' strengths is its ability to ingest a good deal of data from a wide variety of data sources, due to the simplicity of its metrics format.  However, if you work at an organization with multiple teams managing Prometheus exporters, you can end up feeling a little lost or overwhelmed with all of the metrics available to you, especially if you're on an infrastructure team that makes use of lower-level metrics for its alert rules.  These kinds of metrics often come from third-party exporters your team didn't write, so you might not know all of the metrics available to you.
+
+Prometheus //does// offer up lists of metrics in an autocomplete dialog when you start typing a query, and you can accomplish something similar if you're using Grafana.  However, that workflow is more suited to "known unknowns" rather than "unknown unknowns" - it's more like searching a library for a book via the catalog search opposed to just browsing the stacks.
+
+!!! List all metrics for a given exporter
+
+Let's say you want a list of all metrics exported by Prometheus when it scrapes itself - the trick in
+question looks like this:
+
+```promql
+count({job="prometheus"}) by (__name__)
+```
+
+Depending on your experience with Prometheus, you may or may not have seen that `__name__` label before.  `__name__` is a special label in Prometheus - it's the name of the metric itself.  In fact, `foo{bar="baz"}` is really just sugar for `{__name__="foo",bar="baz"}`!
+
+!!! Listing all "namespaces" for a given exporter
+
+Running this against my own Prometheus, I get 202 results - here's a small sampling:
+
+|!Metric|!Value|
+|prometheus_tsdb_isolation_low_watermark{}|1|
+|prometheus_tsdb_lowest_timestamp_seconds{}|1|
+|prometheus_rule_group_duration_seconds_sum{}|1|
+|prometheus_sd_file_read_errors_total{}|1|
+|prometheus_tsdb_compactions_total{}|1|
+|go_memstats_gc_sys_bytes{}|1|
+|prometheus_tsdb_head_min_time{}|1|
+|prometheus_tsdb_head_truncations_failed_total{}|1|
+|prometheus_tsdb_compaction_chunk_size_bytes_count{}|1|
+|net_conntrack_dialer_conn_established_total{}|9|
+|prometheus_tsdb_head_chunks_removed_total{}|1|
+|prometheus_tsdb_tombstone_cleanup_seconds_count{}|1|
+
+There are two important takeaways here - first, the metrics aren't ordered by name, and in fact, the result ordering can change between executions.  Because of this, I will often run these kinds of exploratory queries using [[promtool|https://github.com/prometheus/prometheus/tree/master/cmd/promtool]] and pipe them to tools like `jq` or `sort`.
+
+You can also see that the metrics follow a sort of namespacing scheme.  We can use [[label_replace|https://prometheus.io/docs/prometheus/latest/querying/functions/#label_replace]] to extract the first level of "namespaces":
+
+```promql
+count(label_replace({job="prometheus"}, "metric_namespace", "$1", "__name__", "^([^_]+).*")) by(metric_namespace)
+```
+
+...which gives us a list that looks like this:
+
+* `{metric_namespace="prometheus"}`
+* `{metric_namespace="promhttp"}`
+* `{metric_namespace="scrape"}`
+* `{metric_namespace="up"}`
+* `{metric_namespace="go"}`
+* `{metric_namespace="net"}`
+* `{metric_namespace="process"}`
+
+This listing can give us some hints on additional filters to use to zero in on what we're looking for - for example, if I'm interested in low-level metrics about how Prometheus communicates with things over the network, I can dig into the `net` "namespace" by adding `__name__=~"net_.*"` to my vector selector!  Since these "namespaces" are not documented within the metrics themselves, you often need to explore each one and see what you find to figure out which each one is about.
+
+!!! List all metrics for all exporters
+
+You could tweak that first query slightly to list metrics for //every// job in your Prometheus:
+
+```promql
+count({__name__!=""}) by (__name__)
+```
+
+One noteworthy thing about this query when compared to the first one is the `__name__!=""` bit - it might seem a bit strange if you're not used to it!  It's just one possible shorthand for "give me all time series".  The reason for that part is that PromQL requires that a vector selector has at least one label match that doesn't
+match the empty string, so you can't use something like `{}` or `{__name__=~".*"}`.
+
+!!! List all time series for a given exporter
+
+Another change you could make to that initial query would be to list all //time series// - rather than metrics - that an exporter offers:
+
+```promql
+{job="prometheus"}
+```
+
+This allows you to see all label permutations for each metric.  Be warned though: this can result in a //lot// of output, so I recommend adding some additional filters as you explore.  This is another situation where I'd reach for `promtool`, which I mentioned above.  It's not uncommon for me to use `promtool` to dump all of the time series to a file and then use shell tools (or even just explore the file in `vim`!) to get a better idea of what is available to me.
+
+----
+
+I hope you found this helpful, and that you now feel empowered to explore what kinds of metrics are available on Prometheus instances you use every day!  Do you have any neat PromQL tricks you've discovered?  If so, let me know!
+
+Many thanks to [[Frew Schmidt|https://blog.afoolishmanifesto.com/]], [[John Anderson|https://genehack.org/]], [[David Golden|https://xdg.me/]], [[Jonathan Yeong|https://www.jonathanyeong.com/]], and [[Liz Lam|https://lizlam.github.io/]] for reviewing this post!
