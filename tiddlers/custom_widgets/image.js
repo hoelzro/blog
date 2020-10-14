@@ -71,7 +71,11 @@ ImageWidget.prototype.render = function(parent,nextSibling) {
 						src = "data:image/svg+xml," + encodeURIComponent(text);
 						break;
 					default:
-						src = "data:" + type + ";base64," + text;
+						if(this.document.isTiddlyWikiFakeDom) {
+						    src = '/images/' + this.imageSource;
+						} else {
+						    src = "data:" + type + ";base64," + text;
+						}
 						break;
 				}
 			} else if(_canonical_uri) {
