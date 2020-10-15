@@ -1,0 +1,16 @@
+created: 20201015141910475
+modified: 20201015143110968
+tags: [[Blog Post]] zsh
+title: Random zsh tips
+type: text/vnd.tiddlywiki
+
+Here's a random smattering of tips I've picked up using zsh over the years
+
+''NOTE'' - a number of these apply to bash too!
+
+<$list variable="tipTiddler" filter="[tag[tag: zsh tips]]">
+
+! <$transclude tiddler=<<tipTiddler>> field="heading" />
+
+<$transclude tiddler=<<tipTiddler>> mode="block" />
+</$list>

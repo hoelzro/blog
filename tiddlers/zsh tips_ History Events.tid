@@ -1,0 +1,12 @@
+created: 20201015142637808
+heading: History Events
+modified: 20201015143039544
+tags: [[tag: zsh tips]]
+title: zsh tips: History Events
+type: text/vnd.tiddlywiki
+
+  * `!$`
+  * `!^`
+  * `!!`
+  * `...:h`, `...:t`
+  * `!!:2`
