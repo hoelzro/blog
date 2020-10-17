@@ -1,5 +1,5 @@
 created: 20201015141910475
-modified: 20201015143110968
+modified: 20201016033105655
 tags: [[Blog Post]] zsh
 title: Random zsh tips
 type: text/vnd.tiddlywiki
@@ -14,3 +14,9 @@ Here's a random smattering of tips I've picked up using zsh over the years
 
 <$transclude tiddler=<<tipTiddler>> mode="block" />
 </$list>
+
+! Misc stuff to mention?
+
+  * `run-help` and `run-help-aws`
+  * Mention my SQLite history thing?
+  * Mention my "show destination directory" bindkey hack?

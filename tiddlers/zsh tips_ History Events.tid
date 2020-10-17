@@ -1,6 +1,6 @@
 created: 20201015142637808
 heading: History Events
-modified: 20201015143039544
+modified: 20201016032825166
 tags: [[tag: zsh tips]]
 title: zsh tips: History Events
 type: text/vnd.tiddlywiki
@@ -10,3 +10,5 @@ type: text/vnd.tiddlywiki
   * `!!`
   * `...:h`, `...:t`
   * `!!:2`
+
+Mention how you have `cd` overloaded so that `$ git clone github:user/repo` then `$ cd !$` does the right thing
