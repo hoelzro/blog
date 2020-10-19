@@ -1,0 +1,59 @@
+created: 20201018142637808
+heading: fREW Tips
+modified: 20201018032825166
+tags: [[tag: zsh tips]]
+title: zsh tips: fREW Tips
+type: text/vnd.tiddlywiki
+
+Here are some random, but cool, features that I (fREW) really enjoy:
+
+## `push-line`
+
+I bound the `q` key in the `vicmd` mode to `push-line` like this:
+
+```
+bindkey -M vicmd "q" push-line
+```
+
+What this does is set aside the current commandline, give you a fresh
+commandline to modify, and then pop the current line back.  I typically use it
+in situations like this:
+
+```
+$ vi some/dir/some/file<ESC>q
+$ mkdir -p some/dir/some/
+$ vi some/dir/some/file
+```
+
+## `AUTO_PUSHD`
+
+In both zsh and bash you can use `pushd some/dir` to change directory into
+`some/dir`, and then if you use `popd` you'll change directory back to where
+you came from.  If you set the `AUTO_PUSHD` option, `cd` will automatically
+`pushd` for you.  I'll then use `popd` (or my alias for it, the symettrical
+`mk`) to get back to where I started.
+
+## global aliases
+
+In `zsh` you can have aliases that are allowed anywhere in a commandline.  I
+use `G` and `L` constantly below, and always forget that I've defined `V` even
+though I do that action manually a lot:
+
+```
+alias -g G="| grep"
+alias -g L="| $PAGER"
+alias -g V="| vim -"
+```
+
+Example:
+
+```
+$ long-out-is-long G needle # finds lines matching needle
+$ curl https://blog.afoolishmanifest.com/ L # runs with pager
+```
+
+You can also pass arguments!  This works fine:
+
+```
+$ ls G -P '^f'
+```
